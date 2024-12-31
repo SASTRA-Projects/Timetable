@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>{% block title %}{% endblock %}</title>
+		<!--link rel="stylesheet" type="text/css" href="style.css"-->
+		<style>
+			body {
+				font-family: sans-serif;
+			}
+			nav {
+				position: sticky;
+			}
+			h1 {
+				text-align: center;
+				font-size: 3em;
+				margin-bottom: 10px;
+			}
+			nav > ul {
+				font-size: 1.25em;
+				display: flex;
+				list-style-type: none;
+				padding: 0;
+			}
+			nav > ul > li {
+				margin: 0 20px;
+			}
+			nav > ul > li#about {
+				margin-left: auto;
+			}
+			footer {
+				text-align: center;
+				font-size: 1em;
+				position: relative;
+				bottom: 0;
+				width: 100%;
+			}
+			#content {
+				padding: 20px;
+			}
+			#content > form > label {
+				font-size: large;
+				width: 170px;
+			}
+			#content > form > input {
+				margin-bottom: 15px;
+				font-size: large;
+				height: 25px;
+				width: 300px;
+				border-radius: 15px;
+			}
+			#content > form > button {
+				display: flex;
+				margin: 10px 135px;
+				font-size: large;
+				height: 30px;
+				width: 300px;
+				border: 2px solid black;
+				border-radius: 20px;
+				justify-content: center;
+				background-color: rgba(28, 28, 235, 0.85);
+				color: white;
+			}
+			#content > form > button:hover {
+				background-color: rgba(28, 28, 235, 1);
+			}
+		</style>
+	</head>
+	<body>
+		<nav>
+			<ul>
+				<li id="home">Home</li>
+				<li id="about">About</li>
+				<li id="contact">Contact</li>
+			</ul>
+			<hr>
+		</nav>
+		<div id="content">
+			{% block content %}
+			{% endblock %}
+		</div>
+		<footer>
+			<hr>
+			<p>SASTRA DEEMED To Be University &copy; 2025 <br>
+			   All rights reserved
+			</p>
+		</footer>
+</html>
