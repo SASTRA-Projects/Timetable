@@ -11,8 +11,10 @@ database.cursor.execute("""CREATE TABLE IF NOT EXISTS `timetable` (
 						`period_id` TINYINT UNSIGNED NOT NULL,
 						`faculty_teaches_class_id` SMALLINT UNSIGNED NOT NULL,
 						PRIMARY KEY(`day`, `period_id`),
-						FOREIGN KEY(`faculty_teaches_class_id`) REFERENCES `faculty_teaches_class`(`id`),
+						FOREIGN KEY(`faculty_teaches_class_id`) REFERENCES `faculty_teaches_class`(`id`)
+						ON UPDATE CASCADE ON DELETE RESTRICT,
 						FOREIGN KEY(`period_id`) REFERENCES `period`(`id`)
+						ON UPDATE CASCADE ON DELETE RESTRICT
 )""")
 
 if __name__ == "__main__":
