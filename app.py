@@ -44,6 +44,20 @@ def add_blocks(campus):
 	add_data.add_campus(campus)
 	return render_template("add_blocks.html", campus=campus, no_of_blocks=no_of_blocks)
 
+# @app.route("/add/<campus>/<int:no_of_blocks>", methods=["POST"])
+# def add_classes(campus, no_of_blocks):
+# 	campus = campus.strip().upper()
+# 	blocks = [f"Block {i}" for i in range(1, no_of_blocks+1)]
+# 	classes = request.form.getlist("classes")
+
+# 	if not classes:
+# 		raise Exception("Required Field: Classes")
+
+ # 	for block in blocks:
+# 		for cls in classes:
+# 			add_data.add_class(campus, block, cls)
+# 	return render_template("add_classes.html", campus=campus, blocks=blocks)
+
 @app.route("/show/campus")
 def show_campuses():
 	return render_template("campus.html", function="show", campuses=show_data.show_campuses())

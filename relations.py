@@ -1,35 +1,48 @@
 import database
 
-database.cursor.execute("""CREATE TABLE IF NOT EXISTS `tutors` (
-						`faculty_id` SMALLINT UNSIGNED,
-						`class_id` SMALLINT UNSIGNED,
-						PRIMARY KEY(`faculty_id`, `class_id`),
+database.cursor.execute("""CREATE TABLE IF NOT EXISTS `student_sections` ( -- can be attr. in `students`
+						`student_id` INT UNSIGNED,
+						`section_id` MEDIUMINT UNSIGNED NOT NULL,
+						PRIMARY KEY(`student_id`, `section_id`),
+						FOREIGN KEY(`student_id`) REFERENCES `students`(`id`)
+						ON UPDATE CASCADE ON DELETE RESTRICT,
+						FOREIGN KEY(`section_id`) REFERENCES `sections`(`id`)
+						ON UPDATE CASCADE ON DELETE RESTRICT,
+						UNIQUE(`student_id`)
+)""")
+database.cursor.execute("""CREATE TABLE IF NOT EXISTS `section_courses` (
+						`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+						`section_id` MEDIUMINT UNSIGNED NOT NULL,
+						`course_code` VARCHAR(10) NOT NULL,
+						PRIMARY KEY(`id`),
+						FOREIGN KEY(`section_id`) REFERENCES `sections`(`id`)
+						ON UPDATE CASCADE ON DELETE RESTRICT,
+						FOREIGN KEY(`course_code`) REFERENCES `courses`(`code`) 
+						ON UPDATE CASCADE ON DELETE RESTRICT,
+						UNIQUE(`section_id`, `course_code`)
+)""")
+database.cursor.execute("""CREATE TABLE IF NOT EXISTS `faculty_teaches_class` (
+						`id` INT UNSIGNED AUTO_INCREMENT,
+						`faculty_id` MEDIUMINT UNSIGNED NOT NULL,
+						`class_id` SMALLINT UNSIGNED NOT NULL,
+						`section_course_id` INT UNSIGNED NOT NULL,
+						PRIMARY KEY(`id`),
 						FOREIGN KEY(`faculty_id`) REFERENCES `faculties`(`id`)
 						ON UPDATE CASCADE ON DELETE RESTRICT,
 						FOREIGN KEY(`class_id`) REFERENCES `classes`(`id`)
-						ON UPDATE CASCADE ON DELETE RESTRICT
-)""")
-database.cursor.execute("""CREATE TABLE IF NOT EXISTS `faculty_teaches_class` (
-						`id` SMALLINT UNSIGNED AUTO_INCREMENT,
-						`faculty_id` SMALLINT UNSIGNED NOT NULL,
-						`class_id` SMALLINT UNSIGNED NOT NULL,
-						`subject_id` SMALLINT UNSIGNED NOT NULL,
-						PRIMARY KEY(`id`),
-						FOREIGN KEY(`faculty_id`) REFERENCES `faculties`(`id`),
-						FOREIGN KEY(`class_id`) REFERENCES `classes`(`id`)
 						ON UPDATE CASCADE ON DELETE RESTRICT,
-						FOREIGN KEY(`subject_id`) REFERENCES `subjects`(`id`)
+						FOREIGN KEY(`section_course_id`) REFERENCES `section_courses`(`id`)
 						ON UPDATE CASCADE ON DELETE RESTRICT,
-						UNIQUE(`faculty_id`, `class_id`, `subject_id`)
+						UNIQUE(`faculty_id`, `class_id`, `section_course_id`)
 )""")
 database.cursor.execute("""CREATE TABLE IF NOT EXISTS `student_attends_class` (
-						`student_id` INT UNSIGNED,
-						`subject_id` SMALLINT UNSIGNED, -- check for total credit (minimum), ignoring minor electives
-						`class_id` SMALLINT UNSIGNED,
-						PRIMARY KEY(`student_id`, `subject_id`, `class_id`),
+						`student_id` INT UNSIGNED NOT NULL,
+						`course_code` VARCHAR(10) NOT NULL,
+						`class_id` SMALLINT UNSIGNED NOT NULL,
+						PRIMARY KEY(`student_id`, `course_code`, `class_id`),
 						FOREIGN KEY(`student_id`) REFERENCES `students`(`id`)
 						ON UPDATE CASCADE ON DELETE RESTRICT,
-						FOREIGN KEY(`subject_id`) REFERENCES `subjects`(`id`)
+						FOREIGN KEY(`course_code`) REFERENCES `courses`(`code`)
 						ON UPDATE CASCADE ON DELETE RESTRICT,
 						FOREIGN KEY(`class_id`) REFERENCES `classes`(`id`)
 						ON UPDATE CASCADE ON DELETE RESTRICT

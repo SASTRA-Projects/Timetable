@@ -2,21 +2,44 @@
 
 {% block title %}SASTRA Campus Database{% endblock %}
 
+{% block head %}
+	<style>
+		@media (width >= 490px) {
+			#blocks {
+				margin-left: 15px;
+			}
+			button[type='submit'] {
+				margin-left: 130px;
+			}
+		}
+	</style>
+{% endblock %}
+
 {% block content %}
 	<form method="post">
 		<label for="campus">Campus Name </label>
 		<input type="text" name="campus" id="campus" maxlength="40" autofocus autocomplete="off" required>
 		<br>
 		<label for="blocks">No. of blocks </label>
-		<input type="number" name="no_of_blocks" id="blocks" style="margin-left: 15px;" min="1" max="255" autocomplete="off" required>
+		<input type="number" name="no_of_blocks" id="blocks" min="1" max="255" autocomplete="off" required>
 		<br>
 		<button type="submit">Save</button>
 	</form>
 	<script>
+		function style_btn() {
+			if (window.innerWidth < 490) {
+				document.querySelector("label[for='blocks']").innerHTML = "No. of blocks<br>";
+			}
+			else {
+				document.querySelector("label[for='blocks']").innerHTML = "No. of blocks ";
+			}
+		}
+		window.onload = style_btn
+		window.onresize = style_btn
 		const form = document.querySelector("form");
 		const campus = document.querySelector("input[name='campus']");
-		form.addEventListener("submit", event => {
-			this.action = `/add/${campus.value}`;
-		})
+		form.onsubmit = () => {
+			form.action = `/add/${campus.value}`;
+		};
 	</script>
 {% endblock %}

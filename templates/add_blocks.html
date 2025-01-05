@@ -2,13 +2,47 @@
 
 {% block title %}{{ campus }} Campus Blocks{% endblock %}
 
+{% block head %}
+	<style>
+		@media (width >= 622px) {
+			.spacer {
+				display: inline-block;
+				width: 20px;
+			}
+			input[type="text"] {
+				margin-left: 95px;
+			}
+			button[type='submit'] {
+				margin-left: 230px;
+			}
+		}
+		@media (width < 622px) {
+			.spacer {
+				display: block;
+				height: 10px;
+			}
+			input[type="text"] {
+				margin-left: 0;
+			}
+			button[type='submit'] {
+				margin-left: 0;
+			}
+		}
+	</style>
+{% endblock %}
+
 {% block content %}
 	<h1>Campus {{ campus }}</h1>
 	<form action="\add\SRC\blocks" method="post">
 		{% for i in range(1, no_of_blocks + 1) %}
 			<label for="block{{ i }}">Name of Block-{{ i }} </label>
-			<input type="text" id="block{{ i }}" class="blocks" autofocus autocomplete="off" required/>
+			<div class="spacer"></div>
+			<input type="text" id="block{{ i }}" autofocus autocomplete="off" required/>
 			<br>
+			<label for="rooms{{ i }}">Number of Rooms in Block-{{ i }} </label>
+			<div class="spacer"></div>
+			<input type="number" id="rooms{{ i }}" min="1" max="65535" autocomplete="off" required/>
+			<br> <br>
 		{% endfor %}
 		<button type="submit">Save</button>
 	</form>
