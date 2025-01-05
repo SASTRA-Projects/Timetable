@@ -6,9 +6,11 @@
 	{% if not campuses[0] %}
 		<p style="margin: auto; text-align: center; font-size: 4em">No Campus Found!</p>
 	{% else %}
+		<p style="margin: auto; text-align: center; font-size: 3em">Campuses</p>
 		<ul class="nobulletins">
 			{% for id, campus in campuses %}
-				<li style="text-align: center; font-size: 4em">
+				<hr>
+				<li style="text-align: center; font-size: 3em">
 					<a href="/{{ function }}/{{ campus }}" class="nounderline">{{ campus }}</a>
 				</li>
 			{% endfor %}
