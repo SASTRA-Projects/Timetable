@@ -11,7 +11,7 @@ database.cursor.execute("""CREATE TABLE IF NOT EXISTS `days` (
 						`day` ENUM("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday") NOT NULL,
 						PRIMARY KEY(`day`)
 )""")
-database.cursor.execute("""CREATE TABLE IF NOT EXISTS `timetable` (
+database.cursor.execute("""CREATE TABLE IF NOT EXISTS `timetables` (
 						`day` ENUM("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday") NOT NULL,
 						`period_id` TINYINT UNSIGNED NOT NULL,
 						`faculty_teaches_class_id` INT UNSIGNED NOT NULL,
