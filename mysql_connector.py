@@ -1,4 +1,4 @@
-from mysql import connector
+from mysql.connector import connect, errors
 # from dotenv import load_dotenv
 # from os import getenv
 
@@ -8,11 +8,12 @@ from mysql import connector
 # 	user="root", password=getenv("SASTRA_pwd"), host="localhost"
 # )
 
-db_connector = connector.connect(user="root", password="password", host="localhost")
+db_connector = connect(user="root", password="password", host="localhost")
 if not db_connector.is_connected():
 	raise Exception("Database connection failed")
 
 cursor = db_connector.cursor()
+db_connector.autocommit = False
 
 cursor.execute("""CREATE DATABASE IF NOT EXISTS `SASTRA`""")
 cursor.execute("""USE `SASTRA`""")

@@ -1,4 +1,4 @@
-from mysql_connector import db_connector, cursor, close
+from mysql_connector import db_connector, cursor, close, errors
 
 cursor.execute("""CREATE TABLE IF NOT EXISTS `campuses` (
 			   `id` TINYINT UNSIGNED AUTO_INCREMENT, -- max=255
