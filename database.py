@@ -65,8 +65,9 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS `courses` (
 			   `department` VARCHAR(40) NOT NULL,
 			   `credits` TINYINT UNSIGNED NOT NULL,
 			   `L` TINYINT UNSIGNED NOT NULL, -- lecture hours
-			   `T` TINYINT UNSIGNED NOT NULL, -- tutorial hours
 			   `P` TINYINT UNSIGNED NOT NULL, -- practical hours
+			   `T` TINYINT UNSIGNED NOT NULL, -- tutorial hours
+			   `is_elective` BOOLEAN NOT NULL,
 			   PRIMARY KEY(`code`),
 			   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
 			   ON UPDATE CASCADE ON DELETE RESTRICT
@@ -76,6 +77,7 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS `classes` (
 			   `building_id` SMALLINT UNSIGNED NOT NULL,
 			   `room_no` SMALLINT UNSIGNED NOT NULL,
 			   `capacity` SMALLINT UNSIGNED NOT NULL, -- capacity check for students_classes
+			   `is_lab` BOOLEAN NOT NULL,
 			   PRIMARY KEY(`id`),
 			   FOREIGN KEY(`building_id`) REFERENCES `buildings`(`id`)
 			   ON UPDATE CASCADE ON DELETE RESTRICT,
