@@ -4,8 +4,8 @@ from os import getenv
 
 load_dotenv()
 
-db_connector = connector.connect(
-	user="root", password=getenv("SASTRA_pwd"), host="localhost"
+db_connector = connect(
+	user="root", password=getenv("SASTRA_PWD"), host="localhost"
 )
 
 # db_connector = connect(user="root", ?, host="localhost")
