@@ -16,6 +16,7 @@ Considerations:  * Class capacity >= Student Strength: Allocate
 				 * Section has 2 diff. course / 2 diff. class in same hr, If:
 				 	* Previously alloted course is elective.
 					* Or, Previously alloted class is Lab & capacity < Student Strength
+<<<<<<< HEAD
 Limitations: 	 * Minor Specializations are left a separate time in the timetable, not allocated hr
 
 Algorithm generate_timetable(section, *minor_elective: list[tuple[int,int]]): # day_id, period_id
@@ -88,6 +89,53 @@ Algorithm section_free(section, day, period):
 Algorithm section_can_have_elective(section, crs, day, period):
 	courses, classes = Fetch course, class from section timetable, where section=section, day=day, period=period
 	return crs not in courses and all(courses.is_elective)
+=======
+Limitations: 	 * Minor Specialization is not considered and not left a separate time in the timetable
+
+Algorithm generate_timetable(section):
+	available_hrs = Fetch all days x periods
+	odd_hrs = Odd periods from all the days # Assumption 2
+	course_faculty_class = Fetch (course_code, faculty_id, class_id) from faculty_teaches_class join section_course
+
+	for crs, f_id, cls in course_faculty_class:
+		capacity, cls_is_lab = Fetch capacity, is_lab from classes, where class=cls
+		L, P, T, is_elective = Fetch L, P, T, is_elective from courses, where course=crs
+		total_hrs = L+P+T
+		while total_hrs:
+			if cls_is_Lab:
+				while P > 0:
+					allocated_hr = random.choice(odd_hrs)
+					while faculty_has_cls(faculty, *allocated_hr) or not section_has_lab(section, cls, *allocated_hr):
+						allocated_hr = random.choice(odd_hrs)
+
+					insert_into_timetable(f_id, crs, cls, *allocated_hr)
+					insert_into_timetable(f_id, crs, cls, allocated_hr[0], allocated_hr[1]+1)
+					P -= 2
+					total_hrs -= 2
+			else:
+				allocated_hr = random.choice(odd_hrs)
+					while faculty_has_cls(faculty, *allocated_hr) or not section_has_elective(crs, cls, *allocated_hr):
+						allocated_hr = random.choice(odd_hrs)
+					
+					insert_into_timetable(f_id, crs, *allocated_hr)
+					total_hrs -= 1
+
+Algorithm faculty_has_cls(faculty, day, period):
+	return (SELECT * FROM faculty_timetable WHERE day=day AND period=period).fetchone()
+
+Algorithm section_has_elective(section, course, day, period):
+	courses, classes = Fetch course, class from section timetable, where section=section
+	return not courses[0] or (course.is_elective and all(courses.is_elective))
+
+Algorithm section_has_lab(section, class, day, period):
+	cls_capacity, student_strength = cls_capacity_student_strength(cls, section, day, period)
+	return (all(classes.is_lab) and all(cls_capacity < student_strength))
+
+Algorithm cls_capacity_student_strength(cls, section, day, period):
+	student_strength = (SELECT COUNT(*) FROM student_attends_class WHERE class=cls, section=section day=day, period=period).fetchone()
+	class_capacity = (SELECT capacity FROM classes WHERE class=cls).fetchone()
+	return class_capacity, student_strength
+>>>>>>> 9ec0df21db46808944c299f096f1c9fdd15e3092
 """
 
 def timetable_for(section_id):
