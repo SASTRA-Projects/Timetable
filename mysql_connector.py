@@ -4,16 +4,10 @@ from os import getenv
 
 load_dotenv()
 
-<<<<<<< HEAD
 db_connector = connect(
 	user="root", password=getenv("SASTRA_PWD"), host="localhost"
-=======
-db_connector = connector.connect(
-	user="root", password=getenv("SASTRA_pwd"), host="localhost"
->>>>>>> 9ec0df21db46808944c299f096f1c9fdd15e3092
 )
 
-# db_connector = connect(user="root", ?, host="localhost")
 if not db_connector.is_connected():
 	raise Exception("Database connection failed")
 
