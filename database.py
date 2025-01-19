@@ -102,14 +102,10 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS `faculties` (
 			   `phone` CHAR(10) NOT NULL,
 			   `campus_id` TINYINT UNSIGNED NOT NULL,
 			   `department` VARCHAR(40) NOT NULL, -- desig, salary separate
-			   `tutoring_section_id` MEDIUMINT UNSIGNED DEFAULT NULL,
-			   `is_mentor` BOOLEAN DEFAULT FALSE,
 			   PRIMARY KEY(`id`),
 			   FOREIGN KEY(`campus_id`) REFERENCES `campuses`(`id`)
 			   ON UPDATE CASCADE ON DELETE RESTRICT,
 			   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
-			   ON UPDATE CASCADE ON DELETE RESTRICT,
-			   FOREIGN KEY(`tutoring_section_id`) REFERENCES `sections`(`id`)
 			   ON UPDATE CASCADE ON DELETE RESTRICT,
 			   CHECK(`phone` REGEXP "^[6789][0-9]{9}$")
 )""")

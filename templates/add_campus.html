@@ -5,7 +5,7 @@
 {% block head %}
 	<style>
 		@media (width >= 490px) {
-			#blocks {
+			#schools {
 				margin-left: 15px;
 			}
 			button[type='submit'] {
@@ -20,18 +20,18 @@
 		<label for="campus">Campus Name </label>
 		<input type="text" name="campus" id="campus" maxlength="40" autofocus autocomplete="off" required>
 		<br>
-		<label for="blocks">No. of blocks </label>
-		<input type="number" name="no_of_blocks" id="blocks" min="1" max="255" autocomplete="off" required>
-		<br>
+		<label for="schools">No. of schools </label>
+		<input type="number" name="no_of_schools" id="schools" min="1" max="255" autocomplete="off" required>
+		<br>block
 		<button type="submit">Save</button>
 	</form>
 	<script>
 		function style_btn() {
 			if (window.innerWidth < 490) {
-				document.querySelector("label[for='blocks']").innerHTML = "No. of blocks<br>";
+				document.querySelector("label[for='schools']").innerHTML = "No. of schools<br>";
 			}
 			else {
-				document.querySelector("label[for='blocks']").innerHTML = "No. of blocks ";
+				document.querySelector("label[for='schools']").innerHTML = "No. of schools ";
 			}
 		}
 		window.onload = style_btn

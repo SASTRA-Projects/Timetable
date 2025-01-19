@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}{{ campus }} Campus Blocks{% endblock %}
+{% block title %}{{ campus }} Campus Schools{% endblock %}
 
 {% block head %}
 	<style>
@@ -33,13 +33,13 @@
 
 {% block content %}
 	<h1>Campus {{ campus }}</h1>
-	<form action="\add\SRC\blocks" method="post">
-		{% for i in range(1, no_of_blocks + 1) %}
-			<label for="block{{ i }}">Name of Block-{{ i }} </label>
+	<form action="\add\SRC\schools" method="post">
+		{% for i in range(1, no_of_schools + 1) %}
+			<label for="school{{ i }}">Name of School-{{ i }} </label>
 			<div class="spacer"></div>
-			<input type="text" id="block{{ i }}" autofocus autocomplete="off" required/>
+			<input type="text" id="school{{ i }}" autofocus autocomplete="off" required/>
 			<br>
-			<label for="rooms{{ i }}">Number of Rooms in Block-{{ i }} </label>
+			<label for="rooms{{ i }}">Number of Rooms in school-{{ i }} </label>
 			<div class="spacer"></div>
 			<input type="number" id="rooms{{ i }}" min="1" max="65535" autocomplete="off" required/>
 			<br> <br>

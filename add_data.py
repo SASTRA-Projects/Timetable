@@ -8,7 +8,13 @@ def add_campus(campus):
 				   VALUES (%s)""", (campus,))
 	db_connector.commit()
 
-def add_block(block, campus_id):
-	cursor.execute("""INSERT INTO `blocks` (`name`, `campus_id`)
-				   VALUES (%s, %s)""", (block, campus_id))
+def add_school(campus_id, school):
+	cursor.execute("""INSERT INTO `schools` (`campus_id`, `name`)
+				   VALUES (%s, %s)""", (campus_id, school))
+	db_connector.commit()
+
+
+def add_building(school_id, no_of_rooms):
+	cursor.execute("""INSERT INTO `buildings` (`school_id`, `no_of_rooms`)
+				   VALUES (%s, %s)""", (school_id, no_of_rooms))
 	db_connector.commit()
