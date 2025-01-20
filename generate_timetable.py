@@ -67,7 +67,7 @@ Algorithm generate_timetable(section, *minor_elective_hrs: list[tuple[int,int]])
 				LPT[1] -= 2
 
 	for lab, cls, capacity, f_id, *LPT in labs:
-		total_hrs = sum(LPT)
+		total_hrs = LPT[0]+LPT[2]
 		while total_hrs:
 			allocated_hr = random.choice(available_hrs) # day, period
 			while faculty_has_cls(f_id, *allocated_hr) # faculty has some class or attends 5 cls in day
