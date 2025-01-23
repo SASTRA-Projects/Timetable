@@ -1,6 +1,6 @@
 # SASTRA Timetable Generation
 
-#### - Automates Timetable Genration
+#### Automates Timetable Genration
 
 ## Tools & Technologies Used
 
