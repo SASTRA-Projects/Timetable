@@ -19,8 +19,8 @@ Such complex and mundane tasks should be automated; focusing on the main tasks, 
 In short, this project aims at automating timetable generation using the data stored in the database, with no conflict of classes (which was never a problem).
 
 ## License
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) for details.
-
+Additional attribution details can be found in the [NOTICE](NOTICE) file.
 
 Happy Coding 🚀!
