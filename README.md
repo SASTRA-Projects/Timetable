@@ -20,7 +20,7 @@ In short, this project aims at automating timetable generation using the data st
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) for details.{}
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) for details.
 
 
 Happy Coding 🚀!
