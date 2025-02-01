@@ -7,11 +7,10 @@ def show_campuses():
 def get_campus_id(campus):
 	cursor.execute("""SELECT `id` FROM `campuses`
 				   WHERE `name`=%s)""", (campus,))
-	campus_id = cursor.fetchone()
-	return campus_id
+	return cursor.fetchone()
 
-def show_buildings(campus_id):
-	cursor.execute("""SELECT * FROM `buildings`
+def show_schools(campus_id):
+	cursor.execute("""SELECT * FROM `schools`
 				   WHERE `campus_id`=%s""", (campus_id,))
 	return cursor.fetchall()
 
