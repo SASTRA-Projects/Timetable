@@ -23,4 +23,8 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 
 Additional attribution details can be found in the [NOTICE](NOTICE) file.
 
+## Code of Conduct
+
+Please adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) when contributing to this project.
+
 Happy Coding 🚀!
