@@ -5,7 +5,7 @@
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>{% block title %}{% endblock %}</title>
-		<!--link rel="stylesheet" type="text/css" href="style.css"-->
+		<!--link rel="stylesheet" type="text/css" href="../static/styles.css"-->
 		<style>
 			body {
 				font-family: Arial, Helvetica, sans-serif;
@@ -45,21 +45,21 @@
 				list-style-type: none;
 				text-decoration: none;
 			}
-			#content {
+			.content {
 				padding: 20px;
 			}
-			#content > form > label {
+			.content > form > label {
 				font-size: large;
 				width: 170px;
 			}
-			#content > form > input {
+			.content > form > input {
 				margin-bottom: 15px;
 				font-size: large;
 				height: 25px;
 				width: 300px;
 				border-radius: 15px;
 			}
-			#content > form > button {
+			.content > form > button {
 				font-size: large;
 				height: 30px;
 				width: 300px;
@@ -68,7 +68,7 @@
 				background-color: rgba(28, 28, 235, 0.85);
 				color: white;
 			}
-			#content > form > button:hover {
+			.content > form > button:hover {
 				background-color: rgba(28, 28, 235, 1);
 			}
 			.nobulletins {
@@ -95,7 +95,7 @@
 		</div>
 		<footer>
 			<hr>
-			<div id="contact" style="font-size: 1	em; font-weight: bold;">
+			<div class="contact" style="font-size: 1rem; font-weight: bold;">
 				<p>For any queries, contact us at:</p>
 				<p>Email: consult@sastra.edu</p>
 			</div>
