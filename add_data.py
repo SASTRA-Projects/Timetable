@@ -1,4 +1,5 @@
 from mysql_connector import db_connector, cursor, close
+import timetable
 
 def add_campus(campus):
 	if len(campus) > 40:
