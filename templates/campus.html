@@ -8,10 +8,10 @@
 	{% else %}
 		<p style="margin: auto; text-align: center; font-size: 3em">Campuses</p>
 		<ul class="nobulletins">
-			{% for id, campus in campuses %}
+			{% for campus in campuses %}
 				<hr>
 				<li style="text-align: center; font-size: 3em">
-					<a href="/{{ function }}/{{ campus }}" class="nounderline">{{ campus }}</a>
+					<a href="/{{ function }}/{{ campus['name'] }}" class="nounderline">{{ campus["name"] }}</a>
 				</li>
 			{% endfor %}
 		</ul>

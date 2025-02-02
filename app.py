@@ -16,7 +16,7 @@ def about():
 	return render_template("about.html")
 
 @app.route("/add/campus")
-def add_campus(): 
+def add_campus():
 	return render_template("add_campus.html")
 
 @app.route("/add/<string:campus>", methods=["POST"])
@@ -44,17 +44,18 @@ def add_schools(campus):
 
 @app.route("/add/<string:campus>/<int:no_of_schools>", methods=["POST"])
 def add_buildings(campus, no_of_schools):
-	campus = campus.strip().upper()
-	schools = [f"school {i}" for i in range(1, no_of_schools+1)]
-	buildings = request.form.getlist("buildings")
+	pass
+# 	campus = campus.strip().upper()
+# 	schools = [f"school {i}" for i in range(1, no_of_schools+1)]
+# 	buildings = request.form.getlist("buildings")
 
-	if not buildings:
-		raise Exception("Required Field: buildings")
+# 	if not buildings:
+# 		raise Exception("Required Field: buildings")
 
-	for school in schools:
-		for cls in buildings:
-			add_data.add_class(show_data.get_campus_id(campus), school)
-	return render_template("add_buildings.html", campus=campus, schools=schools)
+# 	for school in schools:
+# 		for cls in buildings:
+# 			add_data.add_class(show_data.get_campus_id(campus), school)
+# 	return render_template("add_buildings.html", campus=campus, schools=schools)
 
 @app.route("/show/campus")
 def show_campuses():
@@ -62,7 +63,7 @@ def show_campuses():
 
 @app.route("/show/<string:campus>")
 def show_schools(campus):
-	return f"{campus}!"
+	return f"{campus}"
 
 @app.route("/delete/campus")
 def delete_campus_page():
@@ -74,4 +75,4 @@ def delete_campus(campus):
 	return render_template("campus.html", function="delete", campuses=show_data.show_campuses())
 
 if __name__ == "__main__":
-	app.run(debug=False)
+	app.run(debug=True)

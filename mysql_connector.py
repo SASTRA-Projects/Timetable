@@ -1,15 +1,21 @@
-from mysql.connector import connect, errors
+import pymysql
 from dotenv import load_dotenv
 from os import getenv
 
 load_dotenv()
 
-db_connector = connect(
-	user="root", password=getenv("SASTRA_PWD"), host="localhost"
+timeout = 20
+db_connector = pymysql.connect(
+  charset=getenv("CHARSET"),
+  connect_timeout=timeout,
+  cursorclass=pymysql.cursors.DictCursor,
+  host=getenv("HOST"),
+  password=getenv("PWD"),
+  read_timeout=timeout,
+  port=17216,
+  user=getenv("USER"),
+  write_timeout=timeout,
 )
-
-if not db_connector.is_connected():
-	raise Exception("Database connection failed")
 
 cursor = db_connector.cursor()
 db_connector.autocommit = False

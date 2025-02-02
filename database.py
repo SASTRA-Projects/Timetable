@@ -1,4 +1,4 @@
-from mysql_connector import db_connector, cursor, close, errors
+from mysql_connector import cursor, close
 
 cursor.execute("""CREATE TABLE IF NOT EXISTS `campuses` (
 			   `id` TINYINT UNSIGNED AUTO_INCREMENT, -- max=255
@@ -87,7 +87,7 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS `sections` (
 			   `id` MEDIUMINT UNSIGNED AUTO_INCREMENT,
 			   `campus_id` TINYINT UNSIGNED NOT NULL,
 			   `degree` VARCHAR(40) NOT NULL,
-			   `stream` VARCHAR(40) DEFAULT "Combined",
+			   `stream` VARCHAR(40),
 			   `section` VARCHAR(2) NOT NULL,
 			   `year` TINYINT UNSIGNED, -- check 0 < `year` <= `degree`.`duration`
 			   PRIMARY KEY(`id`),
@@ -107,7 +107,7 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS `faculties` (
 			   ON UPDATE CASCADE ON DELETE RESTRICT,
 			   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
 			   ON UPDATE CASCADE ON DELETE RESTRICT,
-			   CHECK(`phone` REGEXP "^[6789][0-9]{9}$")
+			   CHECK(`phone` REGEXP '^[6789][0-9]{9}$')
 )""")
 cursor.execute("""CREATE TABLE IF NOT EXISTS `students` ( -- grades & attendance separate
 			   `id` INT UNSIGNED AUTO_INCREMENT, -- e.g., max=4,294,967,296
@@ -126,7 +126,7 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS `students` ( -- grades & attendance
 			   FOREIGN KEY(`mentor_id`) REFERENCES `faculties`(`id`)
 			   ON UPDATE CASCADE ON DELETE RESTRICT,
 			   UNIQUE(`campus_id`, `join_year`, `programme_id`, `roll_no`),
-			   CHECK(`phone` REGEXP "^[6-9][0-9]{9}$")
+			   CHECK(`phone` REGEXP '^[6-9][0-9]{9}$')
 )""")
 
 if __name__ == "__main__":

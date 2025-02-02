@@ -8,11 +8,11 @@ database.cursor.execute("""CREATE TABLE IF NOT EXISTS `periods` (
 						PRIMARY KEY(`id`)
 )""")
 database.cursor.execute("""CREATE TABLE IF NOT EXISTS `days` (
-						`day` ENUM("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday") NOT NULL,
+						`day` ENUM('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday') NOT NULL,
 						PRIMARY KEY(`day`)
 )""")
 database.cursor.execute("""CREATE TABLE IF NOT EXISTS `timetables` (
-						`day` ENUM("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday") NOT NULL,
+						`day` ENUM('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday') NOT NULL,
 						`period_id` TINYINT UNSIGNED NOT NULL,
 						`faculty_teaches_section_id` INT UNSIGNED NOT NULL,
 						`class_id` SMALLINT UNSIGNED NOT NULL,
