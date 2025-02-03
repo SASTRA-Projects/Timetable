@@ -1,0 +1,18 @@
+name: Database Access
+
+on: [push]  # Runs on every push (modify as needed)
+
+jobs:
+  db-connect:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Use Secret Password
+        run: echo "Using DB password securely"
+        env:
+          HOST: ${{ secrets.HOST }}
+          PWD: ${{ secrets.PWD }}
+          USER: ${{ secrets.USER }}
