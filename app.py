@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, url_for, redirect
+from flask import Flask, render_template, request, url_for, redirect, escape
 
 import add_data
 import show_data
@@ -63,7 +63,7 @@ def show_campuses():
 
 @app.route("/show/<string:campus>")
 def show_schools(campus):
-	return f"{campus}"
+	return f"{escape(campus)}"
 
 @app.route("/delete/campus")
 def delete_campus_page():
