@@ -8,6 +8,11 @@ import mysql_connector as sql
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
+@app.before_request
+def check_login():
+	if not session.get("logged_in") and request.endpoint != "login" and request.endpoint != "authenticate":
+		return redirect(url_for("login"))
+
 @app.route("/login")
 def login():
 	if session.get("logged_in"):
@@ -18,21 +23,25 @@ def login():
 def authenticate():
 	if request.form.get("user") and request.form.get("password"):
 		try:
-			sql.connect(request.form["user"], request.form["password"])
-	
+			while True:
+				try:
+					sql.connect(request.form["user"], request.form["password"])
+					break
+				except sql.pymysql.err.OperationalError:
+					return render_template("login.html", error_message="Invalid username or password")
+				except Exception:
+					return render_template("failed.html", reason="Unknown error occurred")
 			import timetable
 			timetable.create_timetable(sql.db_connector, sql.cursor)
 			session["logged_in"] = True
 			return redirect(url_for("index"))
-		except Exception as e:
-			return str(e)
-	return "Error!"
+		except Exception:
+			return render_template("failed.html", reason="Unknown error occurred")
+	return render_template("failed.html", reason="Login information not entered properly!")
 
 @app.route("/")
 @app.route("/home")
 def index():
-	if not session.get("logged_in"):
-		return redirect(url_for("login"))
 	return render_template("index.html")
 
 @app.route("/about")

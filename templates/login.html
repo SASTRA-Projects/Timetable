@@ -1,16 +1,23 @@
 {% extends "layout.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Login{% endblock %}
 
 {% block content %}
 	<h1>Login</h1>
     <form action="/authenticate" method="post">
         <label for="user">User </label>
-        <input type="text" name="user" id="user" maxlength="40" autofocus autocomplete="off" required>
+        <input type="text" name="user" id="user" style="margin-left: 40px;" maxlength="40" autofocus autocomplete="off" required>
         <br>
         <label for="password">Password </label>
         <input type="password" name="password" id="password" autocomplete="off" required>
         <br>
-        <button type="submit">Login</button>
+        <button type="submit" style="margin-top: 24px;">Login</button>
+
+        {% if error_message %}
+            <div class="error message" style="text-align: center;">{{ error_message }}</div>
+        {% endif %}
     </form>
+    <script>
+        
+    </script>
 {% endblock %}
