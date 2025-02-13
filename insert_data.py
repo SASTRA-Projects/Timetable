@@ -1,11 +1,10 @@
-from timetable import database
-
-def insert_timetable(day, period_id, faculty_teaches_class_id):
+def insert_timetable(db_connector, cursor, day, period_id, faculty_teaches_class_id):
 	try:
-		database.cursor.execute("""INSERT INTO `timetables`
+		cursor.execute("""INSERT INTO `timetables`
 					   			VALUES(%s, %s, %s)""", day, period_id, faculty_teaches_class_id)
+		db_connector.commit()
 		return True
-	except database.errors.Error as error:
-		database.db_connector.rollback()
+	except Exception as error:
+		db_connector.rollback()
 		print(error)
 		return False

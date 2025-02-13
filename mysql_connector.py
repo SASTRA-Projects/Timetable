@@ -1,27 +1,29 @@
 import pymysql
-from dotenv import load_dotenv
-from os import getenv
 
-load_dotenv()
+timeout = 10
 
-timeout = 20
-db_connector = pymysql.connect(
-  charset=getenv("CHARSET"),
-  connect_timeout=timeout,
-  cursorclass=pymysql.cursors.DictCursor,
-  host=getenv("HOST"),
-  password=getenv("PWD"),
-  read_timeout=timeout,
-  port=17216,
-  user=getenv("USER"),
-  write_timeout=timeout,
-)
+db_connector = None
+cursor = None
 
-cursor = db_connector.cursor()
-db_connector.autocommit = False
+def connect(user, __pwd, host="mysql-93e938b-harikrishnasri3.f.aivencloud.com"):
+  global db_connector, cursor
+  db_connector = pymysql.connect(
+    charset="utf8mb4",
+    connect_timeout=timeout,
+    cursorclass=pymysql.cursors.DictCursor,
+    host=host,
+    password=__pwd,
+    read_timeout=timeout,
+    port=17216,
+    user=user,
+    write_timeout=timeout,
+  )
 
-cursor.execute("""CREATE DATABASE IF NOT EXISTS `SASTRA`""")
-cursor.execute("""USE `SASTRA`""")
+  cursor = db_connector.cursor()
+  db_connector.autocommit = False
+
+  cursor.execute("""CREATE DATABASE IF NOT EXISTS `SASTRA`""")
+  cursor.execute("""USE `SASTRA`""")
 
 def close():
 	db_connector.commit()

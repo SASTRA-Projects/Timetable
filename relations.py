@@ -1,6 +1,8 @@
-import database
+def create_relations(db_connector, cursor):
+	import database
+	database.create_database(db_connector, cursor)
 
-database.cursor.execute("""CREATE TABLE IF NOT EXISTS `section_classes` (
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `section_classes` (
 						`id` SMALLINT UNSIGNED AUTO_INCREMENT,
 						`section_id` MEDIUMINT UNSIGNED NOT NULL,
 						`class_id` SMALLINT UNSIGNED NOT NULL, -- class is not lab
@@ -10,8 +12,8 @@ database.cursor.execute("""CREATE TABLE IF NOT EXISTS `section_classes` (
 						FOREIGN KEY(`class_id`) REFERENCES `classes`(`id`) 
 						ON UPDATE CASCADE ON DELETE RESTRICT,
 						UNIQUE(`section_id`, `class_id`)
-)""")
-database.cursor.execute("""CREATE TABLE IF NOT EXISTS `section_lab_classes` (
+	)""")
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `section_lab_classes` (
 						`id` SMALLINT UNSIGNED AUTO_INCREMENT,
 						`section_id` MEDIUMINT UNSIGNED NOT NULL,
 						`class_id` SMALLINT UNSIGNED NOT NULL, -- class is lab
@@ -21,8 +23,8 @@ database.cursor.execute("""CREATE TABLE IF NOT EXISTS `section_lab_classes` (
 						FOREIGN KEY(`class_id`) REFERENCES `classes`(`id`) 
 						ON UPDATE CASCADE ON DELETE RESTRICT,
 						UNIQUE(`section_id`, `class_id`)
-)""")
-database.cursor.execute("""CREATE TABLE IF NOT EXISTS `student_sections` ( -- check section class capacity
+	)""")
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `student_sections` ( -- check section class capacity
 						`student_id` INT UNSIGNED NOT NULL,
 						`section_class_id` SMALLINT UNSIGNED NOT NULL,
 						PRIMARY KEY(`student_id`, `section_class_id`),
@@ -31,8 +33,8 @@ database.cursor.execute("""CREATE TABLE IF NOT EXISTS `student_sections` ( -- ch
 						FOREIGN KEY(`section_class_id`) REFERENCES `section_classes`(`id`)
 						ON UPDATE CASCADE ON DELETE RESTRICT,
 						UNIQUE(`student_id`)
-)""")
-database.cursor.execute("""CREATE TABLE IF NOT EXISTS `section_courses` (
+	)""")
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `section_courses` (
 						`id` INT UNSIGNED AUTO_INCREMENT,
 						`section_id` MEDIUMINT UNSIGNED NOT NULL,
 						`course_code` VARCHAR(10) NOT NULL,
@@ -42,8 +44,8 @@ database.cursor.execute("""CREATE TABLE IF NOT EXISTS `section_courses` (
 						FOREIGN KEY(`course_code`) REFERENCES `courses`(`code`) 
 						ON UPDATE CASCADE ON DELETE RESTRICT,
 						UNIQUE(`section_id`, `course_code`)
-)""")
-database.cursor.execute("""CREATE TABLE IF NOT EXISTS `faculty_teaches_section` (
+	)""")
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `faculty_teaches_section` (
 						`id` INT UNSIGNED AUTO_INCREMENT,
 						`faculty_id` MEDIUMINT UNSIGNED NOT NULL,
 						`section_course_id` INT UNSIGNED NOT NULL,
@@ -52,8 +54,8 @@ database.cursor.execute("""CREATE TABLE IF NOT EXISTS `faculty_teaches_section` 
 						ON UPDATE CASCADE ON DELETE RESTRICT,
 						FOREIGN KEY(`section_course_id`) REFERENCES `section_courses`(`id`)
 						ON UPDATE CASCADE ON DELETE RESTRICT
-)""")
-database.cursor.execute("""CREATE TABLE IF NOT EXISTS `student_attends_class` (
+	)""")
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `student_attends_class` (
 						`student_id` INT UNSIGNED NOT NULL, -- check student in this section has,
 						`course_code` VARCHAR(10) NOT NULL, -- this course?
 						PRIMARY KEY(`student_id`, `course_code`),
@@ -61,7 +63,5 @@ database.cursor.execute("""CREATE TABLE IF NOT EXISTS `student_attends_class` (
 						ON UPDATE CASCADE ON DELETE RESTRICT,
 						FOREIGN KEY(`course_code`) REFERENCES `courses`(`code`)
 						ON UPDATE CASCADE ON DELETE RESTRICT
-)""")
-
-if __name__ == "__main__":
-	database.close()
+	)""")
+	db_connector.commit()
