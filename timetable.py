@@ -1,31 +1,31 @@
-from relations import database
+def create_timetable(db_connector, cursor):
+	import relations
+	relations.create_relations(db_connector, cursor)
 
-database.cursor.execute("""CREATE TABLE IF NOT EXISTS `periods` (
-						`id` TINYINT UNSIGNED AUTO_INCREMENT,
-						`is_break` BOOLEAN NOT NULL,
-						`start_time` TIME NOT NULL,
-						`end_time` TIME NOT NULL,
-						PRIMARY KEY(`id`)
-)""")
-database.cursor.execute("""CREATE TABLE IF NOT EXISTS `days` (
-						`day` ENUM('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday') NOT NULL,
-						PRIMARY KEY(`day`)
-)""")
-database.cursor.execute("""CREATE TABLE IF NOT EXISTS `timetables` (
-						`day` ENUM('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday') NOT NULL,
-						`period_id` TINYINT UNSIGNED NOT NULL,
-						`faculty_teaches_section_id` INT UNSIGNED NOT NULL,
-						`class_id` SMALLINT UNSIGNED NOT NULL,
-						PRIMARY KEY(`day`, `period_id`, `faculty_teaches_section_id`),
-						FOREIGN KEY(`day`) REFERENCES `days`(`day`)
-						ON UPDATE RESTRICT ON DELETE CASCADE,
-						FOREIGN KEY(`faculty_teaches_section_id`) REFERENCES `faculty_teaches_section`(`id`)
-						ON UPDATE CASCADE ON DELETE RESTRICT,
-						FOREIGN KEY(`period_id`) REFERENCES `periods`(`id`)
-						ON UPDATE CASCADE ON DELETE RESTRICT,
-						FOREIGN KEY(`class_id`) REFERENCES `classes`(`id`)
-						ON UPDATE CASCADE ON DELETE RESTRICT
-)""")
-
-if __name__ == "__main__":
-	database.close()
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `periods` (
+							`id` TINYINT UNSIGNED AUTO_INCREMENT,
+							`is_break` BOOLEAN NOT NULL,
+							`start_time` TIME NOT NULL,
+							`end_time` TIME NOT NULL,
+							PRIMARY KEY(`id`)
+	)""")
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `days` (
+							`day` ENUM('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday') NOT NULL,
+							PRIMARY KEY(`day`)
+	)""")
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `timetables` (
+							`day` ENUM('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday') NOT NULL,
+							`period_id` TINYINT UNSIGNED NOT NULL,
+							`faculty_teaches_section_id` INT UNSIGNED NOT NULL,
+							`class_id` SMALLINT UNSIGNED NOT NULL,
+							PRIMARY KEY(`day`, `period_id`, `faculty_teaches_section_id`),
+							FOREIGN KEY(`day`) REFERENCES `days`(`day`)
+							ON UPDATE RESTRICT ON DELETE CASCADE,
+							FOREIGN KEY(`faculty_teaches_section_id`) REFERENCES `faculty_teaches_section`(`id`)
+							ON UPDATE CASCADE ON DELETE RESTRICT,
+							FOREIGN KEY(`period_id`) REFERENCES `periods`(`id`)
+							ON UPDATE CASCADE ON DELETE RESTRICT,
+							FOREIGN KEY(`class_id`) REFERENCES `classes`(`id`)
+							ON UPDATE CASCADE ON DELETE RESTRICT
+	)""")
+	db_connector.commit()
