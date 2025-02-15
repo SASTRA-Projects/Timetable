@@ -3,13 +3,18 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-	<h1>Login</h1>
-    <form action="/authenticate" method="post">
-        <label for="user">User </label>
-        <input type="text" name="user" id="user" style="margin-left: 40px;" maxlength="40" autofocus autocomplete="off" required>
+	{% if role %}
+        <h1>{{ role.title() }} Login</h1>
+    {% else %}
+        <h1>Login</h1>
+    {% endif %}
+    <form action={{ auth }} method="post">
+        <label for="user">{{ user }} </label>
+        <input type="text" name="user" id="user" style="margin-left: 42px;" maxlength="40" autofocus autocomplete="off" required>
         <br>
         <label for="password">Password </label>
         <input type="password" name="password" id="password" autocomplete="off" required>
+        <input type="hidden" name={{ role }} value="1"/>
         <br>
         <button type="submit" style="margin-top: 24px;">Login</button>
 
@@ -18,6 +23,11 @@
         {% endif %}
     </form>
     <script>
-        
+        window.onload = function () {
+            if (window.history && window.history.pushState) {
+                window.history.pushState("forward", null, "./");
+                window.history.forward(1);
+            }
+        }
     </script>
 {% endblock %}
