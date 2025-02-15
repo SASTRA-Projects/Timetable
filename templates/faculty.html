@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+    <div>
+        <h3>Name: </h3>
+        <p>{{ faculty["name"] }}</p>
+
+        <h3>Phone Number: </h3>
+        <p>{{ faculty["phone"] }}</p>
+
+        <h3>Campus: </h3>
+        <p>{{ campus }}</p>
+
+        <h3>Department: </h3>
+        <p>{{ faculty["department"] }}</p>
+
+        <h3>Date of join: </h3>
+        <p>{{ faculty["join_year"] }}</p>
+
+        <h3>Salary: </h3>
+        <p>{{ faculty["salary"] }}</p>
+    </div>
+{% endblock %}

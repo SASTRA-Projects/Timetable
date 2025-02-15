@@ -99,8 +99,9 @@ def create_database(db_connector, cursor):
 				`id` MEDIUMINT UNSIGNED AUTO_INCREMENT,
 				`name` VARCHAR(40) NOT NULL,
 				`phone` CHAR(10) NOT NULL,
+				`join_year` SMALLINT UNSIGNED NOT NULL, -- trigger to ensure join_year <= current_year
 				`campus_id` TINYINT UNSIGNED NOT NULL,
-				`department` VARCHAR(40) NOT NULL, -- desig, salary separate
+				`department` VARCHAR(40) NOT NULL, -- desig, salary separate, check dept in campus
 				PRIMARY KEY(`id`),
 				FOREIGN KEY(`campus_id`) REFERENCES `campuses`(`id`)
 				ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -111,7 +112,7 @@ def create_database(db_connector, cursor):
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `students` ( -- grades & attendance separate
 				`id` INT UNSIGNED AUTO_INCREMENT, -- e.g., max=4,294,967,296
 				`campus_id` TINYINT UNSIGNED NOT NULL,
-				`join_year` TINYINT UNSIGNED NOT NULL, -- trigger to ensure join_year <= current_year
+				`join_year` SMALLINT UNSIGNED NOT NULL, -- trigger to ensure join_year <= current_year
 				`programme_id` MEDIUMINT UNSIGNED NOT NULL,
 				`roll_no` SMALLINT UNSIGNED NOT NULL, -- trigger to auto_increment
 				`name` VARCHAR(40) NOT NULL,
