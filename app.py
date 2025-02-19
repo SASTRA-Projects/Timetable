@@ -16,7 +16,13 @@ def check_login():
 @app.route("/login")
 def login():
 	if session.get("logged_in"):
-		return redirect(request.referrer or url_for("index"))
+		referrer = request.referrer
+		if referrer:
+			from urllib.parse import urlparse
+			parsed_url = urlparse(referrer)
+			if parsed_url.netloc == request.host:
+				return redirect(referrer)
+		return redirect(url_for("index"))
 	return render_template("login.html", user="User", auth="/authenticate")
 
 @app.route("/authenticate", methods=["POST"])
