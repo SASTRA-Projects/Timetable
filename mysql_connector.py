@@ -1,6 +1,6 @@
 import pymysql
 
-timeout = 10
+timeout = 300
 
 db_connector = None
 cursor = None

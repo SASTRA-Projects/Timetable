@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, url_for, redirect, session
 import secrets
-import add_data
 import insert_data
 import show_data
 import delete_data
@@ -42,7 +41,9 @@ def authenticate():
 
 @app.route("/show/faculty")
 def log_faculty():
-	return render_template("login.html", user="ID", auth="/auth_faculty", role="faculty")
+	if not session.get("faculty") or not session.get("faculty_details"):
+		return render_template("login.html", user="ID", auth="/auth_faculty", role="faculty")
+	return redirect(url_for("faculty_details"))
 
 @app.route("/auth_faculty", methods=["POST"])
 def auth_faculty():
@@ -92,21 +93,6 @@ def add_schools(campus):
 	
 	add_data.add_campus(sql.db_connector, sql.cursor, campus)
 	return render_template("add_schools.html", campus=campus, no_of_schools=no_of_schools)
-
-@app.route("/add/<string:campus>/<int:no_of_schools>", methods=["POST"])
-def add_buildings(campus, no_of_schools):
-	pass
-# 	campus = campus.strip().upper()
-# 	schools = [f"school {i}" for i in range(1, no_of_schools+1)]
-# 	buildings = request.form.getlist("buildings")
-
-# 	if not buildings:
-# 		raise Exception("Required Field: buildings")
-
-# 	for school in schools:
-# 		for cls in buildings:
-# 			add_data.add_class(sql.db_connector, sql.cursor, show_data.get_campus_id(sql.cursor, campus), school)
-# 	return render_template("add_buildings.html", campus=campus, schools=schools)
 
 @app.route("/show/campus")
 def show_campuses():
