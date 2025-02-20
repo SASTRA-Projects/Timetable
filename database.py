@@ -88,7 +88,7 @@ def create_database(db_connector, cursor):
 				`degree` VARCHAR(40) NOT NULL,
 				`stream` VARCHAR(40),
 				`section` VARCHAR(2) NOT NULL,
-				`year` TINYINT UNSIGNED NOT NLL, -- check 0 < `year` <= `degree`.`duration`
+				`year` TINYINT UNSIGNED NOT NULL, -- check 0 < `year` <= `degree`.`duration`
 				PRIMARY KEY(`id`),
 				FOREIGN KEY(`degree`) REFERENCES `degrees`(`name`)
 				ON UPDATE CASCADE ON DELETE RESTRICT,
