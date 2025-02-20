@@ -73,10 +73,6 @@ def index():
 def about():
 	return render_template("about.html")
 
-@app.route("/add/campus")
-def add_campus():
-	return render_template("add_campus.html")
-
 @app.route("/add/<string:campus>", methods=["POST"])
 def add_schools(campus):
 	campus = request.form.get("campus")
@@ -117,10 +113,6 @@ def delete_campus(campus):
 	delete_data.delete_campus(sql.db_connector, sql.cursor, campus.strip().upper())
 	return render_template("campus.html", function="delete", campuses=show_data.show_campuses(sql.cursor))
 
-@app.route("/add/faculty")
-def add_faculty():
-	pass
-
 @app.route("/show/faculty/details")
 def faculty_details():
 	if not session["faculty"] or not session["faculty_details"]:
@@ -129,4 +121,4 @@ def faculty_details():
 	return render_template("faculty.html", faculty=faculty, campus=show_data.get_campus_name(sql.cursor, faculty["campus_id"]))
 
 if __name__ == "__main__":
-	app.run(debug=True)
+	app.run(host="0.0.0.0", port=5000, debug=True)

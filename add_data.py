@@ -1,6 +1,6 @@
 def add_campus(db_connector, cursor, campus):
 	if len(campus) > 40:
-		raise Exception("Limits Error: Length exceeded!")
+		raise ValueError("Limit Error: Length exceeded!\nAllowed length is 40 bytes.")
 
 	cursor.execute("""INSERT INTO `campuses` (`name`)
 				   VALUES (%s)""", (campus,))

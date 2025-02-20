@@ -29,7 +29,7 @@ def create_database(db_connector, cursor):
 				`name` VARCHAR(40),
 				`duration` TINYINT UNSIGNED NOT NULL, -- in yrs <= 10
 				PRIMARY KEY(`name`),
-				CHECK(`duration` <= 10 AND `duration` <> 0)
+				CHECK(`duration` <= 10 AND `duration` >= 1)
 	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `streams` ( -- e.g., CSE with AI
 				`name` VARCHAR(40),
@@ -88,7 +88,7 @@ def create_database(db_connector, cursor):
 				`degree` VARCHAR(40) NOT NULL,
 				`stream` VARCHAR(40),
 				`section` VARCHAR(2) NOT NULL,
-				`year` TINYINT UNSIGNED, -- check 0 < `year` <= `degree`.`duration`
+				`year` TINYINT UNSIGNED NOT NLL, -- check 0 < `year` <= `degree`.`duration`
 				PRIMARY KEY(`id`),
 				FOREIGN KEY(`degree`) REFERENCES `degrees`(`name`)
 				ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -116,14 +116,11 @@ def create_database(db_connector, cursor):
 				`programme_id` MEDIUMINT UNSIGNED NOT NULL,
 				`roll_no` SMALLINT UNSIGNED NOT NULL, -- trigger to auto_increment
 				`name` VARCHAR(40) NOT NULL,
-				`mentor_id` MEDIUMINT UNSIGNED DEFAULT NULL,
 				`phone` CHAR(10) NOT NULL,
 				PRIMARY KEY(`id`),
 				FOREIGN KEY(`campus_id`) REFERENCES `campuses`(`id`)
 				ON UPDATE CASCADE ON DELETE RESTRICT,
 				FOREIGN KEY(`programme_id`) REFERENCES `programmes`(`id`)
-				ON UPDATE CASCADE ON DELETE RESTRICT,
-				FOREIGN KEY(`mentor_id`) REFERENCES `faculties`(`id`)
 				ON UPDATE CASCADE ON DELETE RESTRICT,
 				UNIQUE(`campus_id`, `join_year`, `programme_id`, `roll_no`),
 				CHECK(`phone` REGEXP '^[6-9][0-9]{9}$')
