@@ -38,8 +38,24 @@
 		window.onresize = style_btn
 		const form = document.querySelector("form");
 		const campus = document.querySelector("input[name='campus']");
+		function escapeHtml(unsafe) {
+			return unsafe.replace(/[&<"']/g, function (m) {
+				switch (m) {
+					case '&':
+						return '&amp;';
+					case '<':
+						return '&lt;';
+					case '>':
+						return '&gt;';
+					case '"':
+						return '&quot;';
+					case "'":
+						return '&#039;';
+				}
+			});
+		}
 		form.onsubmit = () => {
-			form.action = `/add/${campus.value}`;
+			form.action = `/add/${escapeHtml(campus.value)}`;
 		};
 	</script>
 {% endblock %}
