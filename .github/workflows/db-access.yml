@@ -1,6 +1,10 @@
-name: Database Access
+name: "DB Connection Test"
 
-on: [push]  # Runs on every push (modify as needed)
+on:  
+  push:  
+    branches: [ "main" ]  
+  pull_request:  
+    branches: [ "main" ]  
 
 jobs:
   db-connect:
@@ -10,9 +14,44 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Use Secret Password
-        run: echo "Using DB password securely"
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pymysql cryptography
+
+      - name: Wait for MySQL to be ready
+        run: |
+          echo "Waiting for MySQL to be ready..."
+          for i in {1..10}; do
+            if mysqladmin ping -h"127.0.0.1" --silent; then
+              echo "MySQL is ready!"
+              exit 0
+            fi
+            echo "Retrying in 3 seconds..."
+            sleep 3
+          done
+          echo "MySQL failed to start in time."
+          exit 1
+
+      - name: Test Database Connection
         env:
-          HOST: ${{ secrets.HOST }}
-          PWD: ${{ secrets.PWD }}
-          USER: ${{ secrets.USER }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          python -c "
+          import mysql_connector as sql
+          try:
+              sql.connect(user='${{ secrets.DB_USER }}', password='${{ secrets.DB_PASSWORD }}')
+              print('✅ Database connection successful!')
+          except Exception as e:
+              print(f'❌ Database connection failed: {e}')
+              exit(1)
+          finally:
+              if sql.db_connector:
+                  sql.close()
+          "
