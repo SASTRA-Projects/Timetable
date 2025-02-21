@@ -1,6 +1,10 @@
-name: Database Access
+name: "DB Connection Test"
 
-on: [push]  # Runs on every push (modify as needed)
+on:  
+  push:  
+    branches: [ "main" ]  
+  pull_request:  
+    branches: [ "main" ]  
 
 jobs:
   db-connect:
@@ -10,9 +14,30 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Use Secret Password
-        run: echo "Using DB password securely"
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pymysql cryptography
+
+      - name: Test Cloud MySQL Connection
         env:
-          HOST: ${{ secrets.HOST }}
-          PWD: ${{ secrets.PWD }}
-          USER: ${{ secrets.USER }}
+          DB_USER: ${{ secrets.USER }}
+          DB_PASSWORD: ${{ secrets.PWD }}
+        run: |
+          python -c "
+          import mysql_connector as sql
+          try:
+              sql.connect('${{ secrets.DB_USER }}', '${{ secrets.DB_PASSWORD }}')
+              print('✅ Connected to Cloud MySQL!')
+          except Exception as e:
+              print(f'❌ Connection failed: {e}')
+              exit(1)
+          finally:
+              if sql.db_connector():
+                  sql.close()
+          "
