@@ -1,6 +1,6 @@
 version: 2
 updates:
-  - package-ecosystem: "python"
+  - package-ecosystem: "pip"
     directory: "/" # The location of requirements.txt
     schedule:
       interval: "weekly"
