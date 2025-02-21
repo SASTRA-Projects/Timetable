@@ -24,34 +24,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install pymysql cryptography
 
-      - name: Wait for MySQL to be ready
-        run: |
-          echo "Waiting for MySQL to be ready..."
-          for i in {1..10}; do
-            if mysqladmin ping -h"127.0.0.1" --silent; then
-              echo "MySQL is ready!"
-              exit 0
-            fi
-            echo "Retrying in 3 seconds..."
-            sleep 3
-          done
-          echo "MySQL failed to start in time."
-          exit 1
-
-      - name: Test Database Connection
+      - name: Test Cloud MySQL Connection
         env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_USER: ${{ secrets.USER }}
+          DB_PASSWORD: ${{ secrets.PWD }}
         run: |
           python -c "
           import mysql_connector as sql
           try:
-              sql.connect(user='${{ secrets.DB_USER }}', password='${{ secrets.DB_PASSWORD }}')
-              print('✅ Database connection successful!')
+              sql.connect('${{ secrets.DB_USER }}', '${{ secrets.DB_PASSWORD }}')
+              print('✅ Connected to Cloud MySQL!')
           except Exception as e:
-              print(f'❌ Database connection failed: {e}')
+              print(f'❌ Connection failed: {e}')
               exit(1)
           finally:
-              if sql.db_connector:
+              if sql.db_connector():
                   sql.close()
           "
