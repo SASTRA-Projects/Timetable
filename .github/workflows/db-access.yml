@@ -35,7 +35,7 @@ jobs:
               sql.connect('${{ secrets.USER }}', '${{ secrets.PWD }}')
               print('✅ Connected to Cloud MySQL!')
           except Exception as e:
-              print(f'❌ {secrets.USER} Connection failed: {e}')
+              print(f'❌ Connection failed: {e}')
               exit(1)
           finally:
               if sql.db_connector:
