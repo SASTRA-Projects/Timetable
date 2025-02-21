@@ -19,8 +19,9 @@ def login():
 		referrer = request.referrer
 		if referrer:
 			from urllib.parse import urlparse
+			referrer = referrer.replace('\\', '/')
 			parsed_url = urlparse(referrer)
-			if parsed_url.netloc == request.host:
+			if not parsed_url.netloc and not parsed_url.scheme:
 				return redirect(referrer)
 		return redirect(url_for("index"))
 	return render_template("login.html", user="User", auth="/authenticate")
