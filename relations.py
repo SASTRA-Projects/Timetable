@@ -33,11 +33,11 @@ def create_relations(db_connector, cursor):
 	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `student_sections` ( -- check section class capacity
 				   `student_id` INT UNSIGNED NOT NULL,
-				   `section_class_id` SMALLINT UNSIGNED NOT NULL,
-				   PRIMARY KEY(`student_id`, `section_class_id`),
+				   `section_id` SMALLINT UNSIGNED NOT NULL,
+				   PRIMARY KEY(`student_id`, `section_id`),
 				   FOREIGN KEY(`student_id`) REFERENCES `students`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   FOREIGN KEY(`section_class_id`) REFERENCES `section_classes`(`id`)
+				   FOREIGN KEY(`section_id`) REFERENCES `sections`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
 				   UNIQUE(`student_id`)
 	)""")
@@ -62,7 +62,7 @@ def create_relations(db_connector, cursor):
 				   FOREIGN KEY(`section_course_id`) REFERENCES `section_courses`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `student_attends_class` (
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `student_attends_course` (
 				   `student_id` INT UNSIGNED NOT NULL, -- check student in this section has,
 				   `course_code` VARCHAR(10) NOT NULL, -- this course?
 				   PRIMARY KEY(`student_id`, `course_code`),

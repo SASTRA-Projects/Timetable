@@ -1,8 +1,20 @@
 def create_triggers(db_connector, cursor):
-	cursor.execute("""CREATE PROCEDURE IF NOT EXISTS `validate_join_year` (IN `year` SMALLINT UNSIGNED)
+	cursor.execute("""CREATE PROCEDURE IF NOT EXISTS `validate_join_year`
+				   (IN `year` SMALLINT UNSIGNED)
 				   IF `year` > YEAR(CURDATE())
 				   	THEN SIGNAL SQLSTATE '45000'
 				   	SET MESSAGE_TEXT = 'Invalid year: Join Year cannot be greater than the current year';
+				   END IF;
+	""")
+	cursor.execute("""CREATE PROCEDURE IF NOT EXISTS `department_exists`
+				   (IN `campus_id` TINYINT UNSIGNED, IN `department` VARCHAR(40))
+				   IF NOT EXISTS (
+					SELECT 1 
+					FROM `campus_departments`
+					WHERE `campus_id`=`campus_id` AND `department`=`department`
+				   )
+				   	THEN SIGNAL SQLSTATE '45000'
+				   	SET MESSAGE_TEXT = 'Value Error: No such department in given campus (or no such campus) found';
 				   END IF;
 	""")
 	cursor.execute("""CREATE FUNCTION IF NOT EXISTS `get_is_lab`(`class_id` SMALLINT UNSIGNED)
@@ -44,7 +56,7 @@ def create_triggers(db_connector, cursor):
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT = 'Limit Exceeded: Number of classrooms cannot exceed the number of rooms in the building';
 					END IF;
-					END;
+				   END;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `no_of_rooms_chk_update`
 				   BEFORE UPDATE ON `classes`
@@ -60,7 +72,7 @@ def create_triggers(db_connector, cursor):
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT = 'Limit Exceeded: Number of classrooms cannot exceed the number of rooms in the building';
 					END IF;
-					END;
+				   END;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_yr_chk_insert`
 				  BEFORE INSERT ON `sections`
@@ -88,15 +100,21 @@ def create_triggers(db_connector, cursor):
 					END IF;
 				   END;
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `faculties_join_yr_chk_insert`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `faculties_join_yr_dept_chk_insert`
 				   BEFORE INSERT ON `faculties`
 				   FOR EACH ROW
+				   BEGIN
 					CALL `validate_join_year`(NEW.`join_year`);
+					CALL `department_exists`(NEW.`campus_id`, NEW.`department`);
+				   END;
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `faculties_join_yr_chk_update`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `faculties_join_yr_dept_chk_update`
 				   BEFORE UPDATE ON `faculties`
 				   FOR EACH ROW
+				   BEGIN
 					CALL `validate_join_year`(NEW.`join_year`);
+					CALL `department_exists`(NEW.`campus_id`, NEW.`department`);
+				   END;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `students_join_yr_chk_insert`
 				   BEFORE INSERT ON `students`
@@ -125,41 +143,33 @@ def create_triggers(db_connector, cursor):
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_class_not_lab_insert`
 				   BEFORE INSERT ON `section_classes`
 				   FOR EACH ROW
-				   BEGIN
 					IF get_is_lab(NEW.`class_id`)
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT = 'Invalid class: Class can not be lab';
 					END IF;
-					END;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_class_not_lab_update`
 				   BEFORE UPDATE ON `section_classes`
 				   FOR EACH ROW
-				   BEGIN
 					IF get_is_lab(NEW.`class_id`)
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT = 'Invalid class: Class can not be lab';
 					END IF;
-					END;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_class_lab_insert`
 				   BEFORE INSERT ON `section_classes`
 				   FOR EACH ROW
-				   BEGIN
 					IF NOT get_is_lab(NEW.`class_id`)
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT = 'Invalid class: Class must be lab';
 					END IF;
-					END;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_class_lab_update`
 				   BEFORE UPDATE ON `section_classes`
 				   FOR EACH ROW
-				   BEGIN
 					IF NOT get_is_lab(NEW.`class_id`)
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT = 'Invalid class: Class must be lab';
 					END IF;
-					END;
 	""")
 	db_connector.commit()
