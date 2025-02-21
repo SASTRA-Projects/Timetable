@@ -8,9 +8,10 @@
     {% else %}
         <h1>Login</h1>
     {% endif %}
+    {% set userType = userType or "text" %}
     <form action={{ auth }} method="post">
         <label for="user">{{ user }} </label>
-        <input type="text" name="user" id="user" style="margin-left: 42px;" maxlength="40" autofocus autocomplete="off" required>
+        <input type={{ userType }} name="user" id="user" style="margin-left: 42px;" autofocus autocomplete="off" required>
         <br>
         <label for="password">Password </label>
         <input type="password" name="password" id="password" autocomplete="off" required>
