@@ -32,12 +32,12 @@ jobs:
           python -c "
           import mysql_connector as sql
           try:
-              sql.connect('${{ secrets.DB_USER }}', '${{ secrets.DB_PASSWORD }}')
+              sql.connect('${{ secrets.USER }}', '${{ secrets.PWD }}')
               print('✅ Connected to Cloud MySQL!')
           except Exception as e:
-              print(f'❌ Connection failed: {e}')
+              print(f'❌ {secrets.USER} Connection failed: {e}')
               exit(1)
           finally:
-              if sql.db_connector():
+              if sql.db_connector:
                   sql.close()
           "
