@@ -7,4 +7,4 @@ updates:
     versioning-strategy: "increase" # Allow updates only when the version increases
     ignore:
       - dependency-name: "Flask"
-        versions: ["2.0.x"]
+        update-types: ["version-update:semver-major"]
