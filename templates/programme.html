@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block head %}
+	<meta name="description"
+          content="Shows all the Programmes (from all campuses).
+                   Click any Programme name to display more info about it.">
+{% endblock %}
+
+{% block title %}SASTRA Programmes{% endblock %}
+
+{% block content %}
+	{% if not programmes[0] %}
+		<p style="margin: auto; text-align: center; font-size: 4em">No Programme Found!</p>
+	{% else %}
+		<p style="margin: auto; text-align: center; font-size: 3em">Programmes</p>
+		<ul class="nobulletins">
+			{% for programme in programmes %}
+				<hr>
+				<li style="text-align: center; font-size: 3em">
+					<a href="/programme/{{ programme['name'] }}" class="nounderline">{{ programme["name"] }}</a>
+				</li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+{% endblock %}

@@ -1,9 +1,7 @@
 from flask import Flask, render_template, request, url_for, redirect, session
 import secrets
-# import add_data
-# import insert_data
 import show_data
-# import delete_data
+import fetch_data
 import mysql_connector as sql
 
 app = Flask(__name__)
@@ -47,7 +45,7 @@ def authenticate():
 			return render_template("failed.html", reason="Unknown error occurred")
 	return render_template("failed.html", reason="Login information not entered properly!")
 
-@app.route("/show/faculty")
+@app.route("/faculty")
 def log_faculty():
 	if not session.get("faculty") or not session.get("faculty_details"):
 		return render_template("login.html", user="ID", userType="number", auth="/auth_faculty", role="faculty")
@@ -57,13 +55,12 @@ def log_faculty():
 def auth_faculty():
 	if request.form.get("user") and request.form.get("password"):
 		try:
-			session["faculty_details"] = show_data.get_faculty_details(sql.cursor, id=request.form["user"], password=request.form["password"])
+			session["faculty_details"] = fetch_data.get_faculty_details(sql.cursor, id=request.form["user"], password=request.form["password"])
 			session["faculty"] = True
 			return redirect(url_for("faculty_details"))
 		except AssertionError:
 			return render_template("login.html", user="ID", userType="number", auth="/auth_faculty", role="faculty", error_message="Invalid ID")
-		except Exception as e:
-			print(e)
+		except Exception:
 			return render_template("login.html", user="ID", userType="number", auth="/auth_faculty", role="faculty", error_message="Invalid Password")
 	return render_template("failed.html", error_message="Login information not entered properly!")
 
@@ -76,47 +73,25 @@ def index():
 def about():
 	return render_template("about.html")
 
-@app.route("/add/<string:campus>", methods=["POST"])
-def add_schools(campus):
-	campus = request.form.get("campus")
-
-	if not campus:
-		raise Exception("Required Field: Campus name")
-
-	campus = campus.strip().upper()
-	no_of_schools = request.form.get("no_of_schools")
-
-	if not (no_of_schools):
-		raise Exception("Required Field: Number of schools")
-
-	try:
-		no_of_schools = int(no_of_schools)
-		if not (1 <= no_of_schools <= 255):
-			raise Exception("Range Error: Number of schools must be between 1 and 255 (both inclusive) only")
-	except ValueError:
-		raise Exception("Incorrect Format: Number of schools must be an integer")
-	
-	add_data.add_campus(sql.db_connector, sql.cursor, campus)
-	return render_template("add_schools.html", campus=campus, no_of_schools=no_of_schools)
-
-@app.route("/show/campus")
+@app.route("/campus")
 def show_campuses():
-	return render_template("campus.html", function="show", campuses=show_data.show_campuses(sql.cursor))
+	return render_template("campus.html", campuses=show_data.get_campuses(sql.cursor))
 
-@app.route("/show/<string:campus>")
+@app.route("/department")
+def show_departments():
+	return render_template("department.html", departments=show_data.get_departments(sql.cursor))
+
+@app.route("/programme")
+def show_programmes():
+	return render_template("programme.html", programmes=show_data.get_programmes(sql.cursor))
+
+@app.route("/campus/<string:campus>")
 def show_schools(campus):
-	return f"{(campus)}"
+	if campus == "SASTRA": # for testing only
+		return redirect("https://sastra.edu")
+	return redirect(f"https://{campus.replace(" ", "").lower()}.sastra.edu")
 
-@app.route("/delete/campus")
-def delete_campus_page():
-	return render_template("campus.html", function="delete", campuses=show_data.show_campuses(sql.cursor))
-
-@app.route("/delete/<string:campus>")
-def delete_campus(campus):
-	delete_data.delete_campus(sql.db_connector, sql.cursor, campus.strip().upper())
-	return render_template("campus.html", function="delete", campuses=show_data.show_campuses(sql.cursor))
-
-@app.route("/show/faculty/details")
+@app.route("/faculty/details")
 def faculty_details():
 	if not session["faculty"] or not session["faculty_details"]:
 		raise ValueError("Illegal access or value is missing.")
@@ -124,4 +99,4 @@ def faculty_details():
 	return render_template("faculty.html", faculty=faculty, campus=show_data.get_campus_name(sql.cursor, id=faculty["campus_id"]))
 
 if __name__ == "__main__":
-	app.run(host="0.0.0.0", port=5000, debug=True)
+	app.run(host="0.0.0.0", port=5000, debug=False)
