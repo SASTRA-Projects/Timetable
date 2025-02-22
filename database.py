@@ -49,6 +49,19 @@ def create_database(db_connector, cursor):
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
 				   UNIQUE(`degree`, `stream`)
 	)""")
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `courses` (
+				   `code` VARCHAR(10),
+				   `name` VARCHAR(40) NOT NULL,
+				   `department` VARCHAR(40) NOT NULL,
+				   `credits` TINYINT UNSIGNED NOT NULL,
+				   `L` TINYINT UNSIGNED NOT NULL, -- lecture hours
+				   `P` TINYINT UNSIGNED NOT NULL, -- practical hours
+				   `T` TINYINT UNSIGNED NOT NULL, -- tutorial hours
+				   `is_elective` BOOLEAN NOT NULL,
+				   PRIMARY KEY(`code`),
+				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
+				   ON UPDATE CASCADE ON DELETE RESTRICT
+	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `campus_programmes` (
 				   `campus_id` TINYINT UNSIGNED NOT NULL,
 				   `programme_id` MEDIUMINT UNSIGNED NOT NULL,
@@ -67,19 +80,11 @@ def create_database(db_connector, cursor):
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `courses` (
-				   `code` VARCHAR(10),
-				   `name` VARCHAR(40) NOT NULL,
-				   `department` VARCHAR(40) NOT NULL,
-				   `credits` TINYINT UNSIGNED NOT NULL,
-				   `L` TINYINT UNSIGNED NOT NULL, -- lecture hours
-				   `P` TINYINT UNSIGNED NOT NULL, -- practical hours
-				   `T` TINYINT UNSIGNED NOT NULL, -- tutorial hours
-				   `is_elective` BOOLEAN NOT NULL,
-				   PRIMARY KEY(`code`),
-				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT
-	)""") # To have course available in campus / degree / department table (or check)
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `programme_courses` (
+				   `course_code` VARCHAR(10) NOT NULL.
+				   `programme_id` MEDIUMINT UNSIGNED NOT NULL,
+				   PRIMARY KEY(`course_code`, `programme_id`)
+	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `classes` (
 				   `id` SMALLINT UNSIGNED AUTO_INCREMENT, -- check id <=`buildings`.`no_of_rooms`
 				   `building_id` SMALLINT UNSIGNED NOT NULL,
