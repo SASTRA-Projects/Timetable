@@ -8,16 +8,17 @@
         #loginForm > label {
             width: 8ch;
         }
-        @media screen and (min-width: 449px) {
-            form > button {
-                margin-left: 4rem;
-                margin-top: 1.5rem;
+        @media screen and (min-width: 409px) {
+            #content > form > label {
+                text-align: left;
+            }
+            #content > form > button {
+                margin-left: 5rem;
+                margin-top: 0.5rem;
             }
         }
-        @media screen and (max-width: 449px) {
-            form > button {
-                margin: auto;
-            }
+        form > button {
+            margin: auto;
         }
     </style>
 {% endblock %}
