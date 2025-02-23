@@ -46,7 +46,7 @@ jobs:
             )
             cursor = db_connector.cursor()
             cursor.execute("""SELECT 1+2 FROM DUAL""")
-            result = cursor.fetchone()
+            result = cursor.fetchone()["1+2"]
             if not result or result != 3:
               raise Exception("Got invalid result.\nTry later!")
             print(f"Testing...\n"1+2={result}"')
