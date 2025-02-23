@@ -1,6 +1,6 @@
 import pymysql
 
-timeout = 300
+timeout = 10
 
 db_connector = None
 cursor = None
@@ -24,6 +24,8 @@ def connect(user, __pwd, host="mysql-93e938b-harikrishnasri3.f.aivencloud.com"):
 
   cursor.execute("""CREATE DATABASE IF NOT EXISTS `SASTRA`""")
   cursor.execute("""USE `SASTRA`""")
+
+  return db_connector
 
 def close():
 	db_connector.commit()
