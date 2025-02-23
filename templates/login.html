@@ -4,6 +4,22 @@
 	<meta name="description"
           content="Login to access your account.
                    Enter your username or ID and password for authentication.">
+    <style>
+        #loginForm > label {
+            width: 8ch;
+        }
+        @media screen and (min-width: 449px) {
+            form > button {
+                margin-left: 4rem;
+                margin-top: 1.5rem;
+            }
+        }
+        @media screen and (max-width: 449px) {
+            form > button {
+                margin: auto;
+            }
+        }
+    </style>
 {% endblock %}
 
 {% block title %}Login{% endblock %}
@@ -15,15 +31,15 @@
         <h1>Login</h1>
     {% endif %}
     {% set userType = userType or "text" %}
-    <form action={{ auth }} method="post">
+    <form id="loginForm" action={{ auth }} method="post">
         <label for="user">{{ user }} </label>
-        <input type={{ userType }} name="user" id="user" style="margin-left: 42px;" autofocus autocomplete="off" required>
+        <input type={{ userType }} name="user" id="user" autofocus autocomplete="off" required>
         <br>
         <label for="password">Password </label>
         <input type="password" name="password" id="password" autocomplete="off" required>
         <input type="hidden" name={{ role }} value="1"/>
         <br>
-        <button type="submit" style="margin-top: 24px;">Login</button>
+        <button type="submit">Login</button>
 
         {% if error_message %}
             <div class="error message" style="text-align: center;">{{ error_message }}</div>
