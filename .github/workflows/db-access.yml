@@ -26,8 +26,8 @@ jobs:
 
       - name: Test Cloud MySQL Connection
         env:
-          DB_USER: ${{ secrets.USER }}
-          DB_PASSWORD: ${{ secrets.PWD }}
+          USER: ${{ secrets.USER }}
+          PWD: ${{ secrets.PWD }}
         run: |
           python -c "
           import mysql_connector as sql
