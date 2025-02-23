@@ -49,7 +49,7 @@ jobs:
             result = cursor.fetchone()["1+2"]
             if not result or result != 3:
               raise Exception("Got invalid result.\nTry later!")
-            print(f"Testing...\n"1+2={result}"')
+            print(f'Testing...\n"1+2={result}"')
             print('✅ Connected to Cloud MySQL!')
           except Exception as e:
             print(f'❌ Connection failed: {e}')
