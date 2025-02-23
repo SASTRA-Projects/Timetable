@@ -89,7 +89,7 @@ def show_programmes():
 def show_schools(campus):
 	if campus == "SASTRA": # for testing only
 		return redirect("https://sastra.edu")
-	return redirect(f"https://{campus.replace('' '', '').lower()}.sastra.edu")
+	return redirect(f"https://{campus.replace(' ', '').lower()}.sastra.edu")
 
 @app.route("/faculty/details")
 def faculty_details():
