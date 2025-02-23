@@ -64,8 +64,8 @@ def auth_faculty():
 			return render_template("login.html", user="ID", userType="number", auth="/auth_faculty", role="faculty", error_message="Invalid Password")
 	return render_template("failed.html", error_message="Login information not entered properly!")
 
-@app.route("/")
 @app.route("/home")
+@app.route("/")
 def index():
 	return render_template("index.html")
 
