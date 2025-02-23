@@ -19,8 +19,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: testing
-        run: echo "${{ secrets.USR }}"
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
@@ -33,6 +31,7 @@ jobs:
         run: |
           python -c "
           import mysql_connector as sql
+          print('${{ secrets.USER }}', f'secrets.USER') # testing...
           try:
               sql.connect('${{ secrets.USER }}', '${{ secrets.PWD }}')
               print('✅ Connected to Cloud MySQL!')
