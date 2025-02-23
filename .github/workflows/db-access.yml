@@ -35,24 +35,25 @@ jobs:
           import pymysql
           try:
             db_connector = pymysql.connect(
-              charset="utf8mb4",
-              connect_timeout=int("${{ env.TIMEOUT }}"),
+              charset='utf8mb4',
+              connect_timeout=int('${{ env.TIMEOUT }}'),
               cursorclass=pymysql.cursors.DictCursor,
-              host="${{ secrets.HOST }}",
-              password="${{ secrets.PWD }}",
-              read_timeout=int("${{ env.TIMEOUT }}"),
+              host='${{ secrets.HOST }}',
+              password='${{ secrets.PWD }}',
+              read_timeout=int('${{ env.TIMEOUT }}'),
               port=17216,
-              user="${{ secrets.USER }}",
-              write_timeout=int("${{ env.TIMEOUT }}"),
+              user='${{ secrets.USER }}',
+              write_timeout=int('${{ env.TIMEOUT }}'),
             )
             cursor = db_connector.cursor()
-            cursor.execute("SELECT 1+2 FROM DUAL")
-            result = cursor.fetchone()["1+2"]
+            cursor.execute('SELECT 1+2 FROM DUAL')
+            result = cursor.fetchone()['1+2']
             if not result or result != 3:
-              raise Exception("Got invalid result.\nTry later!")
-            print("✅ Connected to Cloud MySQL!")
+              raise Exception('Got invalid result.\\nTry later!')
+            print(f'Testing...\\n\"1+2={result}\"')
+            print('✅ Connected to Cloud MySQL!')
           except Exception as e:
-            print(f"❌ Connection failed: {e}")
+            print(f'❌ Connection failed: {e}')
             exit(1)
           finally:
             if db_connector:
