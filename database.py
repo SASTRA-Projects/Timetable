@@ -81,9 +81,13 @@ def create_database(db_connector, cursor):
 				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `programme_courses` (
-				   `course_code` VARCHAR(10) NOT NULL.
+				   `course_code` VARCHAR(10) NOT NULL,
 				   `programme_id` MEDIUMINT UNSIGNED NOT NULL,
-				   PRIMARY KEY(`course_code`, `programme_id`)
+				   PRIMARY KEY(`course_code`, `programme_id`),
+				   FOREIGN KEY(`course_code`) REFERENCES `courses`(`code`)
+				   ON UPDATE CASCADE ON DELETE RESTRICT,
+				   FOREIGN KEY(`programme_id`) REFERENCES `programmes`(`id`)
+				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `classes` (
 				   `id` SMALLINT UNSIGNED AUTO_INCREMENT, -- check id <=`buildings`.`no_of_rooms`
