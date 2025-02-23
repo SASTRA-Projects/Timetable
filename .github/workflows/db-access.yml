@@ -19,6 +19,8 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: testing
+        run: echo "${{ secrets.USR }}"
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
