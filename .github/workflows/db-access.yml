@@ -26,18 +26,31 @@ jobs:
 
       - name: Test Cloud MySQL Connection
         env:
-          DB_USER: ${{ secrets.USER }}
-          DB_PASSWORD: ${{ secrets.PWD }}
+          USER: ${{ secrets.USER }}
+          PWD: ${{ secrets.PWD }}
+          HOST: ${{ secrets.HOST }}
         run: |
           python -c "
-          import mysql_connector as sql
+          import pymysql
           try:
-              sql.connect('${{ secrets.USER }}', '${{ secrets.PWD }}')
-              print('✅ Connected to Cloud MySQL!')
+            db_connector = pymysql.connect(
+              charset="utf8mb4",
+              connect_timeout=20,
+              cursorclass=pymysql.cursors.DictCursor,
+              host='${{ secrets.HOST }}',
+              password='${{ secrets.PWD }}',
+              read_timeout=timeout,
+              port=17216,
+              user='${{ secrets.USER }}',
+              write_timeout=timeout,
+            )
+            cursor = db_connector.cursor()
+            cursor.execute("""SHOW DATABASES""")
+            print('✅ Connected to Cloud MySQL!')
           except Exception as e:
-              print(f'❌ Connection failed: {e}')
-              exit(1)
+            print(f'❌ Connection failed: {e}')
+            exit(1)
           finally:
-              if sql.db_connector:
-                  sql.close()
+            if db_connector:
+              db_connector.close()
           "
