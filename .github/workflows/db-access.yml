@@ -45,7 +45,11 @@ jobs:
               write_timeout=timeout,
             )
             cursor = db_connector.cursor()
-            cursor.execute("""SHOW DATABASES""")
+            cursor.execute("""SELECT 1+2 FROM DUAL""")
+            result = cursor.fetchone()
+            if not result or result != 3:
+              raise Exception("Got invalid result.\nTry later!")
+            print(f"Testing...\n"1+2={result}"')
             print('✅ Connected to Cloud MySQL!')
           except Exception as e:
             print(f'❌ Connection failed: {e}')
