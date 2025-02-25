@@ -99,8 +99,9 @@ def faculty_details():
 	return render_template("faculty.html", faculty=faculty, campus=show_data.get_campus_name(sql.cursor, id=faculty["campus_id"]))
 
 @app.errorhandler(404)
-def page_not_found(e):
+def page_not_found(error):
     return (render_template("404.html"), 404)
 
 if __name__ == "__main__":
+	app.config.update(SESSION_COOKIE_SECURE=True, SESSION_COOKIE_HTTPSONLY=True)
 	app.run(host="0.0.0.0", port=5000, debug=False)
