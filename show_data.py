@@ -19,7 +19,8 @@ def get_schools(cursor, /, *, campus_id=None):
 
 def get_school_id(cursor, /, *, campus_id=None, school=None):
 	cursor.execute("""SELECT `id` FROM `schools`
-				   WHERE `name`=%s""", (campus_id, school))
+				   WHERE `campus_id`=%s
+				   AND `name`=%s""", (campus_id, school))
 	return cursor.fetchone()["id"]
 
 def get_school_name(cursor, /, *, id=None):

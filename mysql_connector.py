@@ -20,6 +20,8 @@ def connect(user, __pwd, /, *, host="mysql-93e938b-harikrishnasri3.f.aivencloud.
   )
 
   cursor = db_connector.cursor()
+  cursor.execute("""CREATE DATABASE IF NOT EXISTS `SASTRA`""")
+  cursor.execute("""USE `SASTRA`""")
   return db_connector
 
 def create_db(*, database=None):
@@ -30,10 +32,10 @@ def use_db(*, database=None):
   cursor.execute("""USE `%s`""", (database,))
 
 def close():
-	db_connector.commit()
-	cursor.close()
-	db_connector.close()
-	exit()
+  db_connector.commit()
+  cursor.close()
+  db_connector.close()
+  exit()
 
 if __name__ == "__main__":
 	close()

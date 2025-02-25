@@ -59,9 +59,9 @@ def auth_faculty():
 			session["faculty"] = True
 			return redirect(url_for("faculty_details"))
 		except AssertionError:
-			return render_template("login.html", user="ID", userType="number", auth="/auth_faculty", role="faculty", error_message="Invalid ID")
+			return render_template("login.html", user="ID", userType="number", auth="/auth_faculty", role="faculty", error_message="Invalid ID or Password")
 		except Exception:
-			return render_template("login.html", user="ID", userType="number", auth="/auth_faculty", role="faculty", error_message="Invalid Password")
+			return render_template("login.html", user="ID", userType="number", auth="/auth_faculty", role="faculty", error_message="Invalid ID")
 	return render_template("failed.html", error_message="Login information not entered properly!")
 
 @app.route("/home")

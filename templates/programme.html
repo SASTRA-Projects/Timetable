@@ -17,7 +17,7 @@
 			{% for programme in programmes %}
 				<hr>
 				<li style="text-align: center; font-size: 3em">
-					<a href="/programme/{{ programme['name'] }}" class="nounderline">{{ programme["name"] }}</a>
+					<a href="/programme/{{ programme['name'] }}" class="nounderline">{{ programme["degree"] }} {{ programme["stream"] }}</a>
 				</li>
 			{% endfor %}
 		</ul>
