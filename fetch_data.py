@@ -121,11 +121,11 @@ def get_student(cursor, /, *, id=None):
 				   WHERE `id`=%s""", (id,))
 	return cursor.fetchone()
 
-def get_student_by_info(cursor, /, *,
-                        campus_id=None,
-                        join_year=None,
-                        programme_id=None,
-                        roll_no=None):
+def get_student_by_details(cursor, /, *,
+                           campus_id=None,
+                           join_year=None,
+                           programme_id=None,
+                           roll_no=None):
 	cursor.execute("""SELECT `name` FROM `students`
 				   WHERE `campus_id`=%s
                    AND `join_id`=%s

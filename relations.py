@@ -33,7 +33,7 @@ def create_relations(db_connector, cursor):
 	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `student_sections` ( -- check section class capacity
 				   `student_id` INT UNSIGNED NOT NULL,
-				   `section_id` SMALLINT UNSIGNED NOT NULL,
+				   `section_id` MEDIUMINT UNSIGNED NOT NULL,
 				   PRIMARY KEY(`student_id`, `section_id`),
 				   FOREIGN KEY(`student_id`) REFERENCES `students`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
