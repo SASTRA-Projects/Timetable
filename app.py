@@ -38,10 +38,13 @@ def authenticate():
 				except Exception:
 					return render_template("failed.html", reason="Unknown error occurred")
 			import views
+			import triggers
 			views.create_views(sql.db_connector, sql.cursor)
+			triggers.create_triggers(sql.db_connector, sql.cursor)
 			session["logged_in"] = True
 			return redirect(url_for("index"))
-		except Exception:
+		except Exception as e:
+			print(e)
 			return render_template("failed.html", reason="Unknown error occurred")
 	return render_template("failed.html", reason="Login information not entered properly!")
 
