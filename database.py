@@ -62,6 +62,15 @@ def create_database(db_connector, cursor):
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `campus_departments` (
+				   `campus_id` TINYINT UNSIGNED NOT NULL,
+				   `department` VARCHAR(40) NOT NULL,
+				   PRIMARY KEY(`campus_id`, `department`),
+				   FOREIGN KEY(`campus_id`) REFERENCES `campuses`(`id`)
+				   ON UPDATE CASCADE ON DELETE RESTRICT,
+				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
+				   ON UPDATE CASCADE ON DELETE RESTRICT
+	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `campus_programmes` (
 				   `campus_id` TINYINT UNSIGNED NOT NULL,
 				   `programme_id` MEDIUMINT UNSIGNED NOT NULL,

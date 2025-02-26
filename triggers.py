@@ -42,6 +42,16 @@ def create_triggers(db_connector, cursor):
 						INSERT INTO `deleted_campus`(`id`, `name`)
 						VALUES (OLD.id, OLD.name);
 	""")
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `school_department_chk_insert`
+				   BEFORE INSERT ON `school_departments`
+				   FOR EACH ROW
+					CALL `department_exists`(NEW.`school_id`, NEW.`department`);
+	""")
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `school_department_chk_update`
+				   BEFORE UPDATE ON `school_departments`
+				   FOR EACH ROW
+					CALL `department_exists`(NEW.`school_id`, NEW.`department`);
+	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `no_of_rooms_chk_insert`
 				   BEFORE INSERT ON `classes`
 				   FOR EACH ROW
