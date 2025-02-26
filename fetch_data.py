@@ -85,7 +85,7 @@ def get_classes(cursor, /):
     cursor.execute("""SELECT * FROM `classes`""")
     return cursor.fetchall()
 
-def get_class(cursor, /, building_id=None):
+def get_classes_in_building(cursor, /, building_id=None):
     cursor.execute("""SELECT * FROM `classes`
                    WHERE `building_id`=%s""", (building_id,))
     classes = cursor.fetchall()
@@ -116,16 +116,16 @@ def get_students(cursor, /):
 	cursor.execute("""SELECT * FROM `students`""")
 	return cursor.fetchall()
 
-def get_student(cursor, /, *, id=None):
+def get_student_by_id(cursor, /, *, id=None):
 	cursor.execute("""SELECT `name` FROM `students`
 				   WHERE `id`=%s""", (id,))
 	return cursor.fetchone()
 
-def get_student_by_details(cursor, /, *,
-                           campus_id=None,
-                           join_year=None,
-                           programme_id=None,
-                           roll_no=None):
+def get_student(cursor, /, *,
+                campus_id=None,
+                join_year=None,
+                programme_id=None,
+                roll_no=None):
 	cursor.execute("""SELECT `name` FROM `students`
 				   WHERE `campus_id`=%s
                    AND `join_id`=%s

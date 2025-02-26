@@ -100,29 +100,28 @@ def add_section(db_connector,
 	db_connector.commit()
 
 def add_faculty(db_connector,
-				  cursor, /, *,
-				  id=None,
-				  name=None,
-				  campus_id=None,
-				  department=None,
-				  join_year=datetime.date.today().year,
-				  phone=None):
-	cursor.execute("""INSERT INTO `faculties` (`id`, `name`,
-											   `campus_id`, `department`,
-											   `join_year`, `phone`)
-				   VALUES (%s, %s, %s, %s, %s, %s)""",
-				   (id, name, campus_id, department, join_year, phone))
+				cursor, /, *,
+				id=None,
+				name=None,
+				campus_id=None,
+				department=None,
+				join_year=datetime.date.today().year,
+				phone=None):
+	cursor.execute("""INSERT INTO `faculties` (`id`, `name`, `campus_id`,
+											   `department`, `join_year`)
+				   VALUES (%s, %s, %s, %s, %s)""",
+				   (id, name, campus_id, department, join_year))
 	db_connector.commit()
 
 def add_student(db_connector,
-				  cursor, /, *,
-				  id=None,
-				  name=None,
-				  campus_id=None,
-				  join_year=datetime.date.today().year,
-				  programme_id=None,
-				  roll_no=None,
-				  phone=None):
+				cursor, /, *,
+				id=None,
+				name=None,
+				campus_id=None,
+				join_year=datetime.date.today().year,
+				programme_id=None,
+				roll_no=None,
+				phone=None):
 	cursor.execute("""INSERT INTO `students` (`id`, `name`,
 											  `campus_id`, `join_year`,
 											  `programme_id`, `roll_no`,

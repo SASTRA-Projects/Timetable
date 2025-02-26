@@ -57,17 +57,8 @@ def create_database(db_connector, cursor):
 				   `L` TINYINT UNSIGNED NOT NULL, -- lecture hours
 				   `P` TINYINT UNSIGNED NOT NULL, -- practical hours
 				   `T` TINYINT UNSIGNED NOT NULL, -- tutorial hours
-				   `is_elective` BOOLEAN NOT NULL,
+				   `is_elective` BOOLEAN NOT NULL, -- assumed: elective course have diff code than core
 				   PRIMARY KEY(`code`),
-				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT
-	)""")
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `campus_departments` (
-				   `campus_id` TINYINT UNSIGNED NOT NULL,
-				   `department` VARCHAR(40) NOT NULL,
-				   PRIMARY KEY(`campus_id`, `department`),
-				   FOREIGN KEY(`campus_id`) REFERENCES `campuses`(`id`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT,
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
@@ -113,13 +104,10 @@ def create_database(db_connector, cursor):
 				   `id` MEDIUMINT UNSIGNED AUTO_INCREMENT,
 				   `campus_id` TINYINT UNSIGNED NOT NULL,
 				   `degree` VARCHAR(40) NOT NULL,
-				   `stream` VARCHAR(40),
 				   `section` VARCHAR(2) NOT NULL,
 				   `year` TINYINT UNSIGNED NOT NULL, -- check 0 < `year` <= `degree`.`duration`
 				   PRIMARY KEY(`id`),
 				   FOREIGN KEY(`degree`) REFERENCES `degrees`(`name`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   FOREIGN KEY(`stream`) REFERENCES `streams`(`name`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `faculties` (
@@ -128,13 +116,11 @@ def create_database(db_connector, cursor):
 				   `campus_id` TINYINT UNSIGNED NOT NULL,
 				   `department` VARCHAR(40) NOT NULL, -- desig, salary separate, check dept in campus
 				   `join_year` SMALLINT UNSIGNED NOT NULL, -- trigger to ensure join_year <= current_year
-				   `phone` CHAR(10) NOT NULL,
 				   PRIMARY KEY(`id`),
 				   FOREIGN KEY(`campus_id`) REFERENCES `campuses`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   CHECK(`phone` REGEXP '^[6789][0-9]{9}$')
+				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `students` ( -- grades & attendance separate
 				   `id` INT UNSIGNED AUTO_INCREMENT, -- e.g., max=4,294,967,296
