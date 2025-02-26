@@ -16,12 +16,12 @@ def create_timetable(db_connector, cursor):
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `timetables` (
 							`day` ENUM('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday') NOT NULL,
 							`period_id` TINYINT UNSIGNED NOT NULL,
-							`faculty_teaches_section_id` INT UNSIGNED NOT NULL,
+							`faculty_section_course_id` INT UNSIGNED NOT NULL,
 							`class_id` SMALLINT UNSIGNED NOT NULL,
-							PRIMARY KEY(`day`, `period_id`, `faculty_teaches_section_id`),
+							PRIMARY KEY(`day`, `period_id`, `faculty_section_course_id`),
 							FOREIGN KEY(`day`) REFERENCES `days`(`day`)
 							ON UPDATE RESTRICT ON DELETE CASCADE,
-							FOREIGN KEY(`faculty_teaches_section_id`) REFERENCES `faculty_teaches_section`(`id`)
+							FOREIGN KEY(`faculty_section_course_id`) REFERENCES `faculty_section_course`(`id`)
 							ON UPDATE CASCADE ON DELETE RESTRICT,
 							FOREIGN KEY(`period_id`) REFERENCES `periods`(`id`)
 							ON UPDATE CASCADE ON DELETE RESTRICT,

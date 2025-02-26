@@ -4,7 +4,7 @@ def get_campuses(cursor, /):
 
 def get_campus_id(cursor, /, *, campus=None):
 	cursor.execute("""SELECT `id` FROM `campuses`
-				   WHERE `name`=%s""", (campus,))
+				   WHERE `name` LIKE %s""", (campus,))
 	return cursor.fetchone()["id"]
 
 def get_campus_name(cursor, /, *, id=None):
@@ -44,7 +44,7 @@ def get_departments_in_school(cursor, /, *, school_id=None):
 
 def get_schools_with_department(cursor, /, *, department=None):
 	cursor.execute("""SELECT `school_id` FROM `school_departments`
-				   WHERE `department`=%s""", (department,))
+				   WHERE `department` LIKE %s""", (department,))
 	return cursor.fetchall()
 
 def get_degrees(cursor, /):
@@ -53,7 +53,7 @@ def get_degrees(cursor, /):
 
 def get_degree_duration(cursor, /, *, degree=None):
 	cursor.execute("""SELECT `duartion` FROM `degrees`
-				   WHERE `degree`=%s""", (degree,))
+				   WHERE `degree` LIKE %s""", (degree,))
 	return cursor.fetchone()["duartion"]
 
 def get_streams(cursor, /):
@@ -62,7 +62,7 @@ def get_streams(cursor, /):
 
 def get_streams_under_department(cursor, /, *, department=None):
 	cursor.execute("""SELECT `stream` FROM `school_streams`
-				   WHERE `department`=%s""", (department,))
+				   WHERE `department` LIKE %s""", (department,))
 	return cursor.fetchall()
 
 def get_programmes(cursor, /):
@@ -71,12 +71,12 @@ def get_programmes(cursor, /):
 
 def get_programmes_with_degree(cursor, /, *, degree=None):
 	cursor.execute("""SELECT `programme` FROM `school_programmes`
-				   WHERE `degree`=%s""", (degree,))
+				   WHERE `degree` LIKE %s""", (degree,))
 	return cursor.fetchall()
 
 def get_programmes_with_stream(cursor, /, *, stream=None):
 	cursor.execute("""SELECT `programme` FROM `school_programmes`
-				   WHERE `stream`=%s""", (stream,))
+				   WHERE `stream` LIKE %s""", (stream,))
 	return cursor.fetchall()
 
 def get_programmes_in_campus(cursor, /, *, campus_id=None):
@@ -84,7 +84,7 @@ def get_programmes_in_campus(cursor, /, *, campus_id=None):
 				   WHERE `campus_id`=%s""", (campus_id,))
 	return cursor.fetchall()
 
-def get_campuses_with_programme(cursor, /, *, programme=None):
+def get_campuses_with_programme_id(cursor, /, *, programme_id=None):
 	cursor.execute("""SELECT `campus_id` FROM `campus_programmes`
-				   WHERE `programme`=%s""", (programme,))
+				   WHERE `programme_id`=%s""", (programme_id,))
 	return cursor.fetchall()

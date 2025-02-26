@@ -9,9 +9,12 @@ def create_triggers(db_connector, cursor):
 	cursor.execute("""CREATE PROCEDURE IF NOT EXISTS `department_exists`
 				   (IN `campus_id` TINYINT UNSIGNED, IN `department` VARCHAR(40))
 				   IF NOT EXISTS (
-					SELECT 1 
-					FROM `campus_departments`
-					WHERE `campus_id`=`campus_id` AND `department`=`department`
+					SELECT 1
+					FROM `school_departments` AS `SD`
+					JOIN `schools`
+					ON `SD`.`school_id`=`schools`.`id`
+					AND `SD`.`department`=`department`
+					AND `schools`.`campus_id`=`campus_id`
 				   )
 				   	THEN SIGNAL SQLSTATE '45000'
 				   	SET MESSAGE_TEXT = 'Value Error: No such department in given campus (or no such campus) found';
@@ -25,32 +28,36 @@ def create_triggers(db_connector, cursor):
 							FROM `classes`
 							WHERE `id`=`class_id`);
 	""")
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `deleted_campus` (
-				   `id` TINYINT UNSIGNED,
-				   `name` VARCHAR(40),
-				   PRIMARY KEY(`id`)
-	)""")
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `deleted_blocks` (
-				   `id` TINYINT UNSIGNED,
-				   `name` VARCHAR(40),
-				   `campus_id` TINYINT UNSIGNED,
-				   PRIMARY KEY(`id`)
-	)""")
+	cursor.execute("""CREATE FUNCTION IF NOT EXISTS `section_has_course`
+				   (`section_id` MEDIUMINT UNSIGNED, `course_code` VARCHAR(10))
+				   RETURNS BOOLEAN
+				   NOT DETERMINISTIC
+				   READS SQL DATA
+					RETURN EXISTS (SELECT 1
+							FROM `sections`
+							JOIN `programmes`
+							ON `sections`.`degree`=`programmes`.`degree`
+							JOIN `section_streams` AS `SS`
+							ON `SS`.`section_id`=`sections`.`id`
+							JOIN `programme_courses` AS `PC`
+							ON `programmes`.`stream`=`SS`.`stream`
+							WHERE `sections`.`id`=`section_id`
+							AND `PC`.`course_code`=`sections`.`course_code`
+							LIMIT 1);
+	""")
+	cursor.execute("""CREATE FUNCTION IF NOT EXISTS `get_is_elective`(`course_code` VARCHAR(10))
+				   RETURNS BOOLEAN
+				   NOT DETERMINISTIC
+				   READS SQL DATA
+					RETURN (SELECT `is_elective`
+							FROM `courses`
+							WHERE `code`=`course_code`);
+	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `backup_campus`
 					BEFORE DELETE ON `campuses`
 					FOR EACH ROW
 						INSERT INTO `deleted_campus`(`id`, `name`)
 						VALUES (OLD.id, OLD.name);
-	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `school_department_chk_insert`
-				   BEFORE INSERT ON `school_departments`
-				   FOR EACH ROW
-					CALL `department_exists`(NEW.`school_id`, NEW.`department`);
-	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `school_department_chk_update`
-				   BEFORE UPDATE ON `school_departments`
-				   FOR EACH ROW
-					CALL `department_exists`(NEW.`school_id`, NEW.`department`);
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `no_of_rooms_chk_insert`
 				   BEFORE INSERT ON `classes`
@@ -58,22 +65,6 @@ def create_triggers(db_connector, cursor):
 				   BEGIN
 					DECLARE `room_count` INT;
 					SELECT COUNT(*) INTO `room_count` 
-					FROM `classes`
-					WHERE `building_id`=NEW.`building_id`;
-					IF room_count >= (SELECT `no_of_rooms`
-									  FROM `buildings`
-									  WHERE `id` = NEW.`building_id`)
-						THEN SIGNAL SQLSTATE '45000'
-						SET MESSAGE_TEXT = 'Limit Exceeded: Number of classrooms cannot exceed the number of rooms in the building';
-					END IF;
-				   END;
-	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `no_of_rooms_chk_update`
-				   BEFORE UPDATE ON `classes`
-				   FOR EACH ROW
-				   BEGIN
-					DECLARE `room_count` INT;
-					SELECT COUNT(*) INTO room_count 
 					FROM `classes`
 					WHERE `building_id`=NEW.`building_id`;
 					IF room_count >= (SELECT `no_of_rooms`
@@ -109,6 +100,38 @@ def create_triggers(db_connector, cursor):
 						SET MESSAGE_TEXT = 'Invalid year: Must be in the range 1 and degree-duration';
 					END IF;
 				   END;
+	""")
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `student_elective_course_insert`
+				   BEFORE INSERT ON `student_elective_courses`
+				   FOR EACH ROW
+					IF NOT EXISTS (
+						SELECT 1
+						FROM `students`
+						JOIN `programme_courses` AS `PC`
+						ON `students`.`programme_id`=`PC`.`programme_id`
+						AND `PC`.`course_code`=NEW.`course_code`
+						AND `get_is_elective`(NEW.`course_code`)
+						AND `students`.`id`=NEW.`student_id`
+					)
+						THEN SIGNAL SQLSTATE '45000'
+				   		SET MESSAGE_TEXT = 'Invalid Course: Course is not valid elective for the Student''s programme';
+				   	END IF;
+	""")
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `student_elective_course_update`
+				   BEFORE UPDATE ON `student_elective_courses`
+				   FOR EACH ROW
+					IF NOT EXISTS (
+						SELECT 1
+						FROM `students`
+						JOIN `programme_courses` AS `PC`
+						ON `students`.`programme_id`=`PC`.`programme_id`
+						AND `PC`.`course_code`=NEW.`course_code`
+						AND `get_is_elective`(NEW.`course_code`)
+						AND `students`.`id`=NEW.`student_id`
+					)
+						THEN SIGNAL SQLSTATE '45000'
+				   		SET MESSAGE_TEXT = 'Invalid Course: Course is not valid elective for the Student''s programme';
+				   	END IF;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `faculties_join_yr_dept_chk_insert`
 				   BEFORE INSERT ON `faculties`
@@ -153,7 +176,7 @@ def create_triggers(db_connector, cursor):
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_class_not_lab_insert`
 				   BEFORE INSERT ON `section_classes`
 				   FOR EACH ROW
-					IF get_is_lab(NEW.`class_id`)
+					IF `get_is_lab`(NEW.`class_id`)
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT = 'Invalid class: Class can not be lab';
 					END IF;
@@ -161,25 +184,25 @@ def create_triggers(db_connector, cursor):
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_class_not_lab_update`
 				   BEFORE UPDATE ON `section_classes`
 				   FOR EACH ROW
-					IF get_is_lab(NEW.`class_id`)
+					IF `get_is_lab`(NEW.`class_id`)
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT = 'Invalid class: Class can not be lab';
 					END IF;
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_class_lab_insert`
-				   BEFORE INSERT ON `section_classes`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `faculty_course_section_insert`
+				   BEFORE INSERT ON `faculty_section_course`
 				   FOR EACH ROW
-					IF NOT get_is_lab(NEW.`class_id`)
+					IF NOT `section_has_course`(NEW.`section_id`, NEW.`course_code`)
 						THEN SIGNAL SQLSTATE '45000'
-						SET MESSAGE_TEXT = 'Invalid class: Class must be lab';
+						SET MESSAGE_TEXT = 'Invalid Course: Course not found in given Section';
 					END IF;
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_class_lab_update`
-				   BEFORE UPDATE ON `section_classes`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `faculty_course_section_update`
+				   BEFORE UPDATE ON `faculty_section_course`
 				   FOR EACH ROW
-					IF NOT get_is_lab(NEW.`class_id`)
+					IF NOT `section_has_course`(NEW.`section_id`, NEW.`course_code`)
 						THEN SIGNAL SQLSTATE '45000'
-						SET MESSAGE_TEXT = 'Invalid class: Class must be lab';
+						SET MESSAGE_TEXT = 'Invalid Course: Course not found in given Section';
 					END IF;
 	""")
 	db_connector.commit()
