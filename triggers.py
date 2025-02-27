@@ -37,12 +37,11 @@ def create_triggers(db_connector, cursor):
 							FROM `sections`
 							JOIN `programmes`
 							ON `sections`.`degree`=`programmes`.`degree`
-							JOIN `section_streams` AS `SS`
-							ON `SS`.`section_id`=`sections`.`id`
-							JOIN `programme_courses` AS `PC`
-							ON `programmes`.`stream`=`SS`.`stream`
-							WHERE `sections`.`id`=`section_id`
-							AND `PC`.`course_code`=`sections`.`course_code`
+							AND `sections`.`stream`=`programmes`.`stream`
+							AND `sections`.`id`=`section_id`
+							JOIN `programme_courses`AS `PC`
+							ON `prgrammes`.`id`=`PC`.`programme_id`
+							AND `PC`.`course_code`=`course_code`
 							LIMIT 1);
 	""")
 	cursor.execute("""CREATE FUNCTION IF NOT EXISTS `get_is_elective`(`course_code` VARCHAR(10))
