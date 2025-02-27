@@ -104,10 +104,13 @@ def create_database(db_connector, cursor):
 				   `id` MEDIUMINT UNSIGNED AUTO_INCREMENT,
 				   `campus_id` TINYINT UNSIGNED NOT NULL,
 				   `degree` VARCHAR(40) NOT NULL,
+				   `stream` VARCHAR(40) NULL,
 				   `section` VARCHAR(2) NOT NULL,
 				   `year` TINYINT UNSIGNED NOT NULL, -- check 0 < `year` <= `degree`.`duration`
 				   PRIMARY KEY(`id`),
 				   FOREIGN KEY(`degree`) REFERENCES `degrees`(`name`)
+				   ON UPDATE CASCADE ON DELETE RESTRICT,
+				   FOREIGN KEY(`stream`) REFERENCES `streams`(`name`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `faculties` (
