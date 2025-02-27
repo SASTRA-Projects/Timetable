@@ -12,15 +12,6 @@ def create_relations(db_connector, cursor):
 				   ON UPDATE CASCADE ON DELETE CASCADE,
 				   CHECK(`phone` REGEXP '^[6789][0-9]{9}$')
 	)""")
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `section_streams` (
-				   `section_id` MEDIUMINT UNSIGNED NOT NULL,
-				   `stream` VARCHAR(40) NOT NULL,
-				   PRIMARY KEY(`section_id`, `stream`),
-				   FOREIGN KEY(`section_id`) REFERENCES `sections`(`id`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   FOREIGN KEY(`stream`) REFERENCES `streams`(`name`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT
-	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `section_classes` (
 				   `id` SMALLINT UNSIGNED AUTO_INCREMENT,
 				   `section_id` MEDIUMINT UNSIGNED NOT NULL,
