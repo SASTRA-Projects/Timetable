@@ -1,5 +1,5 @@
-import random
-from timetable import database
+from typehints import *
+import timetable
 
 """
 By Harikirshna Srinivasan.
@@ -123,8 +123,5 @@ Algorithm section_busy(section, day, period):
 	return (SELECT * from timetable where section=section, day=day, period=period).fetchone()
 """
 
-def timetable_for(section_id):
-	...
-
-if __name__ == "__main__":
-	database.close()
+def timetable_for(section_id: int) -> None:
+	return None

@@ -1,11 +1,12 @@
+from typehints import *
 import pymysql
 
-timeout = 300
+timeout: int = 180
 
-db_connector = None
-cursor = None
+db_connector: Optional[Connection] = None
+cursor: Optional[Cursor] = None
 
-def connect(user, __pwd, /, *, host="mysql-93e938b-harikrishnasri3.f.aivencloud.com"):
+def connect(user: str, __pwd: str, /, *, host: str = "mysql-93e938b-harikrishnasri3.f.aivencloud.com") -> Connection:
   global db_connector, cursor
   db_connector = pymysql.connect(
     charset="utf8mb4",
@@ -18,23 +19,27 @@ def connect(user, __pwd, /, *, host="mysql-93e938b-harikrishnasri3.f.aivencloud.
     user=user,
     write_timeout=timeout,
   )
-
-  cursor = db_connector.cursor()
-  cursor.execute("""CREATE DATABASE IF NOT EXISTS `SASTRA`""")
-  cursor.execute("""USE `SASTRA`""")
+  if db_connector:
+    cursor = db_connector.cursor()
+    db_connector.autocommit(False)
+  if cursor:
+    cursor.execute("""CREATE DATABASE IF NOT EXISTS `SASTRA`""")
+    cursor.execute("""USE `SASTRA`""")
   return db_connector
 
-def create_db(*, database=None):
+def create_db(cursor: Cursor, /, *, database: Optional[str] = None) -> None:
   cursor.execute("""CREATE DATABASE IF NOT EXISTS `%s`""", (database,))
   
-def use_db(*, database=None):
-  db_connector.autocommit = False
+def use_db(db_connector: Connection, cursor: Cursor, /, *, database: Optional[str] = None) -> None:
+  db_connector.autocommit(False)
   cursor.execute("""USE `%s`""", (database,))
 
-def close():
-  db_connector.commit()
-  cursor.close()
-  db_connector.close()
+def close() -> NoReturn:
+  if db_connector:
+    db_connector.commit()
+    if cursor:
+      cursor.close()
+    db_connector.close()
   exit()
 
 if __name__ == "__main__":
