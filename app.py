@@ -82,15 +82,21 @@ def about() -> str:
 
 @app.route("/campus")
 def show_campuses() -> str:
-	return render_template("campus.html", campuses=show_data.get_campuses(sql.cursor))
+	if sql.cursor:
+		return render_template("campus.html", campuses=show_data.get_campuses(sql.cursor))
+	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/department")
 def show_departments() -> str:
-	return render_template("department.html", departments=show_data.get_departments(sql.cursor))
+	if sql.cursor:
+		return render_template("department.html", departments=show_data.get_departments(sql.cursor))
+	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/programme")
 def show_programmes() -> str:
-	return render_template("programme.html", programmes=show_data.get_programmes(sql.cursor))
+	if sql.cursor:
+		return render_template("programme.html", programmes=show_data.get_programmes(sql.cursor))
+	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/campus/<string:campus>")
 def show_schools(campus: str) -> Response:
@@ -100,10 +106,12 @@ def show_schools(campus: str) -> Response:
 
 @app.route("/faculty/details")
 def faculty_details() -> str:
-	if not session["faculty"] or not session["faculty_details"]:
-		raise ValueError("Illegal access or value is missing.")
-	faculty = session["faculty_details"]
-	return render_template("faculty.html", faculty=faculty, campus=show_data.get_campus_name(sql.cursor, id=faculty["campus_id"]))
+	if sql.cursor:
+		if not session["faculty"] or not session["faculty_details"]:
+			raise ValueError("Illegal access or value is missing.")
+		faculty = session["faculty_details"]
+		return render_template("faculty.html", faculty=faculty, campus=show_data.get_campus_name(sql.cursor, id=faculty["campus_id"]))
+	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.errorhandler(404)
 def page_not_found(error: NotFound) -> tuple[str, int]:

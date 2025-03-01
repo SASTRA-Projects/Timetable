@@ -76,6 +76,22 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					END IF;
 				   END;
 	""")
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `no_of_rooms_chk_update`
+				   BEFORE UPDATE ON `classes`
+				   FOR EACH ROW
+				   BEGIN
+					DECLARE `room_count` INT;
+					SELECT COUNT(*) INTO `room_count` 
+					FROM `classes`
+					WHERE `building_id`=NEW.`building_id`;
+					IF room_count >= (SELECT `no_of_rooms`
+									  FROM `buildings`
+									  WHERE `id` = NEW.`building_id`)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT = 'Limit Exceeded: Number of classrooms cannot exceed the number of rooms in the building';
+					END IF;
+				   END;
+	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_yr_chk_insert`
 				  BEFORE INSERT ON `sections`
 				  FOR EACH ROW
@@ -101,38 +117,6 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						SET MESSAGE_TEXT = 'Invalid year: Must be in the range 1 and degree-duration';
 					END IF;
 				   END;
-	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `student_elective_course_insert`
-				   BEFORE INSERT ON `student_elective_courses`
-				   FOR EACH ROW
-					IF NOT EXISTS (
-						SELECT 1
-						FROM `students`
-						JOIN `programme_courses` AS `PC`
-						ON `students`.`programme_id`=`PC`.`programme_id`
-						AND `PC`.`course_code`=NEW.`course_code`
-						AND `get_is_elective`(NEW.`course_code`)
-						AND `students`.`id`=NEW.`student_id`
-					)
-						THEN SIGNAL SQLSTATE '45000'
-				   		SET MESSAGE_TEXT = 'Invalid Course: Course is not valid elective for the Student''s programme';
-				   	END IF;
-	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `student_elective_course_update`
-				   BEFORE UPDATE ON `student_elective_courses`
-				   FOR EACH ROW
-					IF NOT EXISTS (
-						SELECT 1
-						FROM `students`
-						JOIN `programme_courses` AS `PC`
-						ON `students`.`programme_id`=`PC`.`programme_id`
-						AND `PC`.`course_code`=NEW.`course_code`
-						AND `get_is_elective`(NEW.`course_code`)
-						AND `students`.`id`=NEW.`student_id`
-					)
-						THEN SIGNAL SQLSTATE '45000'
-				   		SET MESSAGE_TEXT = 'Invalid Course: Course is not valid elective for the Student''s programme';
-				   	END IF;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `faculties_join_yr_dept_chk_insert`
 				   BEFORE INSERT ON `faculties`
@@ -175,7 +159,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   END;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_class_not_lab_insert`
-				   BEFORE INSERT ON `section_classes`
+				   BEFORE INSERT ON `section_class`
 				   FOR EACH ROW
 					IF `get_is_lab`(NEW.`class_id`)
 						THEN SIGNAL SQLSTATE '45000'
@@ -183,7 +167,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					END IF;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_class_not_lab_update`
-				   BEFORE UPDATE ON `section_classes`
+				   BEFORE UPDATE ON `section_class`
 				   FOR EACH ROW
 					IF `get_is_lab`(NEW.`class_id`)
 						THEN SIGNAL SQLSTATE '45000'
@@ -205,5 +189,37 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT = 'Invalid Course: Course not found in given Section';
 					END IF;
+	""")
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `student_elective_insert`
+				   BEFORE INSERT ON `student_electives`
+				   FOR EACH ROW
+					IF NOT EXISTS (
+						SELECT 1
+						FROM `students`
+						JOIN `programme_courses` AS `PC`
+						ON `students`.`programme_id`=`PC`.`programme_id`
+						AND `PC`.`course_code`=NEW.`course_code`
+						AND `get_is_elective`(NEW.`course_code`)
+						AND `students`.`id`=NEW.`student_id`
+					)
+						THEN SIGNAL SQLSTATE '45000'
+				   		SET MESSAGE_TEXT = 'Invalid Course: Course is not valid elective for the Student''s programme';
+				   	END IF;
+	""")
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `student_elective_update`
+				   BEFORE UPDATE ON `student_electives`
+				   FOR EACH ROW
+					IF NOT EXISTS (
+						SELECT 1
+						FROM `students`
+						JOIN `programme_courses` AS `PC`
+						ON `students`.`programme_id`=`PC`.`programme_id`
+						AND `PC`.`course_code`=NEW.`course_code`
+						AND `get_is_elective`(NEW.`course_code`)
+						AND `students`.`id`=NEW.`student_id`
+					)
+						THEN SIGNAL SQLSTATE '45000'
+				   		SET MESSAGE_TEXT = 'Invalid Course: Course is not valid elective for the Student''s programme';
+				   	END IF;
 	""")
 	db_connector.commit()
