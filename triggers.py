@@ -1,4 +1,6 @@
-def create_triggers(db_connector, cursor):
+from typehints import *
+
+def create_triggers(db_connector: Connection, cursor: Cursor):
 	cursor.execute("""CREATE PROCEDURE IF NOT EXISTS `validate_join_year`
 				   (IN `year` SMALLINT UNSIGNED)
 				   IF `year` > YEAR(CURDATE())

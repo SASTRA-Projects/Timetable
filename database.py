@@ -1,4 +1,6 @@
-def create_database(db_connector, cursor):
+from typehints import *
+
+def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `campuses` (
 				   `id` TINYINT UNSIGNED AUTO_INCREMENT, -- max=255
 				   `name` VARCHAR(40) NOT NULL,

@@ -1,4 +1,6 @@
-def create_relations(db_connector, cursor):
+from typehints import *
+
+def create_relations(db_connector: Connection, cursor: Cursor) -> None:
 	import database
 	database.create_database(db_connector, cursor)
 

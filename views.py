@@ -1,4 +1,6 @@
-def create_views(db_connector, cursor):
+from typehints import *
+
+def create_views(db_connector: Connection, cursor: Cursor) -> None:
     import timetable
     timetable.create_timetable(db_connector, cursor)
 
