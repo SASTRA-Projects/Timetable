@@ -1,4 +1,4 @@
-from typing import Any, Dict, NoReturn, Optional, Tuple, TypeAlias, Union
+from typing import Any, Dict, List, NoReturn, Optional, TypeAlias, Union, Tuple
 import pymysql
 import werkzeug
 
