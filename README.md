@@ -54,7 +54,6 @@ Triggers, stored procedures, and functions enforce data integrity, while the sys
 
 - [Python](https://www.python.org/downloads/)
 - [MySQL Server](https://dev.mysql.com/downloads/)
-- [Node.js](https://nodejs.org/) (for optional front-end enhancements)
 
 ### Installation
 
