@@ -154,3 +154,8 @@ def get_campuses_with_programme(cursor: Cursor, /, *,
 	cursor.execute("""SELECT `campus_id` FROM `campus_programmes`
 				   WHERE `programme_id`=%s""", (programme_id,))
 	return cursor.fetchall()
+
+def get_school_id(campus_id, school):
+	cursor.execute("""SELECT `id` FROM `schools`
+				   WHERE `name`=%s""", (campus_id, school))
+	return cursor.fetchone()
