@@ -1,6 +1,6 @@
-from flask import Flask, redirect, render_template, request, session, url_for
-from typehints import *
-import secrets
+from flask import Flask, render_template, request, url_for, redirect
+
+import add_data
 import show_data
 import fetch_data
 import mysql_connector as sql
@@ -73,31 +73,39 @@ def auth_faculty() -> Response | str:
 	return render_template("failed.html", error_message="Login information not entered properly!")
 
 @app.route("/home")
-@app.route("/")
-def index() -> str:
+def index():
 	return render_template("index.html")
 
 @app.route("/about")
-def about() -> str:
+def about():
 	return render_template("about.html")
 
-@app.route("/campus")
-def show_campuses() -> str:
-	if sql.cursor:
-		return render_template("campus.html", campuses=show_data.get_campuses(sql.cursor))
-	return render_template("failed.html", reason="Unknown error occurred")
+@app.route("/add/campus")
+def add_campus(): 
+	return render_template("add_campus.html")
 
-@app.route("/department")
-def show_departments() -> str:
-	if sql.cursor:
-		return render_template("department.html", departments=show_data.get_departments(sql.cursor))
-	return render_template("failed.html", reason="Unknown error occurred")
+@app.route("/add/<string:campus>", methods=["POST"])
+def add_schools(campus):
+	campus = request.form.get("campus")
 
-@app.route("/programme")
-def show_programmes() -> str:
-	if sql.cursor:
-		return render_template("programme.html", programmes=show_data.get_programmes(sql.cursor))
-	return render_template("failed.html", reason="Unknown error occurred")
+	if not campus:
+		raise Exception("Required Field: Campus name")
+
+	campus = campus.strip().upper()
+	no_of_schools = request.form.get("no_of_schools")
+
+	if not (no_of_schools):
+		raise Exception("Required Field: Number of schools")
+
+	try:
+		no_of_schools = int(no_of_schools)
+		if not (1 <= no_of_schools <= 255):
+			raise Exception("Range Error: Number of schools must be between 1 and 255 (both inclusive) only")
+	except ValueError:
+		raise Exception("Incorrect Format: Number of schools must be an integer")
+	
+	add_data.add_campus(campus)
+	return render_template("add_schools.html", campus=campus, no_of_schools=no_of_schools)
 
 @app.route("/campus/<string:campus>")
 def show_schools(campus: str) -> Response:
@@ -114,11 +122,10 @@ def faculty_details() -> str:
 		return render_template("faculty.html", faculty=faculty, campus=show_data.get_campus_name(sql.cursor, id=faculty["campus_id"]))
 	return render_template("failed.html", reason="Unknown error occurred")
 
-@app.errorhandler(404)
-def page_not_found(error: NotFound) -> tuple[str, int]:
-	print(type(error))
-	return (render_template("404.html"), 404)
+@app.route("/delete/<string:campus>")
+def delete_campus(campus):
+	delete_data.delete_campus(campus.strip().upper())
+	return render_template("campus.html", function="delete", campuses=show_data.show_campuses())
 
 if __name__ == "__main__":
-	app.config.update(SESSION_COOKIE_SECURE=True, SESSION_COOKIE_HTTPSONLY=True)
-	app.run(host="0.0.0.0", port=5000, debug=False)
+	app.run(debug=False)

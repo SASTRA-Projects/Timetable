@@ -18,6 +18,7 @@ def add_school(db_connector: Connection,
 				   VALUES (%s, %s, %s)""", (id, school, campus_id))
 	db_connector.commit()
 
+
 def add_building(db_connector: Connection,
 				 cursor: Cursor, /, *,
 				 id: Optional[int] = None,

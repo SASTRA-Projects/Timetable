@@ -51,36 +51,8 @@
 from argon2 import PasswordHasher, exceptions
 from typehints import *
 
-def get_courses(cursor: Cursor, /, *,
-                elective: Optional[bool] = None,
-                lab: Optional[bool]) -> Tuple[Optional[Dict[str, Union[bool, int, str]]], ...]:
-    if elective is None and lab is None:
-        cursor.execute("""SELECT * FROM `courses`""")
-    elif lab is None:
-        cursor.execute("""SELECT `code`, `name`,
-                       `department`, `credits`,
-                       `L`, `P`, `T` FROM `courses`
-                       WHERE `is_elective`=%s""", (elective,))
-    elif elective is None:
-        if lab:
-            cursor.execute("""SELECT * FROM `courses`
-                           WHERE `P` > %s""", (0,))
-        else:
-            cursor.execute("""SELECT * FROM `courses`
-                           WHERE `P`=%s""", (0,))
-    else:
-        if lab:
-            cursor.execute("""SELECT `code`, `name`,
-                           `department`, `credits`,
-                           `L`, `P`, `T` FROM `courses`
-                           WHERE `P` > %s
-                           AND `is_elective`=%s""", (0, elective))
-        else:
-            cursor.execute("""SELECT `code`, `name`,
-                           `department`, `credits`,
-                           `L`, `P`, `T` FROM `courses`
-                           WHERE `P`=%s
-                           AND `is_elective`=%s""", (0, elective))
+def get_courses(cursor: Cursor, /) -> Tuple[Optional[Dict[str, Union[bool, int, str]]], ...]:
+    cursor.execute("""SELECT * FROM `courses`""")
     return cursor.fetchall()
 
 def get_course(cursor: Cursor, /, *,
@@ -91,54 +63,53 @@ def get_course(cursor: Cursor, /, *,
                    WHERE `code`=%s""", (code,))
     return cursor.fetchone()
 
-def get_classes(cursor: Cursor, /, *,
-                building_id: Optional[int] = None,
-                lab: Optional[bool] = None) -> Tuple[Optional[Dict[str, Union[bool, int]]], ...]:
-    if building_id:
-        if lab is not None:
-            cursor.execute("""SELECT `id`, `room_no`, `capacity`
-                           FROM `classes`
-                           WHERE `is_lab`=%s
-                           AND `building_id`=%s""", (lab, building_id))
-        else:
-            cursor.execute("""SELECT `id`, `room_no`, `capacity`, `is_lab`
-                           FROM `classes`
-                           WHERE `building_id`=%s""", (building_id,))
-    elif lab is not None:
-        cursor.execute("""SELECT `id`, `building_id`, `room_no`, `capacity`
-                       FROM `classes`
-                       WHERE `is_lab`=%s""", (lab,))
-    else:
-        cursor.execute("""SELECT * FROM `classes`""")
+def get_elective_courses(cursor: Cursor, /) -> Tuple[Optional[Dict[str, Union[int, str]]], ...]:
+    cursor.execute("""SELECT `code`, `name`,
+                   `department`, `credits`,
+                   `L`, `P`, `T` FROM `courses`
+                   WHERE `is_elective`=%s""", (True,))
     return cursor.fetchall()
 
-def get_class(cursor: Cursor, /, *,
-              class_id: Optional[int] = None) -> Optional[Dict[str, Union[bool, int]]]:
-    cursor.execute("""SELECT `building_id`, `room_no`,
-                   `capacity`, `is_lab` FROM `classes`
-                   WHERE `id`=%s""", (class_id,))
-    return cursor.fetchone()
-
-def get_faculties(cursor: Cursor, /, *,
-                  campus_id: Optional[int] = None,
-                  department: Optional[str] = None) -> Tuple[Optional[Dict[str, Union[int, str]]], ...]:
-    if campus_id:
-        if department:
-            cursor.execute("""SELECT `id`, `name`, `join_year`
-                           FROM `faculties`
-                           WHERE `campus_id`=%s
-                           AND `department`=%s""", (campus_id, department))
-        else:
-            cursor.execute("""SELECT `id`, `name`, `department`, `join_year`
-                           FROM `faculties`
-                           WHERE `campus_id`=%s""", (campus_id,))
-    elif department:
-        cursor.execute("""SELECT  `id`, `name`, `campus_id`, `join_year`
-                       FROM `faculties`
-                       WHERE `department`=%s""", (department,))
-    else:
-        cursor.execute("""SELECT * FROM `faculties`""")
+def get_nonelective_courses(cursor: Cursor, /) -> Tuple[Optional[Dict[str, Union[bool, int, str]]], ...]:
+    cursor.execute("""SELECT `code`, `name`,
+                   `department`, `credits`,
+                   `L`, `P`, `T` FROM `courses`
+                   WHERE `is_elective`=%s""", (False,))
     return cursor.fetchall()
+
+def get_courses_with_lab(cursor: Cursor, /) -> Tuple[Optional[Dict[str, Union[bool, int, str]]], ...]:
+    cursor.execute("""SELECT * FROM `courses`
+                   WHERE `P` > %s""", (0,))
+    return cursor.fetchall()
+
+def get_courses_without_lab(cursor: Cursor, /) -> Tuple[Optional[Dict[str, Union[bool, int, str]]], ...]:
+    cursor.execute("""SELECT * FROM `courses`
+                   WHERE `P`=%s""", (0,))
+    return cursor.fetchall()
+
+def get_classes(cursor: Cursor, /) -> Tuple[Optional[Dict[str, Union[bool, int]]], ...]:
+    cursor.execute("""SELECT * FROM `classes`""")
+    return cursor.fetchall()
+
+def get_classes_in_building(cursor: Cursor, /,
+                            building_id: Optional[int] = None) -> Tuple[Optional[Dict[str, Union[bool, int, str]]], ...]:
+    cursor.execute("""SELECT `id`, `room_no`, `capacity`, `is_lab` FROM `classes`
+                   WHERE `building_id`=%s""", (building_id,))
+    return cursor.fetchall()
+
+def get_lab_classes(cursor: Cursor, /) -> Tuple[Optional[Dict[str, Union[int, str]]], ...]:
+    cursor.execute("""SELECT `id`, `building_id`, `room_no`, `capacity` FROM `classes`
+                   WHERE `is_lab`=%s""", (True,))
+    return cursor.fetchall()
+
+def get_non_lab_classes(cursor: Cursor, /) -> Tuple[Optional[Dict[str, Union[int, str]]], ...]:
+    cursor.execute("""SELECT `id`, `building_id`, `room_no`, `capacity` FROM `classes`
+                   WHERE `is_lab`=%s""", (False,))
+    return cursor.fetchall()
+
+def get_faculties(cursor: Cursor, /) -> Tuple[Optional[Dict[str, Union[int, str]]], ...]:
+	cursor.execute("""SELECT * FROM `faculties`""")
+	return cursor.fetchall()
 
 def get_faculty(cursor: Cursor, /, *,
                 id: Optional[int] = None) -> Optional[Dict[str, Union[int, str]]]:
@@ -146,43 +117,28 @@ def get_faculty(cursor: Cursor, /, *,
 				   WHERE `id`=%s""", (id,))
 	return cursor.fetchone()
 
-def get_students(cursor: Cursor, /, *,
-                 campus_id: Optional[int] = None,
-                 programme_id: Optional[int] = None) -> Tuple[Optional[Dict[str, Union[int, str]]], ...]:
-    if campus_id:
-        if programme_id:
-            cursor.execute("""SELECT `id`, `name`, `join_year`, `phone`
-                           FROM `students`
-                           WHERE `campus_id`=%s
-                           AND `programme_id`=%s""", (campus_id, programme_id))
-        else:
-            cursor.execute("""SELECT `id`, `name`, `programme_id`, `join_year`, `phone`
-                           FROM `students`
-                           WHERE `campus_id`=%s""", (campus_id,))
-    elif programme_id:
-        cursor.execute("""SELECT  `id`, `name`, `campus_id`, `join_year`, `phone`
-                       FROM `students`
-                       WHERE `programme_id`=%s""", (programme_id,))
-    cursor.execute("""SELECT * FROM `students`""")
-    return cursor.fetchall()
+def get_students(cursor: Cursor, /) -> Tuple[Optional[Dict[str, Union[int, str]]], ...]:
+	cursor.execute("""SELECT * FROM `students`""")
+	return cursor.fetchall()
+
+def get_student_by_id(cursor: Cursor, /, *,
+                      id: Optional[int] = None) -> Optional[Dict[str, Union[int, str]]]:
+	cursor.execute("""SELECT `name` FROM `students`
+				   WHERE `id`=%s""", (id,))
+	return cursor.fetchone()
 
 def get_student(cursor: Cursor, /, *,
-                id: Optional[int] = None,
                 campus_id=None,
                 join_year=None,
                 programme_id=None,
                 roll_no: Optional[int] = None) -> Optional[Dict[str, Union[int, str]]]:
-    if id:
-        cursor.execute("""SELECT `name` FROM `students`
-				       WHERE `id`=%s""", (id,))
-    else:
-    	cursor.execute("""SELECT `name` FROM `students`
-                       WHERE `campus_id`=%s
-                       AND `join_id`=%s
-                       AND `programme_id`=%s
-                       AND `roll_no`=%s""",
-                       (campus_id, join_year, programme_id, roll_no))
-    return cursor.fetchone()
+	cursor.execute("""SELECT `name` FROM `students`
+				   WHERE `campus_id`=%s
+                   AND `join_id`=%s
+                   AND `programme_id`=%s
+                   AND `roll_no`=%s""",
+                   (campus_id, join_year, programme_id, roll_no))
+	return cursor.fetchone()
 
 def get_faculty_details(cursor: Cursor, /, *,
                         id: Optional[int] = None,
