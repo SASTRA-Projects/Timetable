@@ -59,12 +59,13 @@ def log_faculty() -> Response | str:
 def auth_faculty() -> Response | str:
 	if request.form.get("user") and request.form.get("password"):
 		try:
-			if sql.cursor and isinstance(request.form["user"], int):
+			if sql.cursor:
 				session["faculty_details"] = fetch_data.get_faculty_details(sql.cursor,
-																			id=request.form["user"],
+																			id=int(request.form["user"]),
 																			password=request.form["password"])
 				session["faculty"] = True
-			return redirect(url_for("faculty_details"))
+				return redirect(url_for("faculty_details"))
+			return render_template("failed.html", error_message="Unauthorized Login!")
 		except AssertionError:
 			return render_template("login.html", user="ID", userType="number", auth="/auth_faculty", role="faculty", error_message="Invalid ID or Password")
 		except Exception:
@@ -107,7 +108,7 @@ def show_schools(campus: str) -> Response:
 @app.route("/faculty/details")
 def faculty_details() -> str:
 	if sql.cursor:
-		if not session["faculty"] or not session["faculty_details"]:
+		if not session.get("faculty") or not session.get("faculty_details"):
 			raise ValueError("Illegal access or value is missing.")
 		faculty = session["faculty_details"]
 		return render_template("faculty.html", faculty=faculty, campus=show_data.get_campus_name(sql.cursor, id=faculty["campus_id"]))
