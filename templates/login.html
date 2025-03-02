@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block head %}
+	<meta name="description"
+          content="Login to access your account.
+                   Enter your username or ID and password for authentication.">
+    <style>
+        #loginForm > label {
+            width: 8ch;
+        }
+        @media screen and (min-width: 409px) {
+            #content > form > label {
+                text-align: left;
+            }
+            #content > form > button {
+                margin-left: 5rem;
+                margin-top: 0.5rem;
+            }
+        }
+        form > button {
+            margin: auto;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+	{% if role %}
+        <h1>{{ role.title() }} Login</h1>
+    {% else %}
+        <h1>Login</h1>
+    {% endif %}
+    {% set userType = userType or "text" %}
+    <form id="loginForm" action={{ auth }} method="post">
+        <label for="user">{{ user }} </label>
+        <input type={{ userType }} name="user" id="user" autofocus autocomplete="off" required>
+        <br>
+        <label for="password">Password </label>
+        <input type="password" name="password" id="password" autocomplete="off" required>
+        <input type="hidden" name={{ role }} value="1"/>
+        <br>
+        <button type="submit">Login</button>
+
+        {% if error_message %}
+            <div class="error message" style="margin-top: 0.5em;">{{ error_message }}</div>
+        {% endif %}
+    </form>
+    <script>
+        window.onload = function () {
+            if (window.history && window.history.pushState) {
+                window.history.pushState("forward", null, "./");
+                window.history.forward(1);
+            }
+        }
+    </script>
+{% endblock %}

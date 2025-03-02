@@ -1,0 +1,61 @@
+name: "DB Connection Test"
+
+on:  
+  push:  
+    branches: [ "main" ]  
+  pull_request:  
+    branches: [ "main" ]  
+
+jobs:
+  db-connect:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pymysql cryptography
+
+      - name: Test Cloud MySQL Connection
+        env:
+          USER: ${{ secrets.USER }}
+          PWD: ${{ secrets.PWD }}
+          HOST: ${{ secrets.HOST }}
+          TIMEOUT: 20
+        run: |
+          python -c "
+          import pymysql
+          try:
+            db_connector = pymysql.connect(
+              charset='utf8mb4',
+              connect_timeout=int('${{ env.TIMEOUT }}'),
+              cursorclass=pymysql.cursors.DictCursor,
+              host='${{ secrets.HOST }}',
+              password='${{ secrets.PWD }}',
+              read_timeout=int('${{ env.TIMEOUT }}'),
+              port=17216,
+              user='${{ secrets.USER }}',
+              write_timeout=int('${{ env.TIMEOUT }}'),
+            )
+            cursor = db_connector.cursor()
+            cursor.execute('SELECT 1+2 FROM DUAL')
+            result = cursor.fetchone()['1+2']
+            if not result or result != 3:
+              raise Exception('Got invalid result.\\nTry later!')
+            print(f'Testing...\\n\"1+2={result}\"')
+            print('✅ Connected to Cloud MySQL!')
+          except Exception as e:
+            print(f'❌ Connection failed: {e}')
+            exit(1)
+          finally:
+            if db_connector:
+              db_connector.close()
+          "
