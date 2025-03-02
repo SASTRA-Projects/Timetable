@@ -189,10 +189,10 @@ def get_faculty_details(cursor: Cursor, /, *,
                         password: Optional[str] = None) -> Optional[Dict[str, Union[float, int, str]]]:
     try:
         cursor.execute("""SELECT * FROM `faculty_view`
-                    WHERE `id`=%s""", (id,))
+                       WHERE `id`=%s""", (id,))
         faculty: Optional[Dict[str, Union[float, int, str]]] = cursor.fetchone()
         if faculty:
-            pwd: Union[float, int, str] = faculty["Password"]
+            pwd: Union[float, int, str] = faculty["password"]
         if isinstance(pwd, str) and password:
             ph: PasswordHasher = PasswordHasher()
             ph.verify(pwd, password)
@@ -201,11 +201,11 @@ def get_faculty_details(cursor: Cursor, /, *,
             cursor.execute("""UPDATE `faculty_info`
                            SET `password`=%s""", ph.hash(pwd))
         try:
-            del pwd
+            del password
             if faculty:
                 del faculty["password"]
             del ph
-            del password
+            del pwd
         finally:
             raise AssertionError("Incorrect Password")
     del pwd
