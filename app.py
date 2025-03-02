@@ -116,7 +116,6 @@ def faculty_details() -> str:
 
 @app.errorhandler(404)
 def page_not_found(error: NotFound) -> tuple[str, int]:
-	print(type(error))
 	return (render_template("404.html"), 404)
 
 if __name__ == "__main__":

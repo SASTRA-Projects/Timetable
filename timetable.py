@@ -1,4 +1,6 @@
-def create_timetable(db_connector, cursor):
+from typehints import *
+
+def create_timetable(db_connector: Connection, cursor: Cursor) -> None:
 	import relations
 	relations.create_relations(db_connector, cursor)
 
