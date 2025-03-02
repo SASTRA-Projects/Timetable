@@ -14,7 +14,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   PRIMARY KEY(`id`),
 				   FOREIGN KEY(`campus_id`) REFERENCES `campuses`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   UNIQUE(`name`, `campus_id`)
+				   UNIQUE(`campus_id`, `name`)
 	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `buildings` ( -- a school can occupy multiple buildings, many to many
 				   `id` SMALLINT UNSIGNED AUTO_INCREMENT, -- max=65535
