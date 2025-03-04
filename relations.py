@@ -17,7 +17,7 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `section_class` (
 				   `id` SMALLINT UNSIGNED AUTO_INCREMENT,
 				   `section_id` MEDIUMINT UNSIGNED NOT NULL,
-				   `class_id` SMALLINT UNSIGNED NOT NULL, -- class is not lab
+				   `class_id` MEDIUMINT UNSIGNED NOT NULL, -- class is not lab
 				   PRIMARY KEY(`id`),
 				   FOREIGN KEY(`section_id`) REFERENCES `sections`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -29,12 +29,11 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `section_students` ( -- check section class capacity
 				   `section_id` MEDIUMINT UNSIGNED NOT NULL,
 				   `student_id` INT UNSIGNED NOT NULL,
-				   PRIMARY KEY(`section_id`, `student_id`),
+				   PRIMARY KEY(`student_id`),
 				   FOREIGN KEY(`section_id`) REFERENCES `sections`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
 				   FOREIGN KEY(`student_id`) REFERENCES `students`(`id`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   UNIQUE(`student_id`)
+				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `faculty_section_course` (
 				   `id` INT UNSIGNED AUTO_INCREMENT,

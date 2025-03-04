@@ -12,17 +12,32 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   (IN `campus_id` TINYINT UNSIGNED, IN `department` VARCHAR(40))
 				   IF NOT EXISTS (
 					SELECT 1
-					FROM `school_departments` AS `SD`
-					JOIN `schools`
-					ON `SD`.`school_id`=`schools`.`id`
-					AND `SD`.`department`=`department`
-					AND `schools`.`campus_id`=`campus_id`
+					FROM `campus_departments`
+					WHERE `CD`.`department`=`department`
+					AND `CD`.`campus_id`=`campus_id`
 				   )
 				   	THEN SIGNAL SQLSTATE '45000'
-				   	SET MESSAGE_TEXT = 'Value Error: No such department in given campus (or no such campus) found';
+				   	SET MESSAGE_TEXT = 'Value Error: Class and Section are not in same Campus';
 				   END IF;
 	""")
-	cursor.execute("""CREATE FUNCTION IF NOT EXISTS `get_is_lab`(`class_id` SMALLINT UNSIGNED)
+	cursor.execute("""CREATE PROCEDURE IF NOT EXISTS `is_same_campus`
+				   (IN `section_id` MEDIUMINT UNSIGNED,
+				   IN `class_id` MEDIUMINT UNSIGNED)
+				   IF NOT EXISTS (
+				   	SELECT 1
+					FROM `sections`
+					JOIN `classes`
+					ON `sections`.`id`=`section_id`
+					AND`classes`.`id`=`class_id`
+					JOIN `campus_buildings` AS `CB`
+					ON `CB`.`campus_id`=`campus_id`
+					AND `CB`.`building_id`=`buildings_id`
+				   )
+				   	THEN SIGNAL SQLSTATE '45000'
+				   	SET MESSAGE_TEXT = 'Invalid year: Join Year cannot be greater than the current year';
+				   END IF;
+	""")
+	cursor.execute("""CREATE FUNCTION IF NOT EXISTS `get_is_lab`(`class_id` MEDIUMINT UNSIGNED)
 				   RETURNS BOOLEAN
 				   NOT DETERMINISTIC
 				   READS SQL DATA
@@ -134,21 +149,13 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					CALL `department_exists`(NEW.`campus_id`, NEW.`department`);
 				   END;
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `students_join_yr_chk_insert`
-				   BEFORE INSERT ON `students`
-				   FOR EACH ROW
-					CALL `validate_join_year`(NEW.`join_year`);
-	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `students_join_yr_chk_update`
-				   BEFORE UPDATE ON `students`
-				   FOR EACH ROW
-					CALL `validate_join_year`(NEW.`join_year`);
-	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `students_roll_no_auto_incr`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `students_join_yr_chk_roll_incr_insert`
 				   BEFORE INSERT ON `students`
 				   FOR EACH ROW
 				   BEGIN
 					DECLARE `max_roll` SMALLINT UNSIGNED;
+					CALL `validate_join_year`(NEW.`join_year`);
+
 					SELECT IFNULL(MAX(`roll_no`), 1) INTO `max_roll`
 					FROM `students`
 					WHERE `campus_id`=NEW.`campus_id`
@@ -158,21 +165,32 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					SET NEW.`roll_no`=`max_roll`+1;
 				   END;
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_class_not_lab_insert`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `students_join_yr_chk_update`
+				   BEFORE UPDATE ON `students`
+				   FOR EACH ROW
+					CALL `validate_join_year`(NEW.`join_year`);
+	""")
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_class_same_campus_not_lab_insert`
 				   BEFORE INSERT ON `section_class`
 				   FOR EACH ROW
+				   BEGIN
+				   	CALL `is_same_campus`(NEW.`section_id`, NEW.`class_id`);
 					IF `get_is_lab`(NEW.`class_id`)
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT = 'Invalid class: Class can not be lab';
 					END IF;
+				   END;
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_class_not_lab_update`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_class_same_campus_not_lab_update`
 				   BEFORE UPDATE ON `section_class`
 				   FOR EACH ROW
+				   BEGIN
+				   	CALL `is_same_campus`(NEW.`section_id`, NEW.`class_id`);
 					IF `get_is_lab`(NEW.`class_id`)
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT = 'Invalid class: Class can not be lab';
 					END IF;
+				   END;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `faculty_course_section_insert`
 				   BEFORE INSERT ON `faculty_section_course`

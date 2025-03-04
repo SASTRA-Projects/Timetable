@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block head %}
+	<meta name="description"
+          content="Shows all the schools in a particular campus.
+                   Click any School name to display the Building details inside it.">
+{% endblock %}
+
+{% block title %}{{ campus }} Schools{% endblock %}
+
+{% block content %}
+	{% if not schools[0] %}
+		<p style="margin: auto; text-align: center; font-size: 4em">No Schools Found!</p>
+	{% else %}
+		<p style="margin: auto; text-align: center; font-size: 3em">Schools</p>
+		<ul class="nobulletins">
+			{% for school in schools %}
+				<hr>
+				<li style="text-align: center; font-size: 3em">
+					<a href="/school/{{ campus.replace(' ', '+') }}/{{ school['name'].replace(' ', '+') }}" class="nounderline">{{ school["name"] }}</a>
+				</li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+{% endblock %}

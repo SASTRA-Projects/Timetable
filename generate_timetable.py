@@ -1,6 +1,3 @@
-from typehints import *
-import timetable
-
 """
 By Harikirshna Srinivasan.
 Assumptions made: * There are two lunch break, one at P-4 and other at P-5.
@@ -122,6 +119,15 @@ Algorithm faculty_to_section(f_id, section, day):
 Algorithm section_busy(section, day, period):
 	return (SELECT * from timetable where section=section, day=day, period=period).fetchone()
 """
+from typehints import *
+import views
+import show_data
+import fetch_data
 
-def timetable_for(section_id: int) -> None:
+
+def generate_timetable(db_connector: Connection,
+					   cursor: Cursor, /, *,
+					   campus_id: Optional[int] = None) -> None:
+	# sections = fetch_data.get_sections(cursor, campus_id=campus_id)
+	# classes = fetch_data.get_campuses(cursor, campus_id=campus_id)
 	return None

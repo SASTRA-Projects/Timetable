@@ -7,7 +7,7 @@ def load_requirements(filename):
 
 setup(
     name="SASTRA",
-    version="0.1.1",
+    version="0.1.1a1",
     author="Harikrishna Srinivasan",
     license="Apache-2.0",
     packages=find_packages(),
@@ -23,8 +23,8 @@ setup(
     python_requires=">=3.9",
     entry_points={
         "console_scripts": [
-            "your-command = app",
-        ],
+            "your-command = app:run",
+        ]
     },
     long_description="Working on it..."
 )

@@ -12,7 +12,7 @@ def insert_faculty_info(db_connector: Connection,
 			raise ValueError("Password is missing.")
 		ph: PasswordHasher = PasswordHasher()
 		cursor.execute("""INSERT INTO `faculty_info`
-					   VALUES(%s, %s, %s, %s)""",
+					   VALUES (%s, %s, %s, %s)""",
 					   (faculty_id, phone, salary, ph.hash(password)))
 		del password
 		del ph

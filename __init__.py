@@ -1,6 +1,6 @@
 import importlib
 
-__version__ = "0.1.1"
+__version__ = "0.1.1a1"
 
 __all__ = ["mysql_connector", "add_data", "insert_data", "show_data", "fetch_data", "delete_data"]
 

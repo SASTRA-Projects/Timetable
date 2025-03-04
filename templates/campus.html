@@ -17,7 +17,7 @@
 			{% for campus in campuses %}
 				<hr>
 				<li style="text-align: center; font-size: 3em">
-					<a href="/campus/{{ campus['name'] }}" class="nounderline">{{ campus["name"] }}</a>
+					<a href="/campus/{{ campus['name'].replace(' ', '+') }}" class="nounderline">{{ campus["name"] }}</a>
 				</li>
 			{% endfor %}
 		</ul>

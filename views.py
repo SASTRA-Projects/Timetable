@@ -17,4 +17,13 @@ def create_views(db_connector: Connection, cursor: Cursor) -> None:
                    INNER JOIN `campuses`
                    ON `campuses`.`id`=`schools`.`campus_id`
     """)
+    cursor.execute("""CREATE OR REPLACE VIEW `campus_buildings` AS
+                   SELECT `campuses`.`id` AS `campus_id`,
+                   `buildings`.`id` AS `building_id`
+                   FROM `buildings`
+                   INNER JOIN `schools`
+                   ON `schools`.`id`=`buildings`.`school_id`
+                   INNER JOIN `campuses`
+                   ON `campuses`.`id`=`schools`.`campus_id`
+    """)
     db_connector.commit()

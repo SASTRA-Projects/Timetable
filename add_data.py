@@ -155,8 +155,10 @@ def add_student(db_connector: Connection,
 				roll_no: Optional[int] = None,
 				phone: Optional[Union[int, str]] = None) -> None:
 	cursor.execute("""INSERT INTO `students` (`id`, `name`,
-											  `campus_id`, `join_year`,
-											  `programme_id`, `roll_no`,
+											  `campus_id`,
+											  `join_year`,
+											  `programme_id`,
+											  `roll_no`,
 											  `phone`)
 				   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
 				   (id, name, campus_id, join_year, programme_id, roll_no, phone))

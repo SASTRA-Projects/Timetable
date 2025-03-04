@@ -84,10 +84,15 @@ def get_school_name(cursor: Cursor, /, *,
 	return None
 
 def get_buildings(cursor: Cursor, /, *,
-				  school_id: Optional[int] = None) -> Tuple[Optional[Dict[str, int]], ...]:
+				  school_id: Optional[int] = None,
+				  campus_id: Optional[int] = None) -> Tuple[Optional[Dict[str, int]], ...]:
 	if school_id:
 		cursor.execute("""SELECT `id`, `no_of_rooms` FROM `buildings`
 					   WHERE `school_id`=%s""", (school_id,))
+	elif campus_id:
+		cursor.execute("""SELECT `id`, `no_of_rooms`
+					   FROM `campus_buildings`
+					   WHERE `campus_id`=%s""", (campus_id,))
 	else:
 		cursor.execute("""SELECT `id`, `no_of_rooms` FROM `buildings`""")
 	return cursor.fetchall()

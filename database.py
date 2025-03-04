@@ -62,7 +62,8 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   `is_elective` BOOLEAN NOT NULL, -- assumed: elective course have diff code than core
 				   PRIMARY KEY(`code`),
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT
+				   ON UPDATE CASCADE ON DELETE RESTRICT,
+				   CHECK((`L` + `P` + `T`) > 0)
 	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `campus_programmes` (
 				   `campus_id` TINYINT UNSIGNED NOT NULL,
@@ -92,7 +93,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `classes` (
-				   `id` SMALLINT UNSIGNED AUTO_INCREMENT, -- check id <=`buildings`.`no_of_rooms`
+				   `id` MEDIUMINT UNSIGNED AUTO_INCREMENT, -- check id <=`buildings`.`no_of_rooms`
 				   `building_id` SMALLINT UNSIGNED NOT NULL,
 				   `room_no` SMALLINT UNSIGNED NOT NULL,
 				   `capacity` SMALLINT UNSIGNED NOT NULL, -- capacity check for students_classes

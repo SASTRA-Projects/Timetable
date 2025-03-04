@@ -115,8 +115,133 @@ def get_classes(cursor: Cursor, /, *,
 def get_class(cursor: Cursor, /, *,
               class_id: Optional[int] = None) -> Optional[Dict[str, Union[bool, int]]]:
     cursor.execute("""SELECT `building_id`, `room_no`,
-                   `capacity`, `is_lab` FROM `classes`
+                   `capacity`, `is_lab`
+                   FROM `classes`
                    WHERE `id`=%s""", (class_id,))
+    return cursor.fetchone()
+
+def get_sections(cursor: Cursor, /, *,
+                 campus_id: Optional[int] = None,
+                 degree: Optional[str] = None,
+                 stream: Optional[str] = None,
+                 year: Optional[int] = None) -> Optional[Dict[str, Union[int, str]]]:
+    if campus_id:
+        if degree:
+            if stream:
+                if year:
+                    cursor.execute("""SELECT `id`, `section`
+                                   FROM `sections`
+                                   WHERE `campus_id`=%s
+                                   AND `degree`=%s
+                                   AND `stream`=%s
+                                   AND `year`=%s""",
+                                   (campus_id, degree, stream, year))
+                else:
+                    cursor.execute("""SELECT `id`, `year`, `section`
+                                   FROM `sections`
+                                   WHERE `campus_id`=%s
+                                   AND `degree`=%s
+                                   AND `stream`=%s""",
+                                   (campus_id, degree, stream))
+            elif year:
+                cursor.execute("""SELECT `id`, `stream`, `section`
+                               FROM `sections`
+                               WHERE `campus_id`=%s
+                               AND `degree`=%s
+                               AND `year`=%s""",
+                               (campus_id, degree, year))
+            else:
+                cursor.execute("""SELECT `id`, `stream`, `year`, `section`
+                               FROM `sections`
+                               WHERE `campus_id`=%s
+                               AND `degree`=%s""",
+                               (campus_id, degree))
+        elif stream:
+            if year:
+                cursor.execute("""SELECT `id`, `degree`, `section`
+                               FROM `sections`
+                               WHERE `campus_id`=%s
+                               AND `stream`=%s
+                               AND `year`=%s""",
+                               (campus_id, stream, year))
+            else:
+                cursor.execute("""SELECT `id`, `degree`, `year`, `section`
+                               FROM `sections`
+                               WHERE `campus_id`=%s
+                               AND `stream`=%s""",
+                               (campus_id, stream))
+        elif year:
+            cursor.execute("""SELECT `id`, `degree`, `stream`, `section`
+                           FROM `sections`
+                           WHERE `campus_id`=%s
+                           AND `year`=%s""",
+                           (campus_id, year))
+        else:
+            cursor.execute("""SELECT `id`, `degree`,
+                           `stream`, `year`, `section`
+                           FROM `sections`
+                           WHERE `campus_id`=%s""",
+                           (campus_id,))
+    elif degree:
+        if stream:
+            if year:
+                cursor.execute("""SELECT `id`, `campus_id`, `section`
+                               FROM `sections`
+                               WHERE `degree`=%s
+                               AND `stream`=%s
+                               AND `year`=%s""",
+                               (degree, stream, year))
+            else:
+                cursor.execute("""SELECT `id`, `campus_id`,
+                               `year`, `section`
+                               FROM `sections`
+                               WHERE `degree`=%s
+                               AND `stream`=%s""",
+                               (degree, stream))
+        elif year:
+            cursor.execute("""SELECT `id`, `campus_id`,
+                           `stream`, `section`
+                           FROM `sections`
+                           WHERE `degree`=%s
+                           AND `year`=%s""",
+                           (degree, year))
+        else:
+            cursor.execute("""SELECT `id`, `campus_id`,
+                           `stream`, `year`, `section`
+                           FROM `sections`
+                           WHERE `degree`=%s""",
+                           (degree,))
+    elif stream:
+        if year:
+            cursor.execute("""SELECT `id`, `campus_id`,
+                           `degree`, `section`
+                           FROM `sections`
+                           WHERE `stream`=%s
+                           AND `year`=%s""",
+                           (stream, year))
+        else:
+            cursor.execute("""SELECT `id`, `campus_id`,
+                           `degree`, `year`, `section`
+                           FROM `sections`
+                           WHERE `stream`=%s""",
+                           (stream,))
+    elif year:
+        cursor.execute("""SELECT `id`, `campus_id`,
+                       `degree`, `stream`, `section`
+                       FROM `sections`
+                       WHERE `year`=%s""",
+                       (year,))
+    else:
+        cursor.execute("""SELECT * FROM `sections`""")
+    
+    return cursor.fetchall()
+
+def get_section(cursor: Cursor, /, *,
+              section_id: Optional[int] = None) -> Optional[Dict[str, Union[bool, int]]]:
+    cursor.execute("""SELECT `campus_id`, `degree`, `stream`,
+                   `year`, `section`
+                   FROM `sections`
+                   WHERE `id`=%s""", (section_id,))
     return cursor.fetchone()
 
 def get_faculties(cursor: Cursor, /, *,

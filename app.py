@@ -65,12 +65,12 @@ def auth_faculty() -> Response | str:
 																			password=request.form["password"])
 				session["faculty"] = True
 				return redirect(url_for("faculty_details"))
-			return render_template("failed.html", error_message="Unauthorized Login!")
+			return render_template("failed.html", reason="Unauthorized Login!")
 		except AssertionError:
 			return render_template("login.html", user="ID", userType="number", auth="/auth_faculty", role="faculty", error_message="Invalid ID or Password")
 		except Exception:
 			return render_template("login.html", user="ID", userType="number", auth="/auth_faculty", role="faculty", error_message="Invalid ID")
-	return render_template("failed.html", error_message="Login information not entered properly!")
+	return render_template("failed.html", reason="Login information not entered properly!")
 
 @app.route("/home")
 @app.route("/")
@@ -87,6 +87,24 @@ def show_campuses() -> str:
 		return render_template("campus.html", campuses=show_data.get_campuses(sql.cursor))
 	return render_template("failed.html", reason="Unknown error occurred")
 
+@app.route("/campus/<string:campus>")
+def show_schools(campus: str) -> Response:
+	if sql.cursor:
+		campus_id: Optional[int] = show_data.get_campus_id(sql.cursor, campus=campus)
+		if not campus_id:
+			return render_template("failed.html", reason="No Schools found!")
+		return render_template("school.html", schools=show_data.get_schools(sql.cursor, campus_id=campus_id), campus=campus)
+	return render_template("failed.html", reason="Unknown error occurred")
+
+@app.route("/school/<string:campus>/<string:school>")
+def show_buildings(campus: str, school: str) -> Response:
+	if sql.cursor:
+		school_id: Optional[int] = show_data.get_campus_id(sql.cursor, campus=campus)
+		if not school_id:
+			return render_template("failed.html", reason="No Buildings found!")
+		return render_template("building.html", buildings=show_data.get_buildings(sql.cursor, school_id=school_id), school=school)
+	return render_template("failed.html", reason="Unknown error occurred")
+
 @app.route("/department")
 def show_departments() -> str:
 	if sql.cursor:
@@ -98,12 +116,6 @@ def show_programmes() -> str:
 	if sql.cursor:
 		return render_template("programme.html", programmes=show_data.get_programmes(sql.cursor))
 	return render_template("failed.html", reason="Unknown error occurred")
-
-@app.route("/campus/<string:campus>")
-def show_schools(campus: str) -> Response:
-	if campus == "SASTRA": # for testing only
-		return redirect("https://sastra.edu")
-	return redirect(f"https://{campus.replace(' ', '').lower()}.sastra.edu")
 
 @app.route("/faculty/details")
 def faculty_details() -> str:

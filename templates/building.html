@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+
+{% block head %}
+	<meta name="description"
+          content="Shows all the buildings in a particular school.">
+{% endblock %}
+
+{% block title %}{{ school }} Buildings{% endblock %}
+
+{% block content %}
+	{% if not buildings[0] %}
+		<p style="margin: auto; text-align: center; font-size: 4em">No Buildings Found!</p>
+	{% else %}
+		<p style="margin: auto; text-align: center; font-size: 3em">Buildings</p>
+		<ul class="nobulletins">
+			{% for building in buildings %}
+				<hr>
+				<li style="text-align: center; font-size: 3em">
+					Building: {{ building[id] }}
+                    <br>
+                    No. of Classrooms: {{ building["no_of_rooms"] }}
+				</li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+{% endblock %}
