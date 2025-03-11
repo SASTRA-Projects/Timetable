@@ -7,7 +7,7 @@ colorama==0.4.6
 cryptography==44.0.2
 Flask==3.1.0
 itsdangerous==2.2.0
-Jinja2==3.1.5
+Jinja2==3.1.6
 MarkupSafe==3.0.2
 mypy==1.15.0
 mypy-extensions==1.0.0
