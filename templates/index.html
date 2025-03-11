@@ -30,4 +30,10 @@
 	<form action="/faculty">
 		<button type="submit" style="margin: 10px auto;">Faculty Details</button>
 	</form>
+	<script>
+		window.history.pushState(null, "", window.location.href);
+		window.onpopstate = function () {
+			window.location.href = "/login";
+		};
+	</script>
 {% endblock %}

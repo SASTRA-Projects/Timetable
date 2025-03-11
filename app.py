@@ -17,14 +17,8 @@ def check_login() -> Response | None:
 @app.route("/login")
 def login() -> Response | str:
 	if session.get("logged_in"):
-		referrer = request.referrer
-		if referrer:
-			from urllib.parse import urlparse
-			parsed_url = urlparse(referrer)
-			if parsed_url.netloc == request.host:
-				return redirect(referrer)
 		return redirect(url_for("index"))
-	return render_template("login.html", user="User", auth="/authenticate")
+	return render_template("login.html", user="User", auth="/authenticate", role="User")
 
 @app.route("/authenticate", methods=["POST"])
 def authenticate() -> Response | str:
@@ -35,7 +29,7 @@ def authenticate() -> Response | str:
 					sql.connect(request.form["user"], request.form["password"])
 					break
 				except sql.pymysql.err.OperationalError:
-					return render_template("login.html", user="User", auth="/authenticate", error_message="Invalid username or password")
+					return render_template("login.html", user="User", auth="/authenticate", error_message="Invalid username or password", role="User")
 				except Exception:
 					return render_template("failed.html", reason="Unknown error occurred")
 			import views

@@ -23,14 +23,10 @@
     </style>
 {% endblock %}
 
-{% block title %}Login{% endblock %}
+{% block title %}{{ role.title() }} Login{% endblock %}
 
 {% block content %}
-	{% if role %}
-        <h1>{{ role.title() }} Login</h1>
-    {% else %}
-        <h1>Login</h1>
-    {% endif %}
+    <h1>{{ role.title() }} Login</h1>
     {% set userType = userType or "text" %}
     <form id="loginForm" action={{ auth }} method="post">
         <label for="user">{{ user }} </label>
@@ -38,7 +34,6 @@
         <br>
         <label for="password">Password </label>
         <input type="password" name="password" id="password" autocomplete="off" required>
-        <input type="hidden" name={{ role }} value="1"/>
         <br>
         <button type="submit">Login</button>
 
@@ -47,11 +42,10 @@
         {% endif %}
     </form>
     <script>
+        window.history.pushState(null, "", window.location.href);
         window.onload = function () {
-            if (window.history && window.history.pushState) {
+            if (window.history && window.history.pushState)
                 window.history.pushState("forward", null, "./");
-                window.history.forward(1);
-            }
         }
     </script>
 {% endblock %}
