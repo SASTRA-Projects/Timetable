@@ -5,33 +5,28 @@ import show_data
 import fetch_data
 import mysql_connector as sql
 
-app: Flask = Flask(__name__)
+app: Flask = Flask(__name__, template_folder="templates")
+app.jinja_env.filters.pop("attr", None)
+app.jinja_env.autoescape= True
 app.secret_key = secrets.token_hex(16)
 
 @app.before_request
-def check_login() -> Response | None:
+def check_login() -> Optional[Response]:
 	if not session.get("logged_in") and request.endpoint != "login" and request.endpoint != "authenticate":
 		return redirect(url_for("login"))
 	return None
 
 @app.route("/login")
-def login() -> Response | str:
+def login() -> Union[Response, str]:
 	if session.get("logged_in"):
 		return redirect(url_for("index"))
 	return render_template("login.html", user="User", auth="/authenticate", role="User")
 
 @app.route("/authenticate", methods=["POST"])
-def authenticate() -> Response | str:
+def authenticate() -> Union[Response, str]:
 	if request.form.get("user") and request.form.get("password"):
 		try:
-			while True:
-				try:
-					sql.connect(request.form["user"], request.form["password"])
-					break
-				except sql.pymysql.err.OperationalError:
-					return render_template("login.html", user="User", auth="/authenticate", error_message="Invalid username or password", role="User")
-				except Exception:
-					return render_template("failed.html", reason="Unknown error occurred")
+			sql.connect(user=request.form["user"], password=request.form["password"])
 			import views
 			import triggers
 			if sql.db_connector and sql.cursor:
@@ -39,18 +34,20 @@ def authenticate() -> Response | str:
 				triggers.create_triggers(sql.db_connector, sql.cursor)
 				session["logged_in"] = True
 			return redirect(url_for("index"))
+		except sql.pymysql.err.OperationalError:
+			return render_template("login.html", user="User", auth="/authenticate", error_message="Invalid username or password", role="User")
 		except Exception:
 			return render_template("failed.html", reason="Unknown error occurred")
 	return render_template("failed.html", reason="Login information not entered properly!")
 
 @app.route("/faculty")
-def log_faculty() -> Response | str:
+def log_faculty() -> Union[Response, str]:
 	if not session.get("faculty") or not session.get("faculty_details"):
 		return render_template("login.html", user="ID", userType="number", auth="/auth_faculty", role="faculty")
 	return redirect(url_for("faculty_details"))
 
 @app.route("/auth_faculty", methods=["POST"])
-def auth_faculty() -> Response | str:
+def auth_faculty() -> Union[Response, str]:
 	if request.form.get("user") and request.form.get("password"):
 		try:
 			if sql.cursor:
@@ -82,7 +79,7 @@ def show_campuses() -> str:
 	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/campus/<string:campus>")
-def show_schools(campus: str) -> Response:
+def show_schools(campus: str) -> str:
 	if sql.cursor:
 		campus_id: Optional[int] = show_data.get_campus_id(sql.cursor, campus=campus)
 		if not campus_id:
@@ -91,7 +88,7 @@ def show_schools(campus: str) -> Response:
 	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/school/<string:campus>/<string:school>")
-def show_buildings(campus: str, school: str) -> Response:
+def show_buildings(campus: str, school: str) -> str:
 	if sql.cursor:
 		school_id: Optional[int] = show_data.get_campus_id(sql.cursor, campus=campus)
 		if not school_id:
@@ -125,5 +122,10 @@ def page_not_found(error: NotFound) -> tuple[str, int]:
 	return (render_template("404.html"), 404)
 
 if __name__ == "__main__":
+	app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
+	app.config['SESSION_COOKIE_HTTPONLY'] = True
+	app.config['SESSION_COOKIE_SECURE'] = True
+
+
 	app.config.update(SESSION_COOKIE_SECURE=True, SESSION_COOKIE_HTTPSONLY=True)
 	app.run(host="0.0.0.0", port=5000, debug=False)

@@ -7,7 +7,7 @@ db_connector: Optional[Connection] = None
 cursor: Optional[Cursor] = None
 
 def connect(user: str,
-            __pwd: str, /, *,
+            password: str, *,
             host: str = "mysql-93e938b-harikrishnasri3.f.aivencloud.com") -> Connection:
   global db_connector, cursor
   db_connector = pymysql.connect(
@@ -15,7 +15,7 @@ def connect(user: str,
     connect_timeout=timeout,
     cursorclass=pymysql.cursors.DictCursor,
     host=host,
-    password=__pwd,
+    password=password,
     read_timeout=timeout,
     port=17216,
     user=user,

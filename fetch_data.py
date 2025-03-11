@@ -124,7 +124,7 @@ def get_sections(cursor: Cursor, /, *,
                  campus_id: Optional[int] = None,
                  degree: Optional[str] = None,
                  stream: Optional[str] = None,
-                 year: Optional[int] = None) -> Optional[Dict[str, Union[int, str]]]:
+                 year: Optional[int] = None) -> Tuple[Optional[Dict[str, Union[int, str]]], ...]:
     if campus_id:
         if degree:
             if stream:
@@ -233,7 +233,6 @@ def get_sections(cursor: Cursor, /, *,
                        (year,))
     else:
         cursor.execute("""SELECT * FROM `sections`""")
-    
     return cursor.fetchall()
 
 def get_section(cursor: Cursor, /, *,
