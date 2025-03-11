@@ -20,7 +20,7 @@ setup(
         "Programming Language :: Python :: 3",
         "Framework :: Flask"
     ],
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     entry_points={
         "console_scripts": [
             "your-command = app:run",
