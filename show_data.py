@@ -74,27 +74,18 @@ def get_school_id(cursor: Cursor, /, *,
 		return result["id"]
 	return None
 
-def get_school_name(cursor: Cursor, /, *,
-					id: Optional[int] = None) -> Optional[str]:
-	cursor.execute("""SELECT `name` FROM `schools`
-					WHERE `id`=%s)""", (id,))
-	result: Optional[Dict[str, str]] = cursor.fetchone()
-	if result:
-		return result["name"]
-	return None
-
 def get_buildings(cursor: Cursor, /, *,
 				  school_id: Optional[int] = None,
 				  campus_id: Optional[int] = None) -> Tuple[Optional[Dict[str, int]], ...]:
 	if school_id:
-		cursor.execute("""SELECT `id`, `no_of_rooms` FROM `buildings`
+		cursor.execute("""SELECT `id`, `rooms` FROM `buildings`
 					   WHERE `school_id`=%s""", (school_id,))
 	elif campus_id:
-		cursor.execute("""SELECT `id`, `no_of_rooms`
+		cursor.execute("""SELECT `id`, `rooms`
 					   FROM `campus_buildings`
 					   WHERE `campus_id`=%s""", (campus_id,))
 	else:
-		cursor.execute("""SELECT `id`, `no_of_rooms` FROM `buildings`""")
+		cursor.execute("""SELECT `id`, `rooms` FROM `buildings`""")
 	return cursor.fetchall()
 
 def get_departments(cursor: Cursor, /, *,
@@ -112,7 +103,7 @@ def get_degrees(cursor: Cursor, /) -> Tuple[Optional[Dict[str, str]], ...]:
 
 def get_degree_duration(cursor: Cursor, /, *,
 						degree: Optional[str] = None) -> Optional[int]:
-	cursor.execute("""SELECT `duartion` FROM `degrees`
+	cursor.execute("""SELECT `duration` FROM `degrees`
 				   WHERE `degree` LIKE %s""", (degree,))
 	result: Optional[Dict[str, int]] = cursor.fetchone()
 	if result:
@@ -153,6 +144,14 @@ def get_programme(cursor: Cursor, /, *,
 				   FROM `programmes`
 				   WHERE `id`=%s""", (programme_id,))
 	return cursor.fetchone()
+
+def get_programme_id(cursor: Cursor, /, *,
+				   degree: Optional[str] = None,
+				   stream: Optional[str] = None) -> Optional[int]:
+	programme = get_programmes(cursor, degree=degree, stream=stream)[0]
+	if not programme:
+		return None
+	return int(programme["id"])
 
 def get_campuses_with_programme(cursor: Cursor, /, *,
 								programme_id: Optional[int] = None) -> Tuple[Optional[Dict[str, str]], ...]:

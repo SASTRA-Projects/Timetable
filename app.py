@@ -16,15 +16,15 @@ def check_login() -> Optional[Response]:
 		return redirect(url_for("login"))
 	return None
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login() -> Union[Response, str]:
-	if session.get("logged_in"):
-		return redirect(url_for("index"))
-	return render_template("login.html", user="User", auth="/authenticate", role="User")
+	if request.method == "GET":
+		if session.get("logged_in"):
+			return redirect(url_for("index"))
+		else:
+			return render_template("login.html", user="User", auth="/login", role="User")
 
-@app.route("/authenticate", methods=["POST"])
-def authenticate() -> Union[Response, str]:
-	if request.form.get("user") and request.form.get("password"):
+	elif request.form.get("user") and request.form.get("password"):
 		try:
 			sql.connect(user=request.form["user"], password=request.form["password"])
 			import views
@@ -35,10 +35,16 @@ def authenticate() -> Union[Response, str]:
 				session["logged_in"] = True
 			return redirect(url_for("index"))
 		except sql.pymysql.err.OperationalError:
-			return render_template("login.html", user="User", auth="/authenticate", error_message="Invalid username or password", role="User")
+			return render_template("login.html",
+						user="User",
+						auth="/authenticate",
+						error_message="Invalid username or password",
+						role="User"
+				)
 		except Exception:
 			return render_template("failed.html", reason="Unknown error occurred")
-	return render_template("failed.html", reason="Login information not entered properly!")
+	else:
+		return render_template("failed.html", reason="Login information not entered properly!")
 
 @app.route("/faculty")
 def log_faculty() -> Union[Response, str]:
@@ -51,9 +57,11 @@ def auth_faculty() -> Union[Response, str]:
 	if request.form.get("user") and request.form.get("password"):
 		try:
 			if sql.cursor:
-				session["faculty_details"] = fetch_data.get_faculty_details(sql.cursor,
-																			id=int(request.form["user"]),
-																			password=request.form["password"])
+				session["faculty_details"] = fetch_data.get_faculty_details(
+												sql.cursor,
+												id=int(request.form["user"]),
+												password=request.form["password"]
+											)
 				session["faculty"] = True
 				return redirect(url_for("faculty_details"))
 			return render_template("failed.html", reason="Unauthorized Login!")
@@ -102,10 +110,23 @@ def show_departments() -> str:
 		return render_template("department.html", departments=show_data.get_departments(sql.cursor))
 	return render_template("failed.html", reason="Unknown error occurred")
 
+@app.route("/degree")
+def show_degrees() -> str:
+	if sql.cursor:
+		return render_template("degree.html", degrees=show_data.get_degrees(sql.cursor))
+	return render_template("failed.html", reason="Unknown error occurred")
+
 @app.route("/programme")
 def show_programmes() -> str:
 	if sql.cursor:
 		return render_template("programme.html", programmes=show_data.get_programmes(sql.cursor))
+	return render_template("failed.html", reason="Unknown error occurred")
+
+@app.route("/degree/<string:degree>")
+def show_degree_programmes(degree: str) -> str:
+	if sql.cursor:
+		programmes: Tuple[Optional[Dict[str, str]], ...] = show_data.get_programmes(sql.cursor, degree=degree)
+		return render_template("programme.html", programmes=programmes, degree=degree)
 	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/faculty/details")

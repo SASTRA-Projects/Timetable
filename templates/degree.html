@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block head %}
+	<meta name="description"
+          content="Shows all the Degrees (from all campuses).
+                   Click any Degree name to display more info about it.">
+{% endblock %}
+
+{% block title %}SASTRA Degrees{% endblock %}
+
+{% block content %}
+	{% if not degrees[0] %}
+		<p style="margin: auto; text-align: center; font-size: 4em">No Degree Found!</p>
+	{% else %}
+		<p style="margin: auto; text-align: center; font-size: 3em">Degrees</p>
+		<ul class="nobulletins">
+			{% for degree in degrees %}
+				<hr>
+				<li style="text-align: center; font-size: 3em">
+					<a href="/degree/{{ degree['name'].replace(' ', '+') }}" class="nounderline">{{ degree["name"] }}</a>
+				</li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+{% endblock %}

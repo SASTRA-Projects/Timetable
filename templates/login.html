@@ -20,6 +20,16 @@
         form > button {
             margin: auto;
         }
+        .eye-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
+        .password-container {
+            position: relative;
+        }
     </style>
 {% endblock %}
 
@@ -33,7 +43,6 @@
         <input type={{ userType }} name="user" id="user" autofocus autocomplete="off" required>
         <br>
         <label for="password">Password </label>
-        <input type="password" name="password" id="password" autocomplete="off" required>
         <br>
         <button type="submit">Login</button>
 
@@ -42,6 +51,15 @@
         {% endif %}
     </form>
     <script>
+        const togglePassword = document.getElementById("togglePassword");
+        const passwordInput = document.getElementById("password");
+
+        togglePassword.addEventListener("click", function () {
+            const type = passwordInput.type === "password" ? "text" : "password";
+            passwordInput.type = type;
+
+            togglePassword.innerHTML = type === "password" ? "&#128065;" : "&#128587;";
+        });
         window.history.pushState(null, "", window.location.href);
         window.onload = function () {
             if (window.history && window.history.pushState)

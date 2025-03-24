@@ -9,15 +9,29 @@
 {% block title %}SASTRA Programmes{% endblock %}
 
 {% block content %}
-	{% if not programmes[0] %}
-		<p style="margin: auto; text-align: center; font-size: 4em">No Programme Found!</p>
+	{% if not programmes %}
+		<p style="margin: auto; text-align: center; font-size: 3em">
+			{% if degree %}
+				Programmes
+				<hr>
+				<ul class="nobulletins">
+					<li style="text-align: center; font-size: 3em">
+						<a href="/programme/{{ degree.replace(' ', '+') }}" class="nounderline">{{ degree }}</a>
+					</li>
+				</ul>
+			{% else %}
+				<span style="font-size: 4em;">Programmes Found!!</span>
+			{% endif %}
+		</p>
 	{% else %}
-		<p style="margin: auto; text-align: center; font-size: 3em">Programmes</p>
+		<p style="margin: auto; text-align: center; font-size: 3em">Programmes
+			{% if degree %} ({{ degree }}) {% endif %}
+		</p>
 		<ul class="nobulletins">
 			{% for programme in programmes %}
 				<hr>
 				<li style="text-align: center; font-size: 3em">
-					<a href="/programme/{{ programme['name'] }}" class="nounderline">{{ programme["degree"] }} {{ programme["stream"] }}</a>
+					<a href="/programme/{{ programme['stream'].replace(' ', '+') }}" class="nounderline">{{ programme["stream"] }}</a>
 				</li>
 			{% endfor %}
 		</ul>

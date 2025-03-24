@@ -8,7 +8,7 @@ cursor: Optional[Cursor] = None
 
 def connect(user: str,
             password: str, *,
-            host: str = "mysql-93e938b-harikrishnasri3.f.aivencloud.com") -> Connection:
+            host: str = "mysql-93e938b-harikrishnasri3.f.aivencloud.com") -> Tuple[Connection, Optional[Cursor]]:
   global db_connector, cursor
   db_connector = pymysql.connect(
     charset="utf8mb4",
@@ -27,7 +27,7 @@ def connect(user: str,
   if cursor:
     cursor.execute("""CREATE DATABASE IF NOT EXISTS `SASTRA`""")
     cursor.execute("""USE `SASTRA`""")
-  return db_connector
+  return (db_connector, cursor)
 
 def create_db(cursor: Cursor, /, *,
               database: Optional[str] = None) -> None:
