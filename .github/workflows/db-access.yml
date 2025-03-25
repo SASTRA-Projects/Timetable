@@ -29,12 +29,13 @@ jobs:
         run: |
           python -c "
           import pymysql
+          print('${{ secrets.USER }}')
           try:
             db_connector = pymysql.connect(
               charset='utf8mb4',
               connect_timeout=int('${{ env.TIMEOUT }}'),
               cursorclass=pymysql.cursors.DictCursor,
-              host='mysql-93e938b-harikrishnasri3.f.aivencloud.com',
+              host='${{ secrets.HOST }}',
               password='${{ secrets.PWD }}',
               read_timeout=int('${{ env.TIMEOUT }}'),
               port=17216,
@@ -51,7 +52,4 @@ jobs:
           except Exception as e:
             print(f'❌ Connection failed: {e}')
             exit(1)
-          finally:
-            if db_connector:
-              db_connector.close()
           "
