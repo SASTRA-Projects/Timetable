@@ -26,9 +26,6 @@ jobs:
 
       - name: Test Cloud MySQL Connection
         env:
-          USER: ${{ secrets.USER }}
-          PWD: ${{ secrets.PWD }}
-          HOST: ${{ secrets.HOST }}
           TIMEOUT: 20
         run: |
           python -c "
