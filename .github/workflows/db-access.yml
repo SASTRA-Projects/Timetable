@@ -1,5 +1,4 @@
 name: "DB Connection Test"
-
 on:  
   push:  
     branches: [ "main" ]  
