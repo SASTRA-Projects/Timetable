@@ -35,7 +35,7 @@ jobs:
               charset='utf8mb4',
               connect_timeout=int('${{ env.TIMEOUT }}'),
               cursorclass=pymysql.cursors.DictCursor,
-              host='${{ secrets.HOST }}',
+              host='mysql-93e938b-harikrishnasri3.f.aivencloud.com',
               password='${{ secrets.PWD }}',
               read_timeout=int('${{ env.TIMEOUT }}'),
               port=17216,
