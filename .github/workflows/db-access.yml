@@ -29,7 +29,6 @@ jobs:
         run: |
           python -c "
           import pymysql
-          print('${{ secrets.USER }}')
           try:
             db_connector = pymysql.connect(
               charset='utf8mb4',
