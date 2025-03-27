@@ -59,8 +59,8 @@ Triggers, stored procedures, and functions enforce data integrity, while the sys
 
 1. **Clone the Repository:**
 ```sh
-  git clone https://github.com/your-repo/sastra-timetable.git
-  cd sastra-timetable
+  git clone https://github.com/SASTRA-Projects/SASTRA-Timetable/
+  cd SASTRA-Timetable
 ```
 
 2. **Set Up a Virtual Environment:**
