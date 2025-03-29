@@ -118,9 +118,7 @@ def show_programmes() -> str:
 def show_degree_programmes(degree: str) -> str:
 	if sql.cursor:
 		programmes: Tuple[Optional[Dict[str, str]], ...] = show_data.get_programmes(sql.cursor, degree=degree)
-		if not programmes[0]:
-			programmes = tuple({"degree": degree, "stream": degree})
-		return render_template("programme.html", programmes=programmes)
+		return render_template("programme.html", programmes=programmes, degree=degree)
 	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/faculty/details")
