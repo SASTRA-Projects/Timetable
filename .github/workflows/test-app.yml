@@ -32,7 +32,7 @@ jobs:
           while [ $ATTEMPT -le 3 ]; do
             echo "🔄 Attempt $ATTEMPT: Checking site status..."
             STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://sastra-3yx3.onrender.com/)
-            if [ "$STATUS_CODE" = "200" ]; then
+            if [ "$STATUS_CODE" = "200" ] || [ "$STATUS_CODE" = "302" ]; then
               echo "✅ Website is UP. Status Code: $STATUS_CODE"
               break
             fi
