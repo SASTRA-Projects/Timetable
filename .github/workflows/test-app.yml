@@ -26,15 +26,25 @@ jobs:
           python -m pip install --upgrade pip
           pip install .
 
-      - name: Health Check - Status Code
+      - name: Retry Health Check Until Ready (Max 3 Attempts)
         run: |
-          echo "Checking site status..."
-          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://sastra-3yx3.onrender.com/)
+          ATTEMPT=1
+          while [ $ATTEMPT -le 3 ]; do
+            echo "🔄 Attempt $ATTEMPT: Checking site status..."
+            STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://sastra-3yx3.onrender.com/)
+            if [ "$STATUS_CODE" = "200" ]; then
+              echo "✅ Website is UP. Status Code: $STATUS_CODE"
+              break
+            fi
+            echo "❌ Website not ready (Status: $STATUS_CODE). Retrying in 2 minutes..."
+            sleep 120
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+
           if [ "$STATUS_CODE" != "200" ]; then
-            echo "❌ Website is DOWN. Status Code: $STATUS_CODE"
+            echo "🚨 Site still DOWN after 3 attempts!"
             exit 1
           fi
-          echo "✅ Website is UP. Status Code: $STATUS_CODE"
 
       - name: Check Login - DB Connection
         env:
