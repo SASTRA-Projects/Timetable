@@ -9,13 +9,13 @@ def create_views(db_connector: Connection, cursor: Cursor) -> None:
 
     Views Created
     =============
-    1. **faculty_view**: Combines faculty details with their additional info.
+    1. **``faculty_view``**: Combines faculty details with their additional info.
        - **Columns**: All columns from `faculties` and `faculty_info`.
     
-    2. **campus_departments**: Lists departments available at each campus.
+    2. **``campus_departments``**: Lists departments available at each campus.
        - **Columns**: `campus_id`, `department`
 
-    3. **campus_buildings**: Lists buildings available at each campus.
+    3. **``campus_buildings``**: Lists buildings available at each campus.
        - **Columns**: `campus_id`, `building_id`
 
     Parameters

@@ -7,7 +7,7 @@ import mysql_connector as sql
 
 app: Flask = Flask(__name__, template_folder="templates")
 app.jinja_env.filters.pop("attr", None)
-app.jinja_env.autoescape= True
+app.jinja_env.autoescape = True
 app.secret_key = secrets.token_hex(16)
 
 @app.before_request
