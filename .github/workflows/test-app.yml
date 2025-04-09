@@ -1,0 +1,52 @@
+name: Flask Health Check
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  release:
+    types: [published]
+
+jobs:
+  check-flask-site:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: Health Check - Status Code
+        run: |
+          echo "Checking site status..."
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://sastra-3yx3.onrender.com/)
+          if [ "$STATUS_CODE" != "200" ]; then
+            echo "❌ Website is DOWN. Status Code: $STATUS_CODE"
+            exit 1
+          fi
+          echo "✅ Website is UP. Status Code: $STATUS_CODE"
+
+      - name: Check Login - DB Connection
+        env:
+          USERNAME: ${{ secrets.USER }}
+          PASSWORD: ${{ secrets.PWD }}
+        run: |
+          echo "Checking login with test credentials..."
+          RESPONSE=$(curl -s -X POST https://sastra-3yx3.onrender.com/login \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "user=$USERNAME&password=$PASSWORD")
+
+          echo "$RESPONSE" | grep -iq "dashboard\|success\|welcome"
+          if [ $? -ne 0 ]; then
+            echo "❌ Login or DB connection failed!"
+            exit 1
+          fi
+          echo "✅ Login and DB check passed!"
