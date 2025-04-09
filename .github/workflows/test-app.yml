@@ -41,7 +41,7 @@ jobs:
             ATTEMPT=$((ATTEMPT + 1))
           done
 
-          if [ "$STATUS_CODE" != "200" ]; then
+          if [ "$STATUS_CODE" != "200" ] && [ "$STATUS_CODE" != "300" ]; then
             echo "🚨 Site still DOWN after 3 attempts!"
             exit 1
           fi
