@@ -9,7 +9,11 @@ def insert_faculty_info(db_connector: Connection,
 						password: Optional[str] = None) -> None:
 	try:
 		if not password:
+<<<<<<< HEAD
+			raise ValueError("Password is missing")
+=======
 			raise ValueError("Password is missing.")
+>>>>>>> 886c1387824083f6d82a62c5d32fa7cc5d72551c
 		ph: PasswordHasher = PasswordHasher()
 		cursor.execute("""INSERT INTO `faculty_info`
 					   VALUES (%s, %s, %s, %s)""",
