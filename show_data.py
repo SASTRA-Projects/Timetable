@@ -152,9 +152,3 @@ def get_programme_id(cursor: Cursor, /, *,
 	if not programme:
 		return None
 	return int(programme["id"])
-
-def get_campuses_with_programme(cursor: Cursor, /, *,
-								programme_id: Optional[int] = None) -> Tuple[Optional[Dict[str, str]], ...]:
-	cursor.execute("""SELECT `campus_id` FROM `campus_programmes`
-				   WHERE `programme_id`=%s""", (programme_id,))
-	return cursor.fetchall()
