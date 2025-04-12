@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block head %}
+	<meta name="description"
+          content="Shows all the campuses.
+                   Click any Campus name to display the Schools inside it.">
+{% endblock %}
+
+{% block title %}SASTRA Campuses{% endblock %}
+
+{% block content %}
+	{% if not campuses[0] %}
+		<p style="margin: auto; text-align: center; font-size: 4em">No Campus Found!</p>
+	{% else %}
+		<p style="margin: auto; text-align: center; font-size: 3em">Campuses</p>
+		<ul class="nobulletins">
+			{% for campus in campuses %}
+				<hr>
+				<li style="text-align: center; font-size: 3em">
+					<a href="/campus/{{ campus['name'].replace(' ', '+') }}" class="nounderline">{{ campus["name"] }}</a>
+				</li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+{% endblock %}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>{% block title %}{% endblock %}</title>
+		<!--link rel="stylesheet" type="text/css" href="style.css"-->
+		<style>
+			body {
+				font-family: Arial, Helvetica, sans-serif;
+			}
+			nav {
+				position: sticky;
+			}
+			h1 {
+				text-align: center;
+				font-size: 3em;
+				margin-bottom: 10px;
+			}
+			nav > ul {
+				font-size: 1.25em;
+				display: flex;
+				list-style-type: none;
+				padding: 0;
+			}
+			nav > ul > li {
+				margin: 0 20px;
+			}
+			nav > ul > li#about {
+				margin-left: auto;
+			}
+			footer {
+				text-align: center;
+				font-size: 1em;
+				position: relative;
+				margin-top: auto;
+				width: 100%;
+			}
+			footer p {
+				margin: 5px;
+			}
+			nav a {
+				color: black;
+				text-decoration: none;
+			}
+			#content > form {
+				text-align: center;
+			}
+			#content > form > label {
+				font-size: large;
+				display: inline-block;
+				text-align: center;
+			}
+			#content > form > input {
+				margin-bottom: 15px;
+				font-size: large;
+				height: 25px;
+				width: 300px;
+				border-radius: 15px;
+			}
+			#content > form > button {
+				font-size: large;
+				height: 30px;
+				width: 300px;
+				border: 2px solid black;
+				border-radius: 20px;
+				background-color: rgba(28, 28, 235, 0.85);
+				color: white;
+			}
+			#content > form > button:hover {
+				background-color: rgba(28, 28, 235, 1);
+			}
+			.error {
+				color: red;
+        	}
+			.message {
+				font-size: 14px;
+            	margin-top: 5px;
+			}
+			.nobulletins {
+				list-style-type: none;
+			}
+			.nounderline {
+				text-decoration: none;
+			}
+		</style>
+		{% block head %}{% endblock %}
+	</head>
+	<body>
+		<nav>
+			<ul>
+				<li id="home"><a href="/">Home</a></li>
+				<li id="about"><a href="/about">About</a></li>
+				<li class="contact"><a href="#contact">Contact</a></li>
+			</ul>
+			<hr>
+		</nav>
+		<div id="content">
+			{% block content %}
+			{% endblock %}
+		</div>
+		<footer>
+			<hr>
+			<div id="contact" style="font-size: 1em; font-weight: bold;">
+				<p>For any queries, contact us at:</p>
+				<p>Email: consult@sastra.edu</p>
+			</div>
+			<p>SASTRA DEEMED To Be University &copy; 2025 </p>
+			<p> All rights reserved </p>
+			</p>
+		</footer>
+</html>

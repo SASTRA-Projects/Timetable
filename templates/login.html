@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block head %}
+	<meta name="description"
+          content="Login to access your account.
+                   Enter your username or ID and password for authentication.">
+    <style>
+        #loginForm > label {
+            width: 8ch;
+        }
+        @media screen and (min-width: 409px) {
+            #content > form > label {
+                text-align: left;
+            }
+            #content > form > button {
+                margin-left: 5rem;
+                margin-top: 0.5rem;
+            }
+        }
+        form > button {
+            margin: auto;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}{{ role.title() }} Login{% endblock %}
+
+{% block content %}
+    <h1>{{ role.title() }} Login</h1>
+    {% set userType = userType or "text" %}
+    <form id="loginForm" action={{ auth }} method="post">
+        <label for="user">{{ user }} </label>
+        <input type={{ userType }} name="user" id="user" autofocus autocomplete="off" required>
+        <br>
+        <label for="password">Password </label>
+        <input type="password" name="password" id="password" required autocomplete="off" style="margin-left: 1.5em;">
+        <svg id="togglePassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            style="position: relative; left: -1.8em; top: 0.3em; cursor: pointer;">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <br>
+        <button type="submit">Login</button>
+
+        {% if error_message %}
+            <div class="error message" style="margin-top: 0.5em;">{{ error_message }}</div>
+        {% endif %}
+    </form>
+    <script>
+        const password = document.getElementById("password");
+        const toggle = document.getElementById("togglePassword");
+
+        toggle.addEventListener("click", () => {
+            const type = password.type === "password" ? "text" : "password";
+            password.type = type;
+        });
+        window.history.pushState(null, "", window.location.href);
+        window.onload = function () {
+            if (window.history && window.history.pushState)
+                window.history.pushState("forward", null, "./");
+        }
+    </script>
+{% endblock %}

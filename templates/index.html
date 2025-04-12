@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block head %}
+	<meta name="description"
+		  content="Welcome to home page!
+				   Shows Campuses
+				   Shows Departments
+				   Shows Programmes
+				   Shows Faculty Details">
+{% endblock %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+	<h1>Welcome to the home page!</h1>
+	<br>
+
+	<form action="/campus">
+		<button type="submit" style="margin: 10px auto;">Campuses</button>
+	</form>
+
+	<form action="/department">
+		<button type="submit" style="margin: 10px auto;">Departments</button>
+	</form>
+
+	<form action="/degree">
+		<button type="submit" style="margin: 10px auto;">Degrees</button>
+	</form>
+
+	<form action="/faculty">
+		<button type="submit" style="margin: 10px auto;">Faculty Details</button>
+	</form>
+	<script>
+		window.history.pushState(null, "", window.location.href);
+		window.onpopstate = function () {
+			window.location.href = "/login";
+		};
+	</script>
+{% endblock %}
