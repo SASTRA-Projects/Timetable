@@ -1,0 +1,4 @@
+*.pem
+a.py
+.*
+!.github/
