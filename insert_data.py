@@ -1,6 +1,6 @@
 from argon2 import PasswordHasher
 from typehints import *
-
+	"""Insert faculty information into the database"""
 def insert_faculty_info(db_connector: Connection,
 						cursor: Cursor, /, *,
 						faculty_id: Optional[int] = None,
