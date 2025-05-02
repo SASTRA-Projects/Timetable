@@ -29,20 +29,21 @@ jobs:
       - name: Retry Health Check Until Ready (Max 3 Attempts)
         run: |
           ATTEMPT=1
-          while [ $ATTEMPT -le 3 ]; do
+          sleep 20
+          while [ $ATTEMPT -le 5 ]; do
             echo "🔄 Attempt $ATTEMPT: Checking site status..."
             STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://sastra-3yx3.onrender.com/)
             if [ "$STATUS_CODE" = "200" ] || [ "$STATUS_CODE" = "302" ]; then
               echo "✅ Website is UP. Status Code: $STATUS_CODE"
               break
             fi
-            echo "❌ Website not ready (Status: $STATUS_CODE). Retrying in 2 minutes..."
-            sleep 120
+            echo "❌ Website not ready (Status: $STATUS_CODE). Retrying in 1 minute..."
+            sleep 40
             ATTEMPT=$((ATTEMPT + 1))
           done
 
           if [ "$STATUS_CODE" != "200" ] && [ "$STATUS_CODE" != "302" ]; then
-            echo "🚨 Site still DOWN after 3 attempts!"
+            echo "🚨 Site still DOWN after 5 attempts!"
             exit 1
           fi
 

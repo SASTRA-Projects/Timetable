@@ -1,39 +1,38 @@
+{# templates/home.html #}
 {% extends "layout.html" %}
 
 {% block head %}
-	<meta name="description"
-		  content="Welcome to home page!
-				   Shows Campuses
-				   Shows Departments
-				   Shows Programmes
-				   Shows Faculty Details">
+    <meta name="description"
+          content="Welcome to the home page! Shows Campuses, Departments, Degrees, and Faculty Details.">
 {% endblock %}
 
 {% block title %}Home{% endblock %}
 
 {% block content %}
-	<h1>Welcome to the home page!</h1>
-	<br>
+    <h1 style="text-align: center; font-size: 3em; margin-bottom: 1rem;">Welcome to the Home Page!</h1>
 
-	<form action="/campus">
-		<button type="submit" style="margin: 10px auto;">Campuses</button>
-	</form>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+        <form action="/campus">
+            <button type="submit" style="padding: 1rem 2rem; font-size: 1.2rem;">Campuses</button>
+        </form>
 
-	<form action="/department">
-		<button type="submit" style="margin: 10px auto;">Departments</button>
-	</form>
+        <form action="/department">
+            <button type="submit" style="padding: 1rem 2rem; font-size: 1.2rem;">Departments</button>
+        </form>
 
-	<form action="/degree">
-		<button type="submit" style="margin: 10px auto;">Degrees</button>
-	</form>
+        <form action="/degree">
+            <button type="submit" style="padding: 1rem 2rem; font-size: 1.2rem;">Degrees</button>
+        </form>
 
-	<form action="/faculty">
-		<button type="submit" style="margin: 10px auto;">Faculty Details</button>
-	</form>
-	<script>
-		window.history.pushState(null, "", window.location.href);
-		window.onpopstate = function () {
-			window.location.href = "/login";
-		};
-	</script>
+        <form action="/faculty">
+            <button type="submit" style="padding: 1rem 2rem; font-size: 1.2rem;">Faculty Details</button>
+        </form>
+    </div>
+
+    <script>
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = function () {
+            window.location.href = "/login";
+        };
+    </script>
 {% endblock %}

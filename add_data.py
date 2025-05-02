@@ -510,8 +510,8 @@ def add_faculty(db_connector: Connection,
 	========
 	- :func:`get_campus_id` – To get the campus ID based on the campus name.
 	"""
-	cursor.execute("""INSERT INTO `faculties` (`id`, `name`, `campus_id`,
-											   `department`, `join_year`)
+	cursor.execute("""INSERT INTO `faculties`
+				   (`id`, `name`, `campus_id`, `department`, `join_year`)
 				   VALUES (%s, %s, %s, %s, %s)""",
 				   (id, name, campus_id, department, join_year))
 	db_connector.commit()

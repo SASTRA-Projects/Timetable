@@ -317,25 +317,30 @@ def get_faculty_details(cursor: Cursor, /, *,
         faculty: Optional[Dict[str, Union[float, int, str]]] = cursor.fetchone()
         if faculty:
             pwd: Union[float, int, str] = faculty["password"]
+
         if isinstance(pwd, str) and password:
             ph: PasswordHasher = PasswordHasher()
             ph.verify(pwd, password)
+
     except exceptions.VerifyMismatchError:
         if faculty and isinstance(pwd, str):
             cursor.execute("""UPDATE `faculty_info`
                            SET `password`=%s""", ph.hash(pwd))
         try:
-            del pwd
             if faculty:
                 del faculty["password"]
+            pwd = "\0" * len(str(pwd))
+            password = "\0" * len(str(password))
             del ph
-            del password
         finally:
             raise AssertionError("Incorrect Password")
-    del pwd
+
     if faculty:
         del faculty["password"]
-    del password
+    if pwd:
+        pwd = "\0" * len(str(pwd))
+    if password:
+        password = "\0" * len(str(password))
     del ph
     return faculty
 

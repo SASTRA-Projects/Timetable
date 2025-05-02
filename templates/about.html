@@ -1,13 +1,27 @@
 {% extends "layout.html" %}
 
 {% block head %}
-	<meta name="description"
-		  content="Shows history about the university.">
+    <meta name="description"
+          content="Shows history about the university.">
+    <style>
+        h1 {
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 3em;
+        }
+        p {
+            max-width: 800px;
+            margin: auto;
+            font-size: 1.5em;
+            line-height: 1.6;
+            text-align: center;
+        }
+    </style>
 {% endblock %}
 
 {% block title %}About{% endblock %}
 
 {% block content %}
-	<h1>About</h1>
-	<p>This is a simple web application that allows you to see campuses, degrees, programmes and faculty details.</p>
+    <h1>About</h1>
+    <p>This is a simple web application that allows you to see campuses, degrees, programmes and faculty details.</p>
 {% endblock %}

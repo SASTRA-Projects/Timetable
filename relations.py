@@ -64,20 +64,16 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
 	"""
 	Functional Dependencies
 	=======================
-	- `id` \u2192 `section_id`, `class_id`
-	- `section_id` \u2192 `id`, `class_id`
-	- `class_id` \u2192 `id`, `section_id`
+	- `student_id` \u2192 `section_id`
 	"""
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `section_class` (
-				   `id` SMALLINT UNSIGNED AUTO_INCREMENT,
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `section_class` ( -- check section class capacity
 				   `section_id` MEDIUMINT UNSIGNED NOT NULL,
-				   `class_id` MEDIUMINT UNSIGNED NOT NULL, -- class is not lab
-				   PRIMARY KEY(`id`),
+				   `class_id` MEDIUMINT UNSIGNED NOT NULL,
+				   PRIMARY KEY(`section_id`),
 				   FOREIGN KEY(`section_id`) REFERENCES `sections`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   FOREIGN KEY(`class_id`) REFERENCES `classes`(`id`) 
+				   FOREIGN KEY(`class_id`) REFERENCES `classes`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   UNIQUE(`section_id`),
 				   UNIQUE(`class_id`)
 	)""")
 	"""
@@ -112,7 +108,7 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
 				   FOREIGN KEY(`course_code`) REFERENCES `courses`(`code`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   UNIQUE(`faculty_id`, `section_id`, `course_id`)
+				   UNIQUE(`faculty_id`, `section_id`, `course_code`)
 	)""")
 	"""
 	Functional Dependencies

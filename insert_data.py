@@ -1,6 +1,6 @@
 from argon2 import PasswordHasher
 from typehints import *
-	"""Insert faculty information into the database"""
+
 def insert_faculty_info(db_connector: Connection,
 						cursor: Cursor, /, *,
 						faculty_id: Optional[int] = None,
@@ -9,22 +9,20 @@ def insert_faculty_info(db_connector: Connection,
 						password: Optional[str] = None) -> None:
 	try:
 		if not password:
-<<<<<<< HEAD
 			raise ValueError("Password is missing")
-=======
-			raise ValueError("Password is missing.")
->>>>>>> 886c1387824083f6d82a62c5d32fa7cc5d72551c
 		ph: PasswordHasher = PasswordHasher()
 		cursor.execute("""INSERT INTO `faculty_info`
 					   VALUES (%s, %s, %s, %s)""",
 					   (faculty_id, phone, salary, ph.hash(password)))
+		password = "\0" * len(password)
 		del password
 		del ph
 		db_connector.commit()
 	except Exception:
+		password = "\0" * len(password)
 		del password
 		del ph
-		raise ValueError("Invalid ID or Password")
+		raise ValueError("Faculty does not exist")
 
 def add_section_class(db_connector: Connection,
 					  cursor: Cursor, /, *,

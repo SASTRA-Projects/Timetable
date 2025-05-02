@@ -155,7 +155,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	"""
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `courses` (
 				   `code` VARCHAR(10),
-				   `name` VARCHAR(40) NOT NULL,
+				   `name` VARCHAR(60) NOT NULL,
 				   `department` VARCHAR(40) NOT NULL,
 				   `credits` TINYINT UNSIGNED NOT NULL,
 				   `L` TINYINT UNSIGNED NOT NULL, -- lecture hours

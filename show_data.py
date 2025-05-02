@@ -148,7 +148,7 @@ def get_programme(cursor: Cursor, /, *,
 def get_programme_id(cursor: Cursor, /, *,
 				   degree: Optional[str] = None,
 				   stream: Optional[str] = None) -> Optional[int]:
-	programme = get_programmes(cursor, degree=degree, stream=stream)[0]
+	programme = get_programmes(cursor, degree=degree, stream=stream)
 	if not programme:
 		return None
-	return int(programme["id"])
+	return int(programme[0]["id"])

@@ -12,12 +12,12 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   (IN `campus_id` TINYINT UNSIGNED, IN `department` VARCHAR(40))
 				   IF NOT EXISTS (
 					SELECT 1
-					FROM `campus_departments`
+					FROM `campus_departments` AS `CD`
 					WHERE `CD`.`department`=`department`
 					AND `CD`.`campus_id`=`campus_id`
 				   )
 				   	THEN SIGNAL SQLSTATE '45000'
-				   	SET MESSAGE_TEXT = 'Value Error: Class and Section are not in same Campus';
+				   	SET MESSAGE_TEXT = 'Value Error: Department does not exist in this Campus';
 				   END IF;
 	""")
 	cursor.execute("""CREATE PROCEDURE IF NOT EXISTS `is_same_campus`
@@ -54,7 +54,10 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 							FROM `sections`
 							JOIN `programmes`
 							ON `sections`.`degree`=`programmes`.`degree`
-							AND `sections`.`stream`=`programmes`.`stream`
+							AND (
+								`sections`.`stream` is NULL
+								OR `sections`.`stream`=`programmes`.`stream`
+							)
 							AND `sections`.`id`=`section_id`
 							JOIN `programme_courses`AS `PC`
 							ON `prgrammes`.`id`=`PC`.`programme_id`
@@ -69,11 +72,17 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 							FROM `courses`
 							WHERE `code`=`course_code`);
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `backup_campus`
-					BEFORE DELETE ON `campuses`
-					FOR EACH ROW
-						INSERT INTO `deleted_campus`(`id`, `name`)
-						VALUES (OLD.id, OLD.name);
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `campus_has_programme_department`
+				   BEFORE INSERT ON `campus_programmes`
+				   FOR EACH ROW
+				   BEGIN
+					DECLARE `dept` VARCHAR(40);
+					SELECT `department` INTO `dept`
+					FROM `programmes`
+					WHERE NEW.`programme_id`=`id`;
+
+					CALL `department_exists`(NEW.`campus_id`, `dept`);
+				   END;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `no_of_rooms_chk_insert`
 				   BEFORE INSERT ON `classes`
@@ -83,7 +92,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					SELECT COUNT(*) INTO `room_count` 
 					FROM `classes`
 					WHERE `building_id`=NEW.`building_id`;
-					IF room_count >= (SELECT `no_of_rooms`
+					IF room_count >= (SELECT `rooms`
 									  FROM `buildings`
 									  WHERE `id` = NEW.`building_id`)
 						THEN SIGNAL SQLSTATE '45000'
@@ -99,7 +108,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					SELECT COUNT(*) INTO `room_count` 
 					FROM `classes`
 					WHERE `building_id`=NEW.`building_id`;
-					IF room_count >= (SELECT `no_of_rooms`
+					IF room_count >= (SELECT `rooms`
 									  FROM `buildings`
 									  WHERE `id` = NEW.`building_id`)
 						THEN SIGNAL SQLSTATE '45000'

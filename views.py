@@ -59,7 +59,7 @@ def create_views(db_connector: Connection, cursor: Cursor) -> None:
                    ON `faculties`.`id`=`faculty_info`.`faculty_id`
     """)
     cursor.execute("""CREATE OR REPLACE VIEW `campus_departments` AS
-                   SELECT `campuses`.`id` AS `campus_id`, `SD`.`department`
+                   SELECT `campuses`.`id` AS `campus_id`, `SD`.`department` AS `department`
                    FROM `school_departments` `SD`
                    INNER JOIN `schools`
                    ON `schools`.`id`=`SD`.`school_id`
