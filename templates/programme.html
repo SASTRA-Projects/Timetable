@@ -16,7 +16,7 @@
 				<hr>
 				<ul class="nobulletins">
 					<li style="text-align: center; font-size: 3em">
-						<a href="/programme/{{ degree.replace(' ', '+') }}" class="nounderline">{{ degree }}</a>
+						<a href="/programme/{{ degree }}" class="nounderline">{{ degree }}</a>
 					</li>
 				</ul>
 			{% else %}
@@ -31,7 +31,7 @@
 			{% for programme in programmes %}
 				<hr>
 				<li style="text-align: center; font-size: 3em">
-					<a href="/programme/{{ programme['stream'].replace(' ', '+') }}" class="nounderline">{{ programme["stream"] }}</a>
+					<a href="/programme/{{ programme.stream}}" class="nounderline">{{ programme["stream"] }}</a>
 				</li>
 			{% endfor %}
 		</ul>

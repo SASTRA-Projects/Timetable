@@ -17,7 +17,7 @@
 			{% for degree in degrees %}
 				<hr>
 				<li style="text-align: center; font-size: 3em">
-					<a href="/degree/{{ degree['name'].replace(' ', '+') }}" class="nounderline">{{ degree["name"] }}</a>
+					<a href="/degree/{{ degree.name }}" class="nounderline">{{ degree["name"] }}</a>
 				</li>
 			{% endfor %}
 		</ul>

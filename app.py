@@ -90,17 +90,20 @@ def show_campuses() -> str:
 def show_schools(campus: str) -> str:
 	if sql.cursor:
 		campus_id: Optional[int] = show_data.get_campus_id(sql.cursor, campus=campus)
-		if not campus_id:
-			return render_template("failed.html", reason="No Schools found!")
+		if campus_id is None:
+			return render_template("failed.html", reason="No such Campus found!!")
 		return render_template("school.html", schools=show_data.get_schools(sql.cursor, campus_id=campus_id), campus=campus)
 	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/school/<string:campus>/<string:school>")
 def show_buildings(campus: str, school: str) -> str:
 	if sql.cursor:
-		school_id: Optional[int] = show_data.get_campus_id(sql.cursor, campus=campus)
-		if not school_id:
-			return render_template("failed.html", reason="No Buildings found!")
+		campus_id: Optional[int] = show_data.get_campus_id(sql.cursor, campus=campus)
+		if campus_id is None:
+			return render_template("failed.html", reason="No such Campus found!!")
+		school_id: Optional[int] = show_data.get_school_id(sql.cursor, campus_id=campus_id, school=school)
+		if school_id is None:
+			return render_template("failed.html", reason=f"No such School found in {campus}!")
 		return render_template("building.html", buildings=show_data.get_buildings(sql.cursor, school_id=school_id), school=school)
 	return render_template("failed.html", reason="Unknown error occurred")
 

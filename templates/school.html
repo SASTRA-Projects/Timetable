@@ -17,7 +17,7 @@
 			{% for school in schools %}
 				<hr>
 				<li style="text-align: center; font-size: 3em">
-					<a href="/school/{{ campus.replace(' ', '+') }}/{{ school['name'].replace(' ', '+') }}" class="nounderline">{{ school["name"] }}</a>
+					<a href="/school/{{ campus }}/{{ school.name }}" class="nounderline">{{ school["name"] }}</a>
 				</li>
 			{% endfor %}
 		</ul>

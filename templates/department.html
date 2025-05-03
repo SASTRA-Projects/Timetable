@@ -17,7 +17,7 @@
 			{% for department in departments %}
 				<hr>
 				<li style="text-align: center; font-size: 3em">
-					<a href="/department/{{ department['name'].replace(' ', '+') }}" class="nounderline">{{ department["name"] }}</a>
+					<a href="/department/{{ department.name }}" class="nounderline">{{ department["name"] }}</a>
 				</li>
 			{% endfor %}
 		</ul>
