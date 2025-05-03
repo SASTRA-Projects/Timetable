@@ -7,15 +7,11 @@
             max-width: 600px;
             margin: 0.5rem auto;
             padding: 1rem;
-            background-color: var(--input-bg-light);
+            background-color: var(--input-bg-dark);
             border-radius: 12px;
             box-shadow: var(--shadow);
             transition: var(--transition);
             animation: fadeIn 0.5s ease-in;
-        }
-
-        [data-theme="dark"] #loginForm {
-            background-color: var(--input-bg-dark);
         }
 
         [data-theme="light"] #loginForm {
@@ -35,10 +31,6 @@
             margin-right: 1rem;
             font-size: 1.2rem;
             font-weight: 500;
-            color: var(--text-light);
-        }
-
-        [data-theme="dark"] .field-group label {
             color: var(--text-dark);
         }
 
@@ -49,19 +41,13 @@
         .field-group input {
             flex: 1;
             padding: 0.75rem 1.5rem 0.75rem 1rem;
-            border: 1px solid var(--input-border-light);
+            border: 1px solid var(--input-border-dark);
             border-radius: 8px;
-            background-color: var(--input-bg-light);
-            color: var(--text-light);
+            background-color: var(--input-bg-dark);
+            color: var(--text-dark);
             font-size: 1.2rem;
             transition: var(--transition);
             box-sizing: border-box;
-        }
-
-        [data-theme="dark"] .field-group input {
-            border-color: var(--input-border-dark);
-            background-color: var(--input-bg-dark);
-            color: var(--text-dark);
         }
 
         [data-theme="light"] .field-group input {
@@ -72,11 +58,6 @@
 
         .field-group input:focus {
             outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
-        }
-
-        [data-theme="dark"] .field-group input:focus {
             border-color: var(--accent-dark);
             box-shadow: 0 0 8px rgba(30, 58, 138, 0.2);
         }
@@ -93,14 +74,10 @@
             transform: translateY(-50%);
             width: 20px;
             height: 20px;
-            fill: var(--text-light);
+            fill: var(--text-dark);
             cursor: pointer;
             opacity: 0.7;
             transition: opacity 0.2s ease, transform 0.2s ease;
-        }
-
-        [data-theme="dark"] .field-group.password svg#togglePassword {
-            fill: var(--text-dark);
         }
 
         [data-theme="light"] .field-group.password svg#togglePassword {
@@ -115,7 +92,7 @@
         #loginForm button {
             width: 100%;
             padding: 0.75rem;
-            background-color: var(--accent);
+            background-color: var(--accent-dark);
             color: #ffffff;
             border: none;
             border-radius: 8px;
@@ -125,22 +102,13 @@
             transition: var(--transition);
         }
 
-        [data-theme="dark"] #loginForm button {
-            background-color: var(--accent-dark);
-        }
-
         [data-theme="light"] #loginForm button {
             background-color: var(--accent);
         }
 
         #loginForm button:hover {
-            background-color: #2563eb;
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-        }
-
-        [data-theme="dark"] #loginForm button:hover {
             background-color: #1e40af;
+            transform: translateY(-2px);
             box-shadow: 0 2px 8px rgba(30, 58, 138, 0.3);
         }
 
@@ -213,7 +181,7 @@
         const password = document.getElementById("password");
         const toggle = document.getElementById("togglePassword");
         const eyeSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
-        const eyeSlashSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>`;
+        const eyeSlashSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.20-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>`;
 
         toggle.innerHTML = eyeSlashSVG;
 
