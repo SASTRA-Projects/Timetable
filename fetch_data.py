@@ -22,12 +22,6 @@
 # def available_periods(cursor: Cursor, class_id):
 # 	return list(set(all_periods()).difference(occupied_periods(class_id)))
 
-# def faculty_id(cursor: Cursor, faculty_teaches_class_id):
-# 	cursor.execute("""SELECT `faculty_id`
-# 						 	FROM `faculty_teaches_class`
-# 						 	WHERE `id`=%s""", (faculty_teaches_class_id,))
-# 	return cursor.fetchone()
-
 # def faculty_department(cursor: Cursor, faculty_id):
 # 	cursor.execute("""SELECT `name`, `department`
 # 						 	FROM `faculties`
@@ -236,12 +230,28 @@ def get_sections(cursor: Cursor, /, *,
     return cursor.fetchall()
 
 def get_section(cursor: Cursor, /, *,
-              section_id: Optional[int] = None) -> Optional[Dict[str, Union[bool, int]]]:
+                section_id: Optional[int] = None) -> Optional[Dict[str, Union[bool, int]]]:
     cursor.execute("""SELECT `campus_id`, `degree`, `stream`,
                    `year`, `section`
                    FROM `sections`
                    WHERE `id`=%s""", (section_id,))
     return cursor.fetchone()
+
+def get_section_id(cursor: Cursor, /, *,
+                   campus_id: Optional[int] = None,
+                   degree: Optional[str] = None,
+                   stream: Optional[str] = None,
+                   year: Optional[int] = None,
+                   section: Optional[str] = None) -> Optional[int]:
+    sections = get_sections(cursor, campus_id=campus_id, degree=degree, stream=stream, year=year)
+    if not (sections and campus_id and degree and stream and year and section):
+        return None
+
+    for s in sections:
+        if s["section"] == section:
+            return s["id"]
+
+    return None
 
 def get_faculties(cursor: Cursor, /, *,
                   campus_id: Optional[int] = None,
@@ -269,6 +279,10 @@ def get_faculty(cursor: Cursor, /, *,
 	cursor.execute("""SELECT `name` FROM `faculties`
 				   WHERE `id`=%s""", (id,))
 	return cursor.fetchone()
+
+def faculty_id(cursor: Cursor, faculty_teaches_class_id):
+    # TODO: ...
+	pass
 
 def get_students(cursor: Cursor, /, *,
                  campus_id: Optional[int] = None,
@@ -326,22 +340,7 @@ def get_faculty_details(cursor: Cursor, /, *,
         if faculty and isinstance(pwd, str):
             cursor.execute("""UPDATE `faculty_info`
                            SET `password`=%s""", ph.hash(pwd))
-        try:
-            if faculty:
-                del faculty["password"]
-            pwd = "\0" * len(str(pwd))
-            password = "\0" * len(str(password))
-            del ph
-        finally:
             raise AssertionError("Incorrect Password")
-
-    if faculty:
-        del faculty["password"]
-    if pwd:
-        pwd = "\0" * len(str(pwd))
-    if password:
-        password = "\0" * len(str(password))
-    del ph
     return faculty
 
 def get_student_details(cursor: Cursor, /, *, 

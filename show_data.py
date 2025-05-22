@@ -56,7 +56,7 @@ def get_schools(cursor: Cursor, /, *,
 					   AND `SD`.`department` LIKE %s""",
 					   (department,))
 	else:
-		cursor.execute("""SELECT `id`, `name` FROM `campuses`""")
+		cursor.execute("""SELECT `id`, `name`, `campus_id` FROM `schools`""")
 	return cursor.fetchall()
 
 def get_school_id(cursor: Cursor, /, *,
@@ -81,12 +81,20 @@ def get_buildings(cursor: Cursor, /, *,
 		cursor.execute("""SELECT `id`, `rooms` FROM `buildings`
 					   WHERE `school_id`=%s""", (school_id,))
 	elif campus_id:
-		cursor.execute("""SELECT `id`, `rooms`
+		cursor.execute("""SELECT `building_id` AS `id`, `school_id`, `rooms`
 					   FROM `campus_buildings`
 					   WHERE `campus_id`=%s""", (campus_id,))
 	else:
-		cursor.execute("""SELECT `id`, `rooms` FROM `buildings`""")
+		cursor.execute("""SELECT `id`, `school_id`, `rooms` FROM `buildings`""")
 	return cursor.fetchall()
+
+def get_building_id(cursor: Cursor, /, *,
+					school_id: Optional[int] = None,
+					campus_id: Optional[int] = None) -> Optional[List[int]]:
+	buildings: Tuple[Optional[Dict[str, int]], ...] = get_buildings(cursor, school_id=school_id, campus_id=campus_id)
+	if not buildings:
+		return None
+	return [building["id"] for building in buildings]
 
 def get_departments(cursor: Cursor, /, *,
 					school_id: Optional[int] = None) -> Tuple[Optional[Dict[str, str]], ...]:
@@ -146,9 +154,11 @@ def get_programme(cursor: Cursor, /, *,
 	return cursor.fetchone()
 
 def get_programme_id(cursor: Cursor, /, *,
-				   degree: Optional[str] = None,
-				   stream: Optional[str] = None) -> Optional[int]:
+					 degree: Optional[str] = None,
+					 stream: Optional[str] = None) -> Optional[int]:
+	if not (degree and stream):
+		return None
 	programme = get_programmes(cursor, degree=degree, stream=stream)
 	if not programme:
 		return None
-	return int(programme[0]["id"])
+	return programme[0]["id"]

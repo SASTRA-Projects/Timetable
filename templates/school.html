@@ -9,7 +9,7 @@
 {% block title %}{{ campus }} Schools{% endblock %}
 
 {% block content %}
-	{% if not schools[0] %}
+	{% if not schools %}
 		<p style="margin: auto; text-align: center; font-size: 4em">No Schools Found!</p>
 	{% else %}
 		<p style="margin: auto; text-align: center; font-size: 3em">Schools</p>

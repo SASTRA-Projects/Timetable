@@ -14,24 +14,17 @@ def insert_faculty_info(db_connector: Connection,
 		cursor.execute("""INSERT INTO `faculty_info`
 					   VALUES (%s, %s, %s, %s)""",
 					   (faculty_id, phone, salary, ph.hash(password)))
-		password = "\0" * len(password)
-		del password
-		del ph
 		db_connector.commit()
 	except Exception:
-		password = "\0" * len(password)
-		del password
-		del ph
 		raise ValueError("Faculty does not exist")
 
 def add_section_class(db_connector: Connection,
 					  cursor: Cursor, /, *,
-					  id: Optional[int] = None,
 					  section_id: Optional[int] = None,
 					  class_id: Optional[int] = None) -> None:
 	cursor.execute("""INSERT INTO `section_class`
-				   (`id`, `section_id`, `class_id`)
-				   VALUES (%s, %s, %s)""", (id, section_id, class_id))
+				   (`section_id`, `class_id`)
+				   VALUES (%s, %s)""", (section_id, class_id))
 	db_connector.commit()
 
 def add_student_section(db_connector: Connection,

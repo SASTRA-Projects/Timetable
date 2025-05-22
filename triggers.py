@@ -30,8 +30,8 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					ON `sections`.`id`=`section_id`
 					AND`classes`.`id`=`class_id`
 					JOIN `campus_buildings` AS `CB`
-					ON `CB`.`campus_id`=`campus_id`
-					AND `CB`.`building_id`=`buildings_id`
+					ON `CB`.`campus_id`=`sections`.`campus_id`
+					AND `CB`.`building_id`=`classes`.`building_id`
 				   )
 				   	THEN SIGNAL SQLSTATE '45000'
 				   	SET MESSAGE_TEXT = 'Invalid year: Join Year cannot be greater than the current year';
@@ -77,8 +77,10 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   FOR EACH ROW
 				   BEGIN
 					DECLARE `dept` VARCHAR(40);
-					SELECT `department` INTO `dept`
+					SELECT `streams`.`department` INTO `dept`
 					FROM `programmes`
+					JOIN `streams`
+					ON `streams`.`name`=`programmes`.`stream`
 					WHERE NEW.`programme_id`=`id`;
 
 					CALL `department_exists`(NEW.`campus_id`, `dept`);
@@ -165,13 +167,13 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					DECLARE `max_roll` SMALLINT UNSIGNED;
 					CALL `validate_join_year`(NEW.`join_year`);
 
-					SELECT IFNULL(MAX(`roll_no`), 1) INTO `max_roll`
+					SELECT IFNULL(NEW.`roll_no`, MAX(`roll_no`)) INTO `max_roll`
 					FROM `students`
 					WHERE `campus_id`=NEW.`campus_id`
 					AND `join_year`=NEW.`join_year`
 					AND `programme_id`=NEW.`programme_id`;
 
-					SET NEW.`roll_no`=`max_roll`+1;
+					SET NEW.`roll_no`=`max_roll`;
 				   END;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `students_join_yr_chk_update`

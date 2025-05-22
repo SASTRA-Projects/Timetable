@@ -33,7 +33,7 @@
 {% block title %}{{ school }} Buildings{% endblock %}
 
 {% block content %}
-    {% if not buildings[0] %}
+    {% if not buildings %}
         <p style="margin: auto; text-align: center; font-size: 4em">No Buildings Found!</p>
     {% else %}
         <p style="margin: auto; text-align: center; font-size: 3em">Buildings</p>
@@ -41,8 +41,8 @@
             {% for building in buildings %}
                 <hr>
                 <li style="text-align: center; font-size: 1.8em">
-                    Building: {{ building[id] }}<br>
-                    No. of Classrooms: {{ building["no_of_rooms"] }}
+                    Building: {{ building.id }}<br>
+                    No. of Classrooms: {{ building.rooms }}
                 </li>
             {% endfor %}
         </ul>
