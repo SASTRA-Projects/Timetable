@@ -15,6 +15,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					FROM `campus_departments` AS `CD`
 					WHERE `CD`.`department`=`department`
 					AND `CD`.`campus_id`=`campus_id`
+					LIMIT 1
 				   )
 				   	THEN SIGNAL SQLSTATE '45000'
 				   	SET MESSAGE_TEXT = 'Value Error: Department does not exist in this Campus';
@@ -32,6 +33,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					JOIN `campus_buildings` AS `CB`
 					ON `CB`.`campus_id`=`sections`.`campus_id`
 					AND `CB`.`building_id`=`classes`.`building_id`
+					LIMIT 1
 				   )
 				   	THEN SIGNAL SQLSTATE '45000'
 				   	SET MESSAGE_TEXT = 'Invalid year: Join Year cannot be greater than the current year';
@@ -50,7 +52,8 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   RETURNS BOOLEAN
 				   NOT DETERMINISTIC
 				   READS SQL DATA
-					RETURN EXISTS (SELECT 1
+					RETURN EXISTS (
+							SELECT 1
 							FROM `sections`
 							JOIN `programmes`
 							ON `sections`.`degree`=`programmes`.`degree`
@@ -62,7 +65,8 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 							JOIN `programme_courses`AS `PC`
 							ON `prgrammes`.`id`=`PC`.`programme_id`
 							AND `PC`.`course_code`=`course_code`
-							LIMIT 1);
+							LIMIT 1
+					);
 	""")
 	cursor.execute("""CREATE FUNCTION IF NOT EXISTS `get_is_elective`(`course_code` VARCHAR(10))
 				   RETURNS BOOLEAN
@@ -118,29 +122,59 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					END IF;
 				   END;
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_yr_chk_insert`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_yr_programme_chk_insert`
 				  BEFORE INSERT ON `sections`
 				  FOR EACH ROW
 				  BEGIN
 					DECLARE `degree_duration` TINYINT UNSIGNED;
+				    IF NOT EXISTS (
+						SELECT 1
+						FROM `campus_programmes` `CP`
+						JOIN `programmes`
+						ON `CP`.`programme_id` = `programmes`.`id`
+						WHERE `CP`.`campus_id`=NEW.`campus_id`
+						AND ((NEW.`stream` IS NULL AND `programmes`.`degree` = NEW.`degree`)
+							OR 
+							(NEW.`stream` IS NOT NULL AND `programmes`.`degree` = NEW.`degree`
+							AND `programmes`.`stream` = NEW.`stream`))
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT = 'Invalid Programme: Must also be in the same Campus';
+					END IF;
+
 					SELECT `duration` INTO `degree_duration`
 					FROM `degrees` WHERE `name` = NEW.`degree`;
 					IF NEW.`year` <= 0 OR NEW.`year` > `degree_duration`
 						THEN SIGNAL SQLSTATE '45000'
-						SET MESSAGE_TEXT = 'Invalid year: Must be in the range 1 and degree-duration';
+						SET MESSAGE_TEXT = 'Invalid Year: Must be in the range 1 and degree-duration';
 					END IF;
 				   END;
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_yr_chk_update`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_yr_programme_chk_update`
 				  BEFORE UPDATE ON `sections`
 				  FOR EACH ROW
 				  BEGIN
 					DECLARE `degree_duration` TINYINT UNSIGNED;
+				    IF NOT EXISTS (
+						SELECT 1
+						FROM `campus_programmes` `CP`
+						WHERE `CP`.`campus_id`=NEW.`campus_id`
+						AND ((NEW.`stream` IS NULL AND `programmes`.`degree` = NEW.`degree`)
+							OR 
+							(NEW.`stream` IS NOT NULL AND `programmes`.`degree` = NEW.`degree`
+							AND `programmes`.`stream` = NEW.`stream`))
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT = 'Invalid Programme: Must also be in the same Campus';
+					END IF;
+
 					SELECT `duration` INTO `degree_duration`
 					FROM `degrees` WHERE `name` = NEW.`degree`;
 					IF NEW.`year` <= 0 OR NEW.`year` > `degree_duration`
 						THEN SIGNAL SQLSTATE '45000'
-						SET MESSAGE_TEXT = 'Invalid year: Must be in the range 1 and degree-duration';
+						SET MESSAGE_TEXT = 'Invalid Year: Must be in the range 1 and degree-duration';
 					END IF;
 				   END;
 	""")
@@ -230,6 +264,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `PC`.`course_code`=NEW.`course_code`
 						AND `get_is_elective`(NEW.`course_code`)
 						AND `students`.`id`=NEW.`student_id`
+						LIMIT 1
 					)
 						THEN SIGNAL SQLSTATE '45000'
 				   		SET MESSAGE_TEXT = 'Invalid Course: Course is not valid elective for the Student''s programme';
@@ -246,6 +281,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `PC`.`course_code`=NEW.`course_code`
 						AND `get_is_elective`(NEW.`course_code`)
 						AND `students`.`id`=NEW.`student_id`
+						LIMIT 1
 					)
 						THEN SIGNAL SQLSTATE '45000'
 				   		SET MESSAGE_TEXT = 'Invalid Course: Course is not valid elective for the Student''s programme';
