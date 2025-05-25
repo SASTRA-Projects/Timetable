@@ -53,7 +53,7 @@ Triggers, stored procedures, and functions enforce data integrity, while the sys
 ### Prerequisites
 
 - [Python](https://www.python.org/downloads/)
-- [MySQL Client] \(Uses Aiven Cloud Service) (https://dev.mysql.com/downloads/)
+- [MySQL Client](https://dev.mysql.com/downloads/)
 
 ### Installation
 
