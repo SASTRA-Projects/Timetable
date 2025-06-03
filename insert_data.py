@@ -6,7 +6,8 @@ def insert_faculty_info(db_connector: Connection,
 						faculty_id: Optional[int] = None,
 						phone: Optional[Union[int, str]] = None,
 						salary: Optional[float] = None,
-						password: Optional[str] = None) -> None:
+						password: Optional[str] = None,
+						verbose: bool = False) -> None:
 	try:
 		if not password:
 			raise ValueError("Password is missing")
@@ -15,8 +16,14 @@ def insert_faculty_info(db_connector: Connection,
 					   VALUES (%s, %s, %s, %s)""",
 					   (faculty_id, phone, salary, ph.hash(password)))
 		db_connector.commit()
-	except Exception:
-		raise ValueError("Faculty does not exist")
+	except Exception as exception:
+		if verbose:
+			if exception[0] == 1062:
+				raise IntegrityError("Faculty information already exists in `faculty_info` table.\n\
+						If you want to update the information, use `update_faculty_info()` function.")
+			elif exception[0] == 1452:
+				raise IntegrityError("Faculty ID does not exist in `faculties` table.")
+		raise ValueError("Faculty inforation already exists or Faculty ID does not exist in `faculties` table.")
 
 def add_section_class(db_connector: Connection,
 					  cursor: Cursor, /, *,
