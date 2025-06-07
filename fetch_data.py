@@ -279,25 +279,128 @@ def get_faculty(cursor: Cursor, /, *,
 				   WHERE `id`=%s""", (id,))
 	return cursor.fetchone()
 
-def faculty_id(cursor: Cursor, /, *,
-               faculty_teaches_class_id: Optional[int] = None,
+def get_faculty_id(cursor: Cursor, /, *,
                campus_id: Optional[int] = None,
                department: Optional[str] = None,
                name: Optional[str] = None,
-               join_year: Optional[int] = None) -> Tuple[Dict[str, int], ...]:
-    if faculty_teaches_class_id:
-        cursor.execute("""SELECT `id` AS faculty_id`
-                       FROM `faculty_teaches_class`
-                       WHERE `id`=%s""", (faculty_teaches_class_id,))
-    elif campus_id and department and name and join_year:
-        cursor.execute("""SELECT `id``
-                       FROM `faculties`
-                       WHERE `campus_id`=%s
-                       AND `department`=%s
-                       AND `name`=%s
-                       AND `join_year`=%s""",
-                       (campus_id, department, name, join_year))
-    return cursor.fetchall()
+               join_year: Optional[int] = None,
+               section_id: Optional[int] = None,
+               course_id: Optional[int] = None,
+               faculty_section_course_id: Optional[int] = None) -> Optional[List[int]]:
+    if section_id and course_id:
+        cursor.execute("""SELECT `faculty_id` AS `id`
+                       FROM `faculty_section_course`
+                       WHERE `section_id`=%s
+                       AND `course_id`=%s""", (section_id, course_id))
+    elif faculty_section_course_id:
+        cursor.execute("""SELECT `faculty_id` AS `id`
+                       FROM `faculty_section_course` `FTC`
+                       WHERE `FTC`.`id`=%s""", (faculty_section_course_id,))
+    elif campus_id:
+        if department:
+            if name:
+                if join_year:
+                    cursor.execute("""SELECT `id`
+                                   FROM `faculties`
+                                   WHERE `campus_id`=%s
+                                   AND `department`=%s
+                                   AND `name`=%s
+                                   AND `join_year`=%s""",
+                                   (campus_id, department, name, join_year))
+                else:
+                    cursor.execute("""SELECT `id`
+                                   FROM `faculties`
+                                   WHERE `campus_id`=%s
+                                   AND `department`=%s
+                                   AND `name`=%s""",
+                                   (campus_id, department, name))
+            elif join_year:
+                cursor.execute("""SELECT `id`
+                                FROM `faculties`
+                                WHERE `campus_id`=%s
+                                AND `department`=%s
+                                AND `join_year`=%s""",
+                                (campus_id, department, join_year))
+            else:
+                cursor.execute("""SELECT `id`
+                                FROM `faculties`
+                                WHERE `campus_id`=%s
+                                AND `department`=%s""",
+                                (campus_id, department))
+        elif name:
+            if join_year:
+                cursor.execute("""SELECT `id`
+                                FROM `faculties`
+                                WHERE `campus_id`=%s
+                                AND `name`=%s
+                                AND `join_year`=%s""",
+                                (campus_id, name, join_year))
+            else:
+                cursor.execute("""SELECT `id`
+                                FROM `faculties`
+                                WHERE `campus_id`=%s
+                                AND `name`=%s""",
+                                (campus_id, name))
+        elif join_year:
+            cursor.execute("""SELECT `id`
+                            FROM `faculties`
+                            WHERE `campus_id`=%s
+                            AND `join_year`=%s""",
+                            (campus_id, join_year))
+        else:
+            cursor.execute("""SELECT `id`
+                            FROM `faculties`
+                            WHERE `campus_id`=%s""",
+                            (campus_id,))
+    elif department:
+        if name:
+            if join_year:
+                cursor.execute("""SELECT `id`
+                                FROM `faculties`
+                                WHERE `department`=%s
+                                AND `name`=%s
+                                AND `join_year`=%s""",
+                                (department, name, join_year))
+            else:
+                cursor.execute("""SELECT `id`
+                                FROM `faculties`
+                                WHERE `department`=%s
+                                AND `name`=%s""",
+                                (department, name))
+        elif join_year:
+            cursor.execute("""SELECT `id`
+                            FROM `faculties`
+                            WHERE `department`=%s
+                            AND `join_year`=%s""",
+                            (department, join_year))
+        else:
+            cursor.execute("""SELECT `id`
+                            FROM `faculties`
+                            WHERE `department`=%s""",
+                            (department,))
+    elif name:
+        if join_year:
+            cursor.execute("""SELECT `id`
+                            FROM `faculties`
+                            WHERE `name`=%s
+                            AND `join_year`=%s""",
+                            (name, join_year))
+        else:
+            cursor.execute("""SELECT `id`
+                            FROM `faculties`
+                            WHERE `name`=%s""",
+                            (name,))
+    elif join_year:
+        cursor.execute("""SELECT `id`
+                        FROM `faculties`
+                        WHERE `join_year`=%s""",
+                        (join_year,))
+    else:
+        cursor.execute("""SELECT `id` FROM `faculties`""")
+    faculties: Tuple[Dict[str, int], ...] = cursor.fetchall()
+    if not faculties:
+        return None
+    return [faculty["id"] for faculty in faculties]
 
 def get_students(cursor: Cursor, /, *,
                  campus_id: Optional[int] = None,
@@ -341,15 +444,16 @@ def get_faculty_details(cursor: Cursor, /, *,
                         id: Optional[int] = None,
                         password: Optional[str] = None) -> Optional[Dict[str, Union[float, int, str]]]:
     try:
-        cursor.execute("""SELECT * FROM `faculty_view`
-                       WHERE `id`=%s""", (id,))
-        faculty: Optional[Dict[str, Union[float, int, str]]] = cursor.fetchone()
-        if faculty:
-            pwd: Union[float, int, str] = faculty["password"]
-
         if isinstance(pwd, str) and password:
-            ph: PasswordHasher = PasswordHasher()
-            ph.verify(pwd, password)
+            cursor.execute("""SELECT * FROM `faculty_view`
+                           WHERE `id`=%s""", (id,))
+            faculty: Optional[Dict[str, Union[float, int, str]]] = cursor.fetchone()
+            if faculty:
+                pwd: Union[float, int, str] = faculty["password"]
+        
+            PasswordHasher().verify(pwd, password)
+        else:
+            raise ValueError("Password must be a non-empty string")
 
     except exceptions.VerifyMismatchError:
         if faculty and isinstance(pwd, str):

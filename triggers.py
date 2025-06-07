@@ -12,7 +12,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   (IN `campus_id` TINYINT UNSIGNED, IN `department` VARCHAR(40))
 				   IF NOT EXISTS (
 					SELECT 1
-					FROM `campus_departments` AS `CD`
+					FROM `campus_departments` `CD`
 					WHERE `CD`.`department`=`department`
 					AND `CD`.`campus_id`=`campus_id`
 					LIMIT 1
@@ -30,7 +30,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					JOIN `classes`
 					ON `sections`.`id`=`section_id`
 					AND`classes`.`id`=`class_id`
-					JOIN `campus_buildings` AS `CB`
+					JOIN `campus_buildings` `CB`
 					ON `CB`.`campus_id`=`sections`.`campus_id`
 					AND `CB`.`building_id`=`classes`.`building_id`
 					LIMIT 1
@@ -78,8 +78,8 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 								OR `sections`.`stream`=`programmes`.`stream`
 							)
 							AND `sections`.`id`=`section_id`
-							JOIN `programme_courses`AS `PC`
-							ON `prgrammes`.`id`=`PC`.`programme_id`
+							JOIN `programme_courses` `PC`
+							ON `programmes`.`id`=`PC`.`programme_id`
 							AND `PC`.`course_code`=`course_code`
 							LIMIT 1
 					);
@@ -307,7 +307,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					IF NOT EXISTS (
 						SELECT 1
 						FROM `students`
-						JOIN `programme_courses` AS `PC`
+						JOIN `programme_courses` `PC`
 						ON `students`.`programme_id`=`PC`.`programme_id`
 						AND `PC`.`course_code`=NEW.`course_code`
 						AND `get_is_elective`(NEW.`course_code`)
@@ -324,7 +324,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					IF NOT EXISTS (
 						SELECT 1
 						FROM `students`
-						JOIN `programme_courses` AS `PC`
+						JOIN `programme_courses` `PC`
 						ON `students`.`programme_id`=`PC`.`programme_id`
 						AND `PC`.`course_code`=NEW.`course_code`
 						AND `get_is_elective`(NEW.`course_code`)

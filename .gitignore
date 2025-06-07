@@ -2,3 +2,5 @@
 a.py
 .*
 !.github/
+*.pyc
+sastra/
