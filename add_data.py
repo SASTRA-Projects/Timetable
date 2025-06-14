@@ -384,7 +384,8 @@ def add_class(db_connector: Connection,
 			  building_id: Optional[int] = None,
 			  room_no: Optional[int] = None,
 			  capacity: Optional[int] = None,
-			  is_lab: bool = False) -> None:
+			  is_lab: bool = False,
+			  department: Optional[str] = None) -> None:
 	r"""
 	Add a new class record to the `classes` table.
 
@@ -416,11 +417,13 @@ def add_class(db_connector: Connection,
 	========
 	- `get_buildings()` – To get the building details for the given school ID.
 	"""
+	if is_lab and not department:
+		raise ValueError("Lab Classes must have a department")
 	cursor.execute("""INSERT INTO `classes` (`id`, `building_id`,
 											 `room_no`, `capacity`,
-											 `is_lab`)
-				   VALUES (%s, %s, %s, %s, %s)""", 
-				   (id, building_id, room_no, capacity, is_lab))
+											 `is_lab`, `department`)
+				   VALUES (%s, %s, %s, %s, %s, %s)""", 
+				   (id, building_id, room_no, capacity, is_lab, department))
 	db_connector.commit()
 
 def add_section(db_connector: Connection,

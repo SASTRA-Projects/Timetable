@@ -221,8 +221,11 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   `room_no` SMALLINT UNSIGNED NOT NULL,
 				   `capacity` SMALLINT UNSIGNED NOT NULL, -- capacity check for students_classes
 				   `is_lab` BOOLEAN NOT NULL,
+				   `department` VARCHAR(40) NULL, -- check department in campus
 				   PRIMARY KEY(`id`),
 				   FOREIGN KEY(`building_id`) REFERENCES `buildings`(`id`)
+				   ON UPDATE CASCADE ON DELETE RESTRICT,
+				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
 				   UNIQUE(`building_id`, `room_no`)
 	)""")

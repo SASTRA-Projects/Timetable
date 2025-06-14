@@ -129,8 +129,41 @@ def get_streams(cursor: Cursor, /, *,
 	return cursor.fetchall()
 
 def get_programmes(cursor: Cursor, /, *,
+				   campus_id: Optional[int] = None,
 				   degree: Optional[str] = None,
 				   stream: Optional[str] = None) -> Tuple[Optional[Dict[str, str]], ...]:
+	if campus_id:
+		if degree and stream:
+			cursor.execute("""SELECT `id`, `degree`, `stream`
+						   FROM `programmes`
+						   JOIN `campus_programmes` AS `CP`
+						   ON `programmes`.`id`=`CP`.`programme_id`
+						   WHERE `CP`.`campus_id`=%s
+						   AND `degree`=%s
+						   AND `stream`=%s""",
+						   (campus_id, degree, stream))
+		elif degree:
+			cursor.execute("""SELECT `id`, `degree`, `stream`
+						   FROM `programmes`
+						   JOIN `campus_programmes` `CP`
+						   ON `programmes`.`id`=`CP`.`programme_id`
+						   WHERE `CP`.`campus_id`=%s
+						   AND `degree`=%s""",
+						   (campus_id, degree))
+		elif stream:
+			cursor.execute("""SELECT `id`, `degree`, `stream`
+						   FROM `programmes`
+						   JOIN `campus_programmes` `CP`
+						   ON `programmes`.`id`=`CP`.`programme_id`
+						   WHERE `CP`.`campus_id`=%s
+						   AND `stream`=%s""",
+						   (campus_id, stream))
+		else:
+			cursor.execute("""SELECT `id`, `degree`, `stream`
+						   FROM `programmes`
+						   JOIN `campus_programmes` `CP`
+						   ON `programmes`.`id`=`CP`.`programme_id`
+						   WHERE `CP`.`campus_id`=%s""", (campus_id,))
 	if degree and stream:
 		cursor.execute("""SELECT `id` FROM `programmes`
 					   WHERE `degree` LIKE %s

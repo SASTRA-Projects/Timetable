@@ -132,92 +132,137 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                        campus_id: Optional[int] = None,
                        days: List[str] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
                        period_ids: List[int] = list(range(1,9)),
-                       num_elective_slots: int = 2,
-                       default_break: int = 5) -> None:
-    # Fetch data
-    sections = fetch_data.get_sections(cursor, campus_id)
-    fac_secs = fetch_data.get_faculty_sections(cursor)
-    section_classes = fetch_data.get_section_class(cursor)
-    theory_rooms = fetch_data.get_classes(cursor, campus_id, is_lab=False)
-    lab_rooms = fetch_data.get_classes(cursor, campus_id, is_lab=True)
+                       minor_elective: int = 4) -> None:
+	def free_classes(day, period_id):
+		cursor.execute("""SELECT `id`
+					   FROM `timetables`
+					   JOIN `classes`
+				 	   ON `id`=`class_id`
+				 	   AND NOT `is_lab`
+				 	   AND `day`=%s
+				 	   AND `period_id`=%s""",
+					   (day, period_id))
+		return {id for id in cursor.fetchall()}
 
-    # Group sections by program, stream can be None
-    groups: Dict[Tuple[int,str,Optional[str],int], List[int]] = {}
-    for sec in sections:
-        key = (sec['campus_id'], sec['degree'], sec['stream'], sec['year'])
-        groups.setdefault(key, []).append(sec['id'])
+	def class_capacity(class_id, day, period_id):
+		cursor.execute("""SELECT `capacity`
+				 	   FROM `timetables`
+				 	   JOIN `classes`
+				 	   ON `timetables`.`class_id`=%s
+				 	   AND `id`=%s
+				 	   AND `day`=%s
+				 	   AND `period_id`=%s""",
+					   (class_id, class_id, day, period_id))
+		return cursor.fetch()["capacity"]
 
-    # Compute student counts
-    group_counts, section_counts = {}, {}
-    for key, sec_ids in groups.items():
-        group_counts[key] = fetch_data.get_group_student_count(cursor, sec_ids)
-        for sid in sec_ids:
-            section_counts[sid] = fetch_data.get_section_student_count(cursor, sid)
+	def no_of_elective_students(degree, stream, elective):
+		cursor.execute("""SELECT `stream`
+				 	   FROM `student_electives` `SE`
+				 	   JOIN `section_students` `SS`
+				 	   ON `SS`.`student_id`=`SE`.`student_id`
+				 	   JOIN `sections`
+				 	   ON `sections`.`id`=`SS`.`section_id`
+				 	   AND `campus_id`=%s
+				 	   AND `degree`=%s
+				 	   AND `course_code`=%s""",
+					   (campus_id, degree, elective))
+		return len([1 for s in cursor.fetchall() if stream is s["stream"] or stream==s["stream"]])
 
-    # Split into electives and cores
-    elective_fsc = [f for f in fac_secs if cursor.execute("SELECT is_elective FROM courses WHERE code=%s",(f['course_code'],)) or f and cursor.fetchone()['is_elective']]
-    core_fsc = [f for f in fac_secs if f not in elective_fsc]
+	section_ids = {section["id"] for section in fetch_data.get_sections(cursor, campus_id=campus_id)}
 
-    # Prepare slots
-    all_slots = [(d,p) for d in days for p in period_ids]
-    elective_slots = {k: random.sample(all_slots, num_elective_slots) for k in groups}
-
-    # Tracking
-    busy_faculty = {f['faculty_id']: set() for f in fac_secs}
-    busy_room = {r['id']: set() for r in theory_rooms + lab_rooms}
-    busy_fsc = {f['id']: set() for f in fac_secs}
-    unscheduled = {'electives': [], 'labs': [], 'theory': []}
-
-    # Schedule electives
-    for key, sec_ids in groups.items():
-        cap = group_counts[key]
-        for fsc in elective_fsc:
-            if fsc['section_id'] not in sec_ids: continue
-            need = fsc['L'] + fsc['T']
-            placed = 0
-            for _ in range(need):
-                for _ in range(10):
-                    day,pid = random.choice(elective_slots[key])
-                    if pid == default_break or (day,pid) in busy_faculty[fsc['faculty_id']]: continue
-                    rooms = [r for r in theory_rooms if (day,pid) not in busy_room[r['id']] and r['capacity']>=cap]
-                    if not rooms: continue
-                    room = random.choice(rooms)
-                    insert_into_timetable(cursor, db_connector, day, pid, fsc['id'], room['id'])
-                    busy_faculty[fsc['faculty_id']].add((day,pid))
-                    busy_room[room['id']].add((day,pid))
-                    busy_fsc[fsc['id']].add((day,pid))
-                    placed+=1; break
-                else:
-                    unscheduled['electives'].append(fsc['id'])
-            if placed<need:
-                print(f"Warning: Elective fsc_id {fsc['id']} only {placed}/{need}")
-
-    # Schedule core
-    for fsc in core_fsc:
-        sid, stud = fsc['section_id'], section_counts[fsc['section_id']]
-        class_id = section_classes.get(sid)
-        is_lab = class_id in {r['id'] for r in lab_rooms}
-        need = (fsc['P']//2)*2 if is_lab else fsc['L'] + fsc['T']
-        rooms = lab_rooms if is_lab else theory_rooms
-        for _ in range(need//(2 if is_lab else 1)):
-            for _ in range(10):
-                day,pid = random.choice(all_slots)
-                if pid==default_break or (day,pid) in busy_faculty[fsc['faculty_id']] or (day,pid) in busy_fsc[fsc['id']]: continue
-                if is_lab and (day,pid+1) not in all_slots: continue
-                cap_room = next((r['capacity'] for r in rooms if r['id']==class_id),0)
-                if cap_room<stud: continue
-                for off in (0,1) if is_lab else (0,):
-                    insert_into_timetable(cursor, db_connector, day, pid+off, fsc['id'], class_id)
-                    busy_faculty[fsc['faculty_id']].add((day,pid+off))
-                    busy_fsc[fsc['id']].add((day,pid+off))
-                    busy_room[class_id].add((day,pid+off))
-                break
-            else:
-                unscheduled['labs' if is_lab else 'theory'].append(fsc['id'])
-
-    # Summary
-    print("--- Scheduling Summary ---")
-    print("Unscheduled Electives:", unscheduled['electives'])
-    print("Unscheduled Labs:", unscheduled['labs'])
-    print("Unscheduled Theory:", unscheduled['theory'])
-    print("Timetable generation complete.")
+	# Allocate lab courses first
+	for section_id in section_ids:
+		periods = [(day, period_id)
+			 for day in days for period_id in period_ids
+			 if period_id % 2 == 1]
+		if minor_elective:
+			periods.remove(("Thursday", 7))
+			periods.remove(("Friday", 7))
+		faculty_course = fetch_data.get_faculty_section_courses(cursor, section_id=section_id)
+		for fc in faculty_course:
+			course = fetch_data.get_course(cursor, code=fc["course_code"])
+			if not course["P"] or course["is_elective"]:
+				continue
+			hrs = course["P"]
+			lab_classes = fetch_data.get_classes(cursor, campus_id=campus_id, lab=True, department=course["department"])
+			while hrs:
+				try:
+					day, period_id, class_id = *random.choice(periods), random.choice(lab_classes)["id"]
+					insert_data.add_timetable(db_connector, cursor, 
+											  day=day,
+											  period_id=period_id,
+											  faculty_section_course_id=fc["id"],
+											  class_id=class_id)
+					insert_data.add_timetable(db_connector, cursor, 
+											  day=day,
+											  period_id=period_id+1,
+											  faculty_section_course_id=fc["id"],
+											  class_id=class_id)
+					hrs -= 2
+					periods.remove((day, period_id))
+					periods.remove((day, period_id+1))
+					print(section_id, day, period_id, fc, class_id)
+				except Exception as e:
+					print(f"Error {section_id}, {fc['faculty_id']}, {fc['id']} {fc['course_code']}: {e}")
+					db_connector.rollback()
+					continue
+	
+	# Allocate electives
+	courses = fetch_data.get_courses(cursor, elective=True)
+	for course in courses:
+		periods = [(day, period_id)
+			 for day in days for period_id in period_ids
+			 if period_id % 2 == 1]
+		if minor_elective:
+			periods.remove(("Thursday", 7))
+			periods.remove(("Thursday", 8))
+			periods.remove(("Friday", 7))
+			periods.remove(("Friday", 8))
+		hrs = course["P"]
+		lab_classes = fetch_data.get_classes(cursor, campus_id=campus_id, lab=True, department=course["department"])
+		while hrs:
+			try:
+				day, period_id = random.choice(periods)
+				if period_id % 2 == 0:
+					continue
+				faculty_sections = [
+					fs for fs in fetch_data.get_faculty_section_courses(cursor, course_code=course["code"])
+					if fs["section_id"] in section_ids
+				]
+				section = fetch_data.get_section(cursor, faculty_sections[0]["section_id"])
+				while True:
+					no_of_students = no_of_elective_students(section["degree"], section["stream"], course["code"])
+					classes = set()
+					for _ in range(len(faculty_sections)):
+						class_id = random.choice(lab_classes)["id"]
+						capacity = class_capacity(class_id, day, period_id)
+						no_of_students -= capacity
+						if no_of_students <= 0:
+							break
+					insert_data.add_timetable(db_connector, cursor, 
+												day=day,
+												period_id=period_id,
+												faculty_section_course_id=fs["id"],
+												class_id=class_id)
+					insert_data.add_timetable(db_connector, cursor, 
+												day=day,
+												period_id=period_id+1,
+												faculty_section_course_id=fs["id"],
+												class_id=class_id)
+					hrs -= 2
+					periods.remove((day, period_id))
+					periods.remove((day, period_id+1))
+					print(day, period_id, fs, class_id)
+					break
+			except Exception as exception:
+				# if exception due to lab full
+				# try:
+				# another lab, if not possible then allocate at some other day, period_id
+				exception = exception.args
+				if exception[0] != 1062:
+					...
+				if exception[0] == 1644:
+					...
+				print(f"Error {fs}: {exception}")
+				db_connector.rollback()
+				continue
