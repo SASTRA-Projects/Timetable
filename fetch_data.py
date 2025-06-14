@@ -439,7 +439,7 @@ def get_faculty_details(cursor: Cursor, /, *,
                         id: Optional[int] = None,
                         password: Optional[str] = None) -> Optional[Dict[str, Union[float, int, str]]]:
     try:
-        if isinstance(pwd, str) and password:
+        if isinstance(password, str) and password:
             cursor.execute("""SELECT * FROM `faculty_view`
                            WHERE `id`=%s""", (id,))
             faculty: Optional[Dict[str, Union[float, int, str]]] = cursor.fetchone()
@@ -451,7 +451,7 @@ def get_faculty_details(cursor: Cursor, /, *,
             raise ValueError("Password must be a non-empty string")
 
     except exceptions.VerifyMismatchError:
-        if faculty and isinstance(pwd, str):
+        if faculty and pwd:
             cursor.execute("""UPDATE `faculty_info`
                            SET `password`=%s""", ph.hash(pwd))
             raise AssertionError("Incorrect Password")
