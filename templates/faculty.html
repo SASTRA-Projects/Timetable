@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block head %}
-  <meta name="description"
+    <meta name="description"
           content="Shows faculty details.
                    Displays the personal information of the authenticated (logged-in) faculty.">
     <style>
@@ -46,22 +46,22 @@
         <p class="empty-message">Faculty ID Not Provided!</p>
     {% else %}
         <div class="faculty-card">
-            <h3>Name:</h3>
+            <h3>Name: </h3>
             <p>{{ faculty["name"] }}</p>
 
             <h3>Phone Number:</h3>
             <p>{{ faculty["phone"] }}</p>
 
-            <h3>Campus:</h3>
+            <h3>Campus: </h3>
             <p>{{ campus }}</p>
 
-            <h3>Department:</h3>
+            <h3>Department: </h3>
             <p>{{ faculty["department"] }}</p>
 
-            <h3>Date of Join:</h3>
+            <h3>Date of Join: </h3>
             <p>{{ faculty["join_year"] }}</p>
 
-            <h3>Salary:</h3>
+            <h3>Salary: </h3>
             <p>{{ faculty["salary"] }}</p>
         </div>
     {% endif %}
