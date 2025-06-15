@@ -1,38 +1,102 @@
-{# templates/home.html #}
 {% extends "layout.html" %}
 
 {% block head %}
     <meta name="description"
           content="Welcome to the home page! Shows Campuses, Departments, Degrees, and Faculty Details.">
+    <style>
+        .lux-button {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            min-width: 260px;
+            text-align: center;
+            background-color: var(--menu-footer-bg-dark);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 3px 8px rgba(26, 145, 197, 0.4); /* subtle blue shadow */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            cursor: pointer;
+        }
+
+        .lux-button:hover {
+            background-color: var(--accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(26, 145, 197, 0.5);
+        }
+
+        .lux-button:active {
+            transform: scale(0.97);
+        }
+
+        [data-theme="light"] .lux-button {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        [data-theme="light"] .lux-button:hover {
+            background-color: var(--accent-dark);
+        }
+
+        .lux-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem; /* slightly reduced vertical space */
+            margin-top: 1.5rem;
+            margin-bottom: 2rem; /* enough space to keep footer in view */
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1; /* makes footer stick to bottom if content is short */
+        }
+    </style>
 {% endblock %}
 
 {% block title %}Home{% endblock %}
 
 {% block content %}
+<main>
     <h1 style="text-align: center; font-size: 3em; margin-bottom: 1rem;">Welcome to the Home Page!</h1>
 
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+    <div class="lux-wrapper">
         <form action="/campus">
-            <button type="submit" style="padding: 1rem 2rem; font-size: 1.2rem;">Campuses</button>
+            <button type="submit" class="lux-button">Campuses</button>
         </form>
 
         <form action="/department">
-            <button type="submit" style="padding: 1rem 2rem; font-size: 1.2rem;">Departments</button>
+            <button type="submit" class="lux-button">Departments</button>
         </form>
 
         <form action="/degree">
-            <button type="submit" style="padding: 1rem 2rem; font-size: 1.2rem;">Degrees</button>
+            <button type="submit" class="lux-button">Degrees</button>
         </form>
 
         <form action="/faculty">
-            <button type="submit" style="padding: 1rem 2rem; font-size: 1.2rem;">Faculty Details</button>
+            <button type="submit" class="lux-button">Faculty Details</button>
+        </form>
+
+        <form action="/generate_timetable">
+            <button type="submit" class="lux-button">Generate Timetable</button>
         </form>
     </div>
+</main>
 
-    <script>
-        window.history.pushState(null, "", window.location.href);
-        window.onpopstate = function () {
-            window.location.href = "/login";
-        };
-    </script>
+<script>
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = function () {
+        window.location.href = "/login";
+    };
+</script>
 {% endblock %}
