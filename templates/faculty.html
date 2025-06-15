@@ -6,33 +6,30 @@
                    Displays the personal information of the authenticated (logged-in) faculty.">
     <style>
         .faculty-card {
-            max-width: 800px;  /* increased from 600px */
+            width: 400px;                /* reduced from 500px */
+            height: 400px;               /* reduced from 500px */
             margin: 60px auto;
-            background: linear-gradient(to right, #f8f9fa, #ffffff);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            background-color: #ffffff;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
             border-radius: 16px;
-            padding: 40px;
+            padding: 30px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #333;
-        }
-
-        .faculty-card h3 {
-            margin-top: 14px;  /* reduced from 20px */
-            margin-bottom: 3px; /* reduced from 5px */
-            font-size: 1.2em;
-            color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.6;
         }
 
         .faculty-card p {
             font-size: 1.05em;
-            margin: 0 0 6px;  /* reduced from 10px */
-            color: #555;
+            margin: 6px 0;
         }
 
         .empty-message {
             margin: 100px auto;
             text-align: center;
-            font-size: 3em;
+            font-size: 2.5em;
             color: #b22222;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
@@ -46,23 +43,12 @@
         <p class="empty-message">Faculty ID Not Provided!</p>
     {% else %}
         <div class="faculty-card">
-            <h3>Name: </h3>
-            <p>{{ faculty["name"] }}</p>
-
-            <h3>Phone Number:</h3>
-            <p>{{ faculty["phone"] }}</p>
-
-            <h3>Campus: </h3>
-            <p>{{ campus }}</p>
-
-            <h3>Department: </h3>
-            <p>{{ faculty["department"] }}</p>
-
-            <h3>Date of Join: </h3>
-            <p>{{ faculty["join_year"] }}</p>
-
-            <h3>Salary: </h3>
-            <p>{{ faculty["salary"] }}</p>
+            <p>Name: {{ faculty["name"] }}</p>
+            <p>Phone Number: {{ faculty["phone"] }}</p>
+            <p>Campus: {{ campus }}</p>
+            <p>Department: {{ faculty["department"] }}</p>
+            <p>Date of Join: {{ faculty["join_year"] }}</p>
+            <p>Salary: ₹{{ faculty["salary"] }}</p>
         </div>
     {% endif %}
 {% endblock %}
