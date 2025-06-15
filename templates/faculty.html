@@ -2,36 +2,40 @@
 
 {% block head %}
     <meta name="description"
-          content="Shows faculty details.
-                   Displays the personal information of the authenticated (logged-in) faculty.">
+          content="Shows faculty details. Displays the personal information of the authenticated (logged-in) faculty.">
     <style>
         .faculty-card {
-            width: 400px;                /* reduced from 500px */
-            height: 400px;               /* reduced from 500px */
+            width: 360px;
+            height: 360px;
             margin: 60px auto;
             background-color: #ffffff;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            box-shadow: var(--shadow);
             border-radius: 16px;
-            padding: 30px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #333;
+            padding: 25px;
+            font-family: 'Inter', sans-serif;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            line-height: 1.6;
+            color: var(--text-light);
+        }
+
+        [data-theme="dark"] .faculty-card {
+            background-color: var(--input-bg-dark);
+            color: var(--text-dark);
         }
 
         .faculty-card p {
-            font-size: 1.05em;
-            margin: 6px 0;
+            font-size: 1rem;
+            font-weight: 500;
+            margin: 8px 0;
         }
 
         .empty-message {
             margin: 100px auto;
             text-align: center;
             font-size: 2.5em;
-            color: #b22222;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--error);
+            font-family: 'Inter', sans-serif;
         }
     </style>
 {% endblock %}
