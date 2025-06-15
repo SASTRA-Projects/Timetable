@@ -13,7 +13,7 @@
             color: white;
             border: none;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(26, 145, 197, 0.6); /* blue shadow */
+            box-shadow: 0 3px 8px rgba(26, 145, 197, 0.4); /* subtle blue shadow */
             transition: background-color 0.3s ease, transform 0.2s ease;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             cursor: pointer;
@@ -22,7 +22,7 @@
         .lux-button:hover {
             background-color: var(--accent-dark);
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(26, 145, 197, 0.75);
+            box-shadow: 0 5px 12px rgba(26, 145, 197, 0.5);
         }
 
         .lux-button:active {
@@ -37,15 +37,40 @@
         [data-theme="light"] .lux-button:hover {
             background-color: var(--accent-dark);
         }
+
+        .lux-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem; /* slightly reduced vertical space */
+            margin-top: 1.5rem;
+            margin-bottom: 2rem; /* enough space to keep footer in view */
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1; /* makes footer stick to bottom if content is short */
+        }
     </style>
 {% endblock %}
 
 {% block title %}Home{% endblock %}
 
 {% block content %}
+<main>
     <h1 style="text-align: center; font-size: 3em; margin-bottom: 1rem;">Welcome to the Home Page!</h1>
 
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+    <div class="lux-wrapper">
         <form action="/campus">
             <button type="submit" class="lux-button">Campuses</button>
         </form>
@@ -66,11 +91,12 @@
             <button type="submit" class="lux-button">Generate Timetable</button>
         </form>
     </div>
+</main>
 
-    <script>
-        window.history.pushState(null, "", window.location.href);
-        window.onpopstate = function () {
-            window.location.href = "/login";
-        };
-    </script>
+<script>
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = function () {
+        window.location.href = "/login";
+    };
+</script>
 {% endblock %}

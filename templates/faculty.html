@@ -6,7 +6,8 @@
     <style>
         .faculty-card {
             width: 360px;
-            height: 360px;
+            max-width: 90%;
+            height: auto;
             margin: 60px auto;
             background-color: #ffffff;
             box-shadow: var(--shadow);
@@ -36,6 +37,26 @@
             font-size: 2.5em;
             color: var(--error);
             font-family: 'Inter', sans-serif;
+        }
+
+        /* Responsive style for mobile */
+        @media (max-width: 480px) {
+            .faculty-card {
+                margin: 40px auto;
+                padding: 18px;
+                width: 95%;
+                border-radius: 12px;
+            }
+
+            .faculty-card p {
+                font-size: 0.95rem;
+                margin: 6px 0;
+            }
+
+            .empty-message {
+                font-size: 1.8em;
+                padding: 0 1rem;
+            }
         }
     </style>
 {% endblock %}

@@ -4,6 +4,29 @@
 	<meta name="description"
           content="Shows all the schools in a particular campus.
                    Click any School name to display the Building details inside it.">
+	<style>
+		.school-button {
+			display: inline-block;
+			width: 290px;
+			height: 90px;
+			line-height: 90px;
+			background-color: #0d0722;
+			color: #fff;
+			text-align: center;
+			font-size: 2rem;
+			border: none;
+			border-radius: 12px;
+			box-shadow: 0 4px 15px rgba(59, 130, 246, 0.6);
+			cursor: pointer;
+			text-decoration: none;
+			transition: all 0.3s ease;
+		}
+
+		.school-button:hover {
+			transform: scale(1.03);
+			box-shadow: 0 6px 20px rgba(59, 130, 246, 0.8);
+		}
+	</style>
 {% endblock %}
 
 {% block title %}{{ campus }} Schools{% endblock %}
@@ -16,8 +39,8 @@
 		<ul class="nobulletins">
 			{% for school in schools %}
 				<hr>
-				<li style="text-align: center; font-size: 3em">
-					<a href="/school/{{ campus }}/{{ school.name }}" class="nounderline">{{ school["name"] }}</a>
+				<li style="text-align: center;">
+					<a href="/school/{{ campus }}/{{ school.name }}" class="school-button">{{ school["name"] }}</a>
 				</li>
 			{% endfor %}
 		</ul>
