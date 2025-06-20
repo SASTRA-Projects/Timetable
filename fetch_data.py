@@ -465,6 +465,21 @@ def get_student_details(cursor: Cursor, /, *,
     # TODO: ...
     ...
 
+def get_section_students(cursor: Cursor, /, *,
+                         section_id: Optional[int] = None,
+                         student_id: Optional[int] = None):
+    if section_id:
+        cursor.execute("""SELECT `student_id`
+                       FROM `section_students`
+                       WHERE `section_id`=%s""", (section_id,))
+    elif student_id:
+        cursor.execute("""SELECT `section_id`
+                       FROM `section_students`
+                       WHERE `student_id`=%s""", (student_id,))
+    else:
+        cursor.execute("""SELECT * FROM `section_students`""")
+    return cursor.fetchall()
+
 def get_faculty_section_courses(cursor: Cursor, /, *,
                                faculty_id: Optional[int] = None,
                                section_id: Optional[int] = None,
