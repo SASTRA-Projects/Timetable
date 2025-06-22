@@ -412,6 +412,22 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						THEN SIGNAL SQLSTATE '45000'
 				   		SET MESSAGE_TEXT='Same faculty cannot take more than 3 class for the same section on the same day';
 					END IF;
+
+					IF EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC1`
+						ON `FSC1`.`id`=`faculty_section_course_id`
+						JOIN `faculty_section_course` `FSC2`
+						ON `FSC2`.`id`=NEW.`faculty_section_course_id`
+						AND `FSC1`.`faculty_id`=`FSC2`.`faculty_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+				   		SET MESSAGE_TEXT='Same faculty cannot take more than one class at the same time';
+					END IF;
 				   END;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `timetable_same_fac_class_full_update`
@@ -438,6 +454,23 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						THEN SIGNAL SQLSTATE '45000'
 				   		SET MESSAGE_TEXT='Same faculty cannot take more than 3 class for the same section on the same day';
 					END IF;
+
+					IF EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC1`
+						ON `FSC1`.`id`=`faculty_section_course_id`
+						JOIN `faculty_section_course` `FSC2`
+						ON `FSC2`.`id`=NEW.`faculty_section_course_id`
+						AND `FSC1`.`faculty_id`=`FSC2`.`faculty_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+				   		SET MESSAGE_TEXT='Same faculty cannot take more than one class at the same time';
+					END IF;
 				   END;
 	""")
 	db_connector.commit()
+# Trigger that a section can have atmost 2 labs (except electives) on the same day
