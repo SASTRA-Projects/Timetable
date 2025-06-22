@@ -132,10 +132,10 @@ def get_programmes(cursor: Cursor, /, *,
                    campus_id: Optional[int] = None,
                    degree: Optional[str] = None,
                    stream: Optional[str] = None) -> Tuple[Optional[Dict[str, str]], ...]:
-    # 🚨 MOCKED OUTPUT since MySQL is not running
+    
     if degree == "B.A":
         return (
-            {"id": 1, "degree": "B.A", "stream": "English"},   # Newly inserted in insert_data.py
+            {"id": 1, "degree": "B.A", "stream": "English"},   
             {"id": 2, "degree": "B.A", "stream": "Mathematics"},
         )
     elif degree == "B.Sc":
