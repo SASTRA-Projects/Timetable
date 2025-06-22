@@ -513,14 +513,14 @@ def get_faculty_section_courses(cursor: Cursor, /, *,
 def get_courses_by_programme(cursor: Cursor, /, *,
                              programme_id: Optional[int]) -> List[Dict[str, Union[str, int]]]:
     cursor.execute("""
-            SELECT c.name AS course_name,
-           c.code AS course_code,
-           c.l AS lecture_hours,
-           c.t AS tutorial_hours,
-           c.p AS practical_hours,
-           c.credits AS credits
-    FROM courses c
-    JOIN programme_courses pc ON c.code = pc.course_code               
-    WHERE programme_id = %s
+        SELECT c.name AS course_name,
+               c.code AS course_code,
+               c.l AS lecture_hours,
+               c.t AS tutorial_hours,
+               c.p AS practical_hours,
+               c.credits AS credits
+        FROM courses c
+        JOIN programme_courses pc ON c.code = pc.course_code               
+        WHERE programme_id = %s
     """, (programme_id,))
     return cursor.fetchall()
