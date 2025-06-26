@@ -21,6 +21,8 @@ import fetch_data
 import random
 from typing import Optional, Dict, List, Tuple
 import random
+from itertools import combinations
+from functools import reduce
 from typehints import Connection, Cursor
 
 def generate_timetable(db_connector: Connection, cursor: Cursor,
@@ -181,9 +183,56 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 		class_capacity = sorted(list({(cls["class_id"], int(cls["capacity"])) for cls in class_capacity}), key=lambda x: x[1], reverse=True)
 		return [[*cls] for cls in class_capacity]
 
+	def is_faculty_free(faculty_id, day, period):
+		cursor.execute("""SELECT 1
+				 	   FROM `timetables`
+				 	   JOIN `faculty_section_course` `FSC`
+				 	   ON `FSC`.`id`=`faculty_section_course_id`
+				 	   AND `faculty_id`=%s
+				 	   AND `day`=%s
+				 	   AND `period_id`=%s
+				 	   LIMIT 1""", (faculty_id, day, period_id))
+		return not cursor.fetchone()
+
+	programmes = fetch_data.get_courses(cursor, campus_id=campus_id)
 	section_ids = {section["id"] for section in fetch_data.get_sections(cursor, campus_id=campus_id)}
 
-	# Allocate lab courses first
+	# 1. Allocate elective labs: Assume no elective if stream is None
+	for programme in programmes:
+		courses = fetch_data.get_courses(cursor, programme_id=programme["id"], elective=True, lab=True)
+		student_electives = tuple((student_id, course["code"]) for course in courses
+   							 if (student_id := {se["student_id"]
+							 for se in fetch_data.get_student_electives(cursor, course_code=course["code"])}))
+		courses = {se[1] for se in student_electives}
+		no_of_electives = 0
+		student_id = student_electives[0][1][0]
+		for se in student_electives:
+			if student_id in se[1]:
+				no_of_electives += 1
+
+		allowed = reduce(lambda comb1, comb2: set(comb1) | set(comb2), (combinations(courses, i) for i in range(1, no_of_electives+1)))
+		if no_of_electives > 1:
+			not_allowed = set()
+			students = set()
+			for se1 in student_electives:
+				for student_id in se1[0]:
+					if student_id in students:
+						continue
+					else:
+						students.add(student_id)
+					num = 0
+					electives = set()
+					for se2 in student_electives:
+						if student_id in se2[0]:
+							num += 1
+							electives.add(se2["course_code"])
+							if num == no_of_electives:
+								break
+					not_allowed.add(tuple(sorted(electives)))
+			allowed -= not_allowed
+
+
+	# 2. Allocate lab courses
 	for section_id in section_ids:
 		periods = [(day, period_id)
 				   for day in days for period_id in period_ids
@@ -192,10 +241,10 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 			periods.remove(("Thursday", 7))
 			periods.remove(("Friday", 7))
 		no_of_students = len(fetch_data.get_section_students(cursor, section_id=section_id))
-		faculty_course = fetch_data.get_faculty_section_courses(cursor, section_id=section_id)
+		faculty_courses = fetch_data.get_faculty_section_courses(cursor, section_id=section_id)
 		twice = []
 		db_connector.autocommit(False)
-		for fc in faculty_course:
+		for fc in faculty_courses:
 			course = fetch_data.get_course(cursor, code=fc["course_code"])
 			if not course["P"] or course["is_elective"]:
 				continue

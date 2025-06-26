@@ -2,34 +2,73 @@ from argon2 import PasswordHasher, exceptions
 from typehints import *
 
 def get_courses(cursor: Cursor, /, *,
+                programme_id: Optional[int] = None,
                 elective: Optional[bool] = None,
                 lab: Optional[bool] = None) -> Tuple[Dict[str, Union[bool, int, str]], ...]:
-    if elective is None and lab is None:
-        cursor.execute("""SELECT * FROM `courses`""")
-    elif lab is None:
-        cursor.execute("""SELECT `code`, `name`,
-                       `department`, `credits`,
-                       `L`, `P`, `T` FROM `courses`
-                       WHERE `is_elective`=%s""", (elective,))
-    elif elective is None:
-        if lab:
-            cursor.execute("""SELECT * FROM `courses`
-                           WHERE `P` > %s""", (0,))
+    if programme_id:
+        if elective is None and lab is None:
+            cursor.execute("""SELECT `code`, `name`,
+                           `department`, `credits`,
+                           `L`, `P`, `T`, `is_elective`
+                           FROM `courses`
+                           JOIN `programme_courses`
+                           ON `code`=`course_code`
+                           AND `programme_id`=%s""", (programme_id,))
+        elif lab is None:
+            cursor.execute("""SELECT `code`, `name`,
+                           `department`, `credits`,
+                           `L`, `P`, `T`
+                           FROM `courses`
+                           JOIN `programme_courses`
+                           ON `code`=`course_code`
+                           AND `programme_id`=%s
+                           AND `is_elective`=%s""", (programme_id, elective,))
+        elif elective is None:
+            cursor.execute("""SELECT *
+                           FROM `courses`
+                           JOIN `programme_courses`
+                           ON `code`=`course_code`
+                           AND `programme_id`=%s
+                           AND `P` > %s
+                           AND `P` < %s""", ((programme_id,) + ((0, 256) if lab else (-1, 1))))
         else:
-            cursor.execute("""SELECT * FROM `courses`
-                           WHERE `P`=%s""", (0,))
-    elif lab:
-        cursor.execute("""SELECT `code`, `name`,
-                       `department`, `credits`,
-                       `L`, `P`, `T` FROM `courses`
-                       WHERE `P` > %s
-                       AND `is_elective`=%s""", (0, elective))
+            cursor.execute("""SELECT `code`, `name`,
+                           `department`, `credits`,
+                           `L`, `P`, `T`
+                           FROM `courses`
+                           JOIN `programme_courses`
+                           ON `code`=`course_code`
+                           AND `programme_id`=%s
+                           AND `P` > %s
+                           AND `P` < %s
+                           AND `is_elective`=%s""", ((programme_id,) + ((0, 256) if lab else (-1, 1)) + (elective,)))
     else:
-        cursor.execute("""SELECT `code`, `name`,
-                       `department`, `credits`,
-                       `L`, `P`, `T` FROM `courses`
-                       WHERE `P`=%s
-                       AND `is_elective`=%s""", (0, elective))
+        if elective is None and lab is None:
+            cursor.execute("""SELECT * FROM `courses`""")
+        elif lab is None:
+            cursor.execute("""SELECT `code`, `name`,
+                           `department`, `credits`,
+                           `L`, `P`, `T` FROM `courses`
+                           WHERE `is_elective`=%s""", (elective,))
+        elif elective is None:
+            if lab:
+                cursor.execute("""SELECT * FROM `courses`
+                               WHERE `P` > %s""", (0,))
+            else:
+                cursor.execute("""SELECT * FROM `courses`
+                               WHERE `P`=%s""", (0,))
+        elif lab:
+            cursor.execute("""SELECT `code`, `name`,
+                           `department`, `credits`,
+                           `L`, `P`, `T` FROM `courses`
+                           WHERE `P` > %s
+                           AND `is_elective`=%s""", (0, elective))
+        else:
+            cursor.execute("""SELECT `code`, `name`,
+                           `department`, `credits`,
+                           `L`, `P`, `T` FROM `courses`
+                           WHERE `P`=%s
+                           AND `is_elective`=%s""", (0, elective))
     return cursor.fetchall()
 
 def get_course(cursor: Cursor, /, *,
@@ -39,6 +78,67 @@ def get_course(cursor: Cursor, /, *,
                    `is_elective` FROM `courses`
                    WHERE `code`=%s""", (code,))
     return cursor.fetchone()
+
+def get_programme_courses(cursor: Cursor, /, *,
+                          campus_id: Optional[int] = None,
+                          programme_id: Optional[int] = None,
+                          course_code: Optional[str] = None) -> Union[Tuple[Dict[str, Union[str, int]]], bool]:
+    if campus_id:
+        if programme_id:
+            if course_code:
+                cursor.execute("""SELECT 1
+                               FROM `programme_courses` `PC`
+                               JOIN `programmes`
+                               ON `programmes`.`id`=`PC`.`programme_id`
+                               AND `campus_id`=%s
+                               AND `programme_id`=%s
+                               AND `course_code`=%s
+                               LIMIT 1""",
+                               (campus_id, programme_id, course_code))
+                return True if cursor.fetchone() else False
+            else:
+                cursor.execute("""SELECT `course_code`
+                               FROM `programme_courses` `PC`
+                               JOIN `programmes`
+                               ON `programmes`.`id`=`PC`.`programme_id`
+                               AND `campus_id`=%s
+                               AND `programme_id`=%s""",
+                               (campus_id, programme_id))
+        elif course_code:
+            cursor.execute("""SELECT `programme_id`
+                           FROM `programme_courses` `PC`
+                           JOIN `programmes`
+                           ON `programmes`.`id`=`PC`.`programme_id`
+                           AND `campus_id`=%s
+                           AND `course_code`=%s""",
+                           (campus_id, course_code))
+        else:
+            cursor.execute("""SELECT `programme_id`, `course_code`
+                           FROM `programme_courses` `PC`
+                           JOIN `programmes`
+                           ON `programmes`.`id`=`PC`.`programme_id`
+                           AND `campus_id`=%s""",
+                           (campus_id,))
+    elif programme_id:
+        if course_code:
+            cursor.execute("""SELECT 1
+                          FROM `programme_courses`
+                          AND `programme_id`=%s
+                          AND `course_code`=%s
+                          LIMIT 1""",
+                          (programme_id, course_code))
+            return True if cursor.fetchone() else False
+        else:
+            cursor.execute("""SELECT `course_code`
+                           FROM `programme_courses`
+                           WHERE `programme_id`=%s""", (programme_id,))
+    elif course_code:
+        cursor.execute("""SELECT `programme_id`
+                       FROM `programme_courses`
+                       WHERE `course_code`=%s""", (course_code,))
+    else:
+        cursor.execute("""SELECT * FROM `programme_courses`""")
+    return cursor.fetchall()
 
 def get_classes(cursor: Cursor, /, *,
                 campus_id: Optional[int] = None,
@@ -280,8 +380,8 @@ def get_faculty_id(cursor: Cursor, /, *,
                    name: Optional[str] = None,
                    join_year: Optional[int] = None,
                    section_id: Optional[int] = None,
-                   course_code: Optional[int] = None,
-                   faculty_section_course_code: Optional[int] = None) -> Optional[List[int]]:
+                   course_code: Optional[str] = None,
+                   faculty_section_course_code: Optional[str] = None) -> Optional[List[int]]:
     if section_id and course_code:
         cursor.execute("""SELECT `faculty_id` AS `id`
                        FROM `faculty_section_course`
@@ -483,7 +583,7 @@ def get_section_students(cursor: Cursor, /, *,
 def get_faculty_section_courses(cursor: Cursor, /, *,
                                faculty_id: Optional[int] = None,
                                section_id: Optional[int] = None,
-                               course_code: Optional[int] = None,) -> Tuple[Dict[str, Union[int, str]], ...]:
+                               course_code: Optional[str] = None,) -> Tuple[Dict[str, Union[int, str]], ...]:
     if faculty_id and section_id and course_code:
         cursor.execute("""SELECT `id`, `section_id`, `course_code`
                        FROM `faculty_section_course`
@@ -523,4 +623,27 @@ def get_faculty_section_courses(cursor: Cursor, /, *,
                        WHERE `course_code`=%s""", (course_code,))
     else:
         cursor.execute("""SELECT * FROM `faculty_section_course`""")
+    return cursor.fetchall()
+
+def get_student_electives(cursor: Cursor, /, *,
+                          student_id: Optional[int] = None,
+                          course_code: Optional[str] = None):
+    if student_id:
+        if course_code:
+            cursor.execute("""SELECT 1
+                           FROM `student_electives`
+                           WHERE `student_id`=%s
+                           AND `course_code`=%s
+                           LIMIT 1""", (student_id, course_code))
+            return True if cursor.fetchone() else False
+        else:
+            cursor.execute("""SELECT `course_code`
+                           FROM `student_electives`
+                           WHERE `student_id`=%s""", (student_id,))
+    elif course_code:
+        cursor.execute("""SELECT `student_id`
+                       FROM `student_electives`
+                       WHERE `course_code`=%s""", (course_code,))
+    else:
+        cursor.execute("""SELECT * FROM `student_electives`""")
     return cursor.fetchall()

@@ -161,11 +161,11 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   `L` TINYINT UNSIGNED NOT NULL, -- lecture hours
 				   `P` TINYINT UNSIGNED NOT NULL, -- practical hours
 				   `T` TINYINT UNSIGNED NOT NULL, -- tutorial hours
-				   `is_elective` BOOLEAN NOT NULL, -- assumed: elective course have diff code than core
+				   `is_elective` BOOLEAN NOT NULL, -- assumed: elective course have diff code than core, if same course
 				   PRIMARY KEY(`code`),
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   CHECK((`L` + `P` + `T`) > 0)
+				   CHECK(`L` >= 0 AND `P` >= 0 AND `T` >= 0 AND (`L` + `P` + `T`) > 0)
 	)""")
 	"""
 	Functional Dependencies
