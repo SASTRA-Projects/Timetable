@@ -194,8 +194,8 @@
         });
 
         window.history.pushState(null, "", window.location.href);
-        window.addEventListener("popstate", () => {
-            window.history.pushState(null, "", window.location.href);
+        window.addEventListener("popstate", function () {
+            location.replace("/");
         });
     </script>
 {% endblock %}

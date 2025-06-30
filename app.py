@@ -89,7 +89,7 @@ def show_campuses() -> str:
 @app.route("/campus/<string:campus>")
 def show_schools(campus: str) -> str:
 	if sql.cursor:
-		campus_id: Optional[int] = show_data.get_campus_id(sql.cursor, campus=campus)
+		campus_id = show_data.get_campus_id(sql.cursor, campus=campus)
 		if campus_id is None:
 			return render_template("failed.html", reason="No such Campus found!!")
 		return render_template("school.html", schools=show_data.get_schools(sql.cursor, campus_id=campus_id), campus=campus)
@@ -98,10 +98,10 @@ def show_schools(campus: str) -> str:
 @app.route("/school/<string:campus>/<string:school>")
 def show_buildings(campus: str, school: str) -> str:
 	if sql.cursor:
-		campus_id: Optional[int] = show_data.get_campus_id(sql.cursor, campus=campus)
+		campus_id = show_data.get_campus_id(sql.cursor, campus=campus)
 		if campus_id is None:
 			return render_template("failed.html", reason="No such Campus found!!")
-		school_id: Optional[int] = show_data.get_school_id(sql.cursor, campus_id=campus_id, school=school)
+		school_id = show_data.get_school_id(sql.cursor, campus_id=campus_id, school=school)
 		if school_id is None:
 			return render_template("failed.html", reason=f"No such School found in {campus}!")
 		return render_template("building.html", buildings=show_data.get_buildings(sql.cursor, school_id=school_id), school=school)
@@ -128,8 +128,15 @@ def show_programmes() -> str:
 @app.route("/degree/<string:degree>")
 def show_degree_programmes(degree: str) -> str:
 	if sql.cursor:
-		programmes: Tuple[Optional[Dict[str, str]], ...] = show_data.get_programmes(sql.cursor, degree=degree)
+		programmes = show_data.get_programmes(sql.cursor, degree=degree)
 		return render_template("programme.html", programmes=programmes, degree=degree)
+	return render_template("failed.html", reason="Unknown error occurred")
+
+@app.route("/programme/<string:degree>/<string:stream>")
+def show_courses(degree, stream) -> str:
+	if sql.cursor:
+		courses = fetch_data.get_courses(sql.cursor, programme_id=show_data.get_programme_id(sql.cursor, degree=degree, stream=stream))
+		return render_template("course.html", courses=courses, degree=degree, stream=stream)
 	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/faculty/details")
