@@ -1,5 +1,6 @@
 # SASTRA Timetable Generation
 [![CodeQL Advanced](https://github.com/SASTRA-Projects/SASTRA/actions/workflows/codeql.yml/badge.svg)](https://github.com/SASTRA-Projects/SASTRA/actions/workflows/codeql.yml)
+[![Flask Health Check](https://github.com/SASTRA-Projects/SASTRA/actions/workflows/test-app.yml/badge.svg)](https://github.com/SASTRA-Projects/SASTRA/actions/workflows/test-app.yml)
 ## 📘 Project Overview
 
 The **SASTRA Timetable Generation System** is an initiative to automate the complex process of class scheduling at [`SASTRA DEEMED To Be University`](https://www.sastra.edu). This system leverages modern technologies to create conflict-free timetables, reducing manual work and enhancing efficiency.
