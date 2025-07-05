@@ -53,7 +53,7 @@ Triggers, stored procedures, and functions enforce data integrity, while the sys
 ### Prerequisites
 
 - [Python](https://www.python.org/downloads/)
-- [MySQL Client](https://dev.mysql.com/downloads/)
+- [MySQL Client](https://dev.mysql.com/downloads/) (Optional)
 
 ### Installation
 
@@ -102,7 +102,7 @@ Open [http://localhost:5000](http://localhost:5000) in your browser.
 
 ## 🧠 Future Scope
 
-- **Timetable Optimization:** Prioritize faculty preferences or student convenience.
+- **Timetable Optimization:** Prioritize faculties preferences and students convenience.
 - **Room & Resource Management:** Track lab availability, equipment, etc.
 - **Notifications & Alerts:** Notify users of timetable updates via email or app.
 - **Analytics & Reports:** Visualize schedule patterns, faculty workloads, etc.
