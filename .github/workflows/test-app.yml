@@ -29,19 +29,33 @@ jobs:
           python -m pip install --upgrade pip
           pip install .
 
-      - name: Retry Health Check Until Ready (Max 3 Attempts)
+      - name: Start Flask App in Forks
+        if: github.repository != 'SASTRA-Projects/SASTRA'
+        run: |
+          nohup python app.py
+
+      - name: Set Target URL
+        id: set-url
+        run: |
+          if [ "${{ github.repository }}" = "SASTRA-Projects/SASTRA" ]; then
+            echo "TARGET_URL=https://sastra-3yx3.onrender.com/" >> $GITHUB_OUTPUT
+          else
+            echo "TARGET_URL=http://localhost:5000/" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Retry Health Check Until Ready (Max 5 Attempts)
         run: |
           ATTEMPT=1
-          sleep 30
+          sleep 20
           while [ $ATTEMPT -le 5 ]; do
             echo "🔄 Attempt $ATTEMPT: Checking site status..."
-            STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://sastra-3yx3.onrender.com/)
+            STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${{ steps.set-url.outputs.TARGET_URL }}")
             if [ "$STATUS_CODE" = "200" ] || [ "$STATUS_CODE" = "302" ]; then
               echo "✅ Website is UP. Status Code: $STATUS_CODE"
               break
             fi
-            echo "❌ Website not ready (Status: $STATUS_CODE). Retrying in 1 minute..."
-            sleep 40
+            echo "❌ Website not ready (Status: $STATUS_CODE). Retrying in 10 seconds..."
+            sleep 30
             ATTEMPT=$((ATTEMPT + 1))
           done
 
@@ -56,7 +70,7 @@ jobs:
           PASSWORD: ${{ secrets.PWD }}
         run: |
           echo "Checking login with test credentials..."
-          RESPONSE=$(curl -s -X POST https://sastra-3yx3.onrender.com/login \
+          RESPONSE=$(curl -s -X POST "${{ steps.set-url.outputs.TARGET_URL }}login" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -d "user=$USERNAME&password=$PASSWORD")
 
