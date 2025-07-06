@@ -26,14 +26,6 @@
 			transform: scale(1.03);
 			box-shadow: 0 6px 20px rgba(59, 130, 246, 0.8);
 		}
-
-		.btn-container {
-			display: flex;
-			justify-content: center;
-			flex-wrap: wrap;
-			gap: 20px;
-			margin-top: 30px;
-		}
 	</style>
 {% endblock %}
 
@@ -44,10 +36,13 @@
 		<p style="margin: auto; text-align: center; font-size: 4em">No Schools Found!</p>
 	{% else %}
 		<p style="margin: auto; text-align: center; font-size: 3em">Schools</p>
-		<div class="btn-container">
+		<ul class="nobulletins">
 			{% for school in schools %}
-				<a href="/school/{{ campus }}/{{ school.name }}" class="school-button">{{ school["name"] }}</a>
+				<hr>
+				<li style="text-align: center;">
+					<a href="/school/{{ campus }}/{{ school.name }}" class="school-button">{{ school["name"] }}</a>
+				</li>
 			{% endfor %}
-		</div>
+		</ul>
 	{% endif %}
 {% endblock %}
