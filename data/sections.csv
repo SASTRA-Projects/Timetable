@@ -1,0 +1,105 @@
+campus_id,degree,stream,year,section
+1,B.A,English,1,A
+1,B.A,English,1,B
+1,B.A,English,2,A
+1,B.A,English,2,B
+2,B.A,English,1,A
+2,B.A,English,1,B
+2,B.A,English,2,A
+2,B.A,English,2,B
+3,B.A,English,1,A
+3,B.A,English,1,B
+3,B.A,English,2,A
+3,B.A,English,2,B
+
+1,B.Sc,Nuclear Physics,1,A
+1,B.Sc,Nuclear Physics,1,B
+1,B.Sc,Nuclear Physics,2,A
+1,B.Sc,Nuclear Physics,2,B
+2,B.Sc,Nuclear Physics,1,A
+2,B.Sc,Nuclear Physics,1,B
+2,B.Sc,Nuclear Physics,2,A
+2,B.Sc,Nuclear Physics,2,B
+3,B.Sc,Nuclear Physics,1,A
+3,B.Sc,Nuclear Physics,1,B
+3,B.Sc,Nuclear Physics,2,A
+3,B.Sc,Nuclear Physics,2,B
+
+1,B.Tech,CSE,1,A
+1,B.Tech,CSE,1,B
+1,B.Tech,CSE,1,C
+1,B.Tech,CSE,2,A
+1,B.Tech,CSE,2,B
+1,B.Tech,CSE,2,C
+1,B.Tech,CSE,3,A
+1,B.Tech,CSE,3,B
+1,B.Tech,CSE,3,C
+1,B.Tech,CSE,4,A
+1,B.Tech,CSE,4,B
+1,B.Tech,CSE,4,C
+
+2,B.Tech,CSE,1,A
+2,B.Tech,CSE,1,B
+2,B.Tech,CSE,1,C
+2,B.Tech,CSE,2,A
+2,B.Tech,CSE,2,B
+2,B.Tech,CSE,2,C
+2,B.Tech,CSE,3,A
+2,B.Tech,CSE,3,B
+2,B.Tech,CSE,3,C
+2,B.Tech,CSE,4,A
+2,B.Tech,CSE,4,B
+2,B.Tech,CSE,4,C
+
+3,B.Tech,CSE,1,A
+3,B.Tech,CSE,1,B
+3,B.Tech,CSE,1,C
+3,B.Tech,CSE,2,A
+3,B.Tech,CSE,2,B
+3,B.Tech,CSE,2,C
+3,B.Tech,CSE,3,A
+3,B.Tech,CSE,3,B
+3,B.Tech,CSE,3,C
+3,B.Tech,CSE,4,A
+3,B.Tech,CSE,4,B
+3,B.Tech,CSE,4,C
+
+1,B.Tech,AIDS,1,A
+1,B.Tech,AIDS,1,B
+1,B.Tech,AIDS,2,A
+1,B.Tech,AIDS,2,B
+1,B.Tech,AIDS,3,A
+1,B.Tech,AIDS,3,B
+1,B.Tech,AIDS,4,A
+1,B.Tech,AIDS,4,B
+
+2,B.Tech,AIDS,1,A
+2,B.Tech,AIDS,1,B
+2,B.Tech,AIDS,2,A
+2,B.Tech,AIDS,2,B
+2,B.Tech,AIDS,3,A
+2,B.Tech,AIDS,3,B
+2,B.Tech,AIDS,4,A
+2,B.Tech,AIDS,4,B
+
+3,B.Tech,AIDS,1,A
+3,B.Tech,AIDS,1,B
+3,B.Tech,AIDS,2,A
+3,B.Tech,AIDS,2,B
+3,B.Tech,AIDS,3,A
+3,B.Tech,AIDS,3,B
+3,B.Tech,AIDS,4,A
+3,B.Tech,AIDS,4,B
+
+1,M.Tech,ECE,1,A
+1,M.Tech,ECE,1,B
+1,M.Tech,ECE,2,A
+1,M.Tech,ECE,2,B
+2,M.Tech,ECE,1,A
+2,M.Tech,ECE,1,B
+2,M.Tech,ECE,2,A
+2,M.Tech,ECE,2,B
+3,M.Tech,ECE,1,A
+3,M.Tech,ECE,1,B
+3,M.Tech,ECE,2,A
+3,M.Tech,ECE,2,B
