@@ -1,5 +1,7 @@
 from argon2 import PasswordHasher, exceptions
 from typehints import *
+import show_data
+import csv
 
 def get_courses(cursor: Cursor, /, *,
                 programme_id: Optional[int] = None,
@@ -70,120 +72,6 @@ def get_courses(cursor: Cursor, /, *,
                            WHERE `P`=%s
                            AND `is_elective`=%s""", (0, elective))
     return cursor.fetchall()
-
-def get_lab_departments(cursor: Cursor, /, *,
-                        course_code: Optional[str] = None,
-                        programme_id: Optional[int] = None,
-                        elective: Optional[bool] = None) -> Tuple[Dict[str, str], ...]:
-    if course_code:
-        if programme_id:
-            if elective is not None:
-                cursor.execute("""SELECT `name`, `credits`, `L`, `P`, `T`,
-                               IFNULL(`LD`.`department`, `courses`.`department`) AS `lab_department`,
-                               `courses`.`department` AS `course_department`
-                               FROM `lab_departments` `LD`
-                               RIGHT JOIN `courses`
-                               ON `LD`.`course_code`=`code`
-                               JOIN `programme_courses` `PC`
-                               ON `code`=`PC`.`course_code`
-                               WHERE `P` > 0
-                               AND `code`=%s
-                               AND `programme_id`=%s
-                               AND `is_elective`=%s""", (course_code, programme_id, elective))
-            else:
-                cursor.execute("""SELECT `name`, `credits`, `L`, `P`, `T`, `is_elective`,
-                               IFNULL(`LD`.`department`, `courses`.`department`) AS `lab_department`,
-                               `courses`.`department` AS `course_department`
-                               FROM `lab_departments` `LD`
-                               RIGHT JOIN `courses`
-                               ON `LD`.`course_code`=`code`
-                               JOIN `programme_courses` `PC`
-                               ON `code`=`PC`.`course_code`
-                               WHERE `P` > 0
-                               AND `code`=%s
-                               AND `programme_id`=%s""", (course_code, programme_id))
-        elif elective is not None:
-            cursor.execute("""SELECT `name`, `credits`, `L`, `P`, `T`,
-                           IFNULL(`LD`.`department`, `courses`.`department`) AS `lab_department`,
-                           `courses`.`department` AS `course_department`
-                           FROM `lab_departments` `LD`
-                           RIGHT JOIN `courses`
-                           ON `LD`.`course_code`=`code`
-                           WHERE `P` > 0
-                           AND `code`=%s
-                           AND `is_elective`=%s""", (course_code, elective))
-        else:
-            cursor.execute("""SELECT `name`, `credits`, `L`, `P`, `T`, `is_elective`,
-                           IFNULL(`LD`.`department`, `courses`.`department`) AS `lab_department`,
-                           `courses`.`department` AS `course_department`
-                           FROM `lab_departments` `LD`
-                           RIGHT JOIN `courses`
-                           ON `LD`.`course_code`=`code`
-                           WHERE `P` > 0
-                           AND `code`=%s""", (course_code,))
-        courses = cursor.fetchall()
-        if not courses:
-            return courses
-        else:
-            courses[0]["lab_departments"] = [courses[0]["lab_department"]]
-            courses[0].pop("lab_department")
-        for course in courses[1:]:
-            courses[0]["lab_departments"].append(course["lab_department"])
-            courses.remove(course)
-        return courses
-
-    elif programme_id:
-        if elective is not None:
-            cursor.execute("""SELECT `code`, `name`, `credits`, `L`, `P`, `T`,
-                           IFNULL(`LD`.`department`, `courses`.`department`) AS `lab_department`,
-                           `courses`.`department` AS `course_department`
-                           FROM `lab_departments` `LD`
-                           RIGHT JOIN `courses`
-                           ON `LD`.`course_code`=`code`
-                           JOIN `programme_courses` `PC`
-                           ON `code`=`PC`.`course_code`
-                           WHERE `P` > 0
-                           AND `programme_id`=%s
-                           AND `is_elective`=%s""", (programme_id, elective))
-        else:
-            cursor.execute("""SELECT `code`, `name`, `credits`, `L`, `P`, `T`,
-                           `is_elective`, IFNULL(`LD`.`department`, `courses`.`department`) AS `lab_department`,
-                           `courses`.`department` AS `course_department`
-                           FROM `lab_departments` `LD`
-                           RIGHT JOIN `courses`
-                           ON `LD`.`course_code`=`code`
-                           JOIN `programme_courses` `PC`
-                           ON `code`=`PC`.`course_code`
-                           WHERE `P` > 0
-                           AND `programme_id`=%s""", (programme_id,))
-    elif elective is not None:
-        cursor.execute("""SELECT `code`, `name`, `credits`, `L`, `P`, `T`,
-                       IFNULL(`LD`.`department`, `courses`.`department`) AS `lab_department`,
-                       `courses`.`department` AS `course_department`
-                       FROM `lab_departments` `LD`
-                       RIGHT JOIN `courses`
-                       ON `LD`.`course_code`=`code`
-                       JOIN `programme_courses` `PC`
-                       ON `code`=`PC`.`course_code`
-                       WHERE `P` > 0
-                       AND `is_elective`=%s""", (elective,))
-    else:
-        cursor.execute("""SELECT `code`, `name`, `credits`, `L`, `P`, `T`,
-                       `is_elective`, IFNULL(`LD`.`department`, `courses`.`department`) AS `lab_department`,
-                       `courses`.`department` AS `course_department`
-                       FROM `lab_departments` `LD`
-                       RIGHT JOIN `courses`
-                       ON `course_code`=`code`
-                       WHERE `P` > 0""")
-    courses = cursor.fetchall()
-    for course in courses:
-        course["lab_departments"] = [course["lab_department"]]
-        course.pop("lab_department")
-        for c in courses:
-            if course["code"] == c["code"] and c != course:
-                course["lab_departments"].append(c["lab_department"])
-                courses.remove(c)
-    return courses
 
 def get_course(cursor: Cursor, /, *,
                code: Optional[str] = None) -> Optional[Dict[str, Union[bool, int, str]]]:
@@ -258,15 +146,8 @@ def get_classes(cursor: Cursor, /, *,
                 campus_id: Optional[int] = None,
                 building_id: Optional[int] = None,
                 lab: Optional[bool] = None,
-                department: Optional[str] = None,
-                section_id: Optional[int] = None) -> Tuple[Dict[str, Union[bool, int]], ...]:
-    if section_id:
-        cursor.execute("""SELECT `id`, `room_no`, `capacity`
-                       FROM `section_class`
-                       JOIN `classes`
-                       ON `class_id`=`classes`.`id`
-                       AND `section_id`=%s""", (section_id,))
-    elif building_id:
+                department: Optional[str] = None) -> Tuple[Dict[str, Union[bool, int]], ...]:
+    if building_id:
         if lab is not None:
             if department:
                 cursor.execute("""SELECT `id`, `room_no`, `capacity`
@@ -329,6 +210,37 @@ def get_class(cursor: Cursor, /, *,
                    FROM `classes`
                    WHERE `id`=%s""", (class_id,))
     return cursor.fetchone()
+
+def get_courses_by_degree_stream_year(cursor, degree: str, stream: str, year: int) -> list[dict]:
+	programme_id = show_data.get_programme_id(cursor, degree=degree, stream=stream)
+	assert programme_id is not None, "Invalid programme"
+	query = """
+    SELECT name AS course_name, code AS course_code, L, T, P, credits AS credit
+    FROM courses
+    JOIN programme_courses ON code = course_code
+    WHERE programme_id = %s
+    """
+	cursor.execute(query, (programme_id,))
+	cols = [col[0] for col in cursor.description]
+	return [dict(zip(cols, row)) for row in cursor.fetchall()]
+
+def get_sections_from_file(*,
+                           campus_id: Optional[int] = None,
+                           degree: Optional[str] = None,
+                           stream: Optional[str] = None,
+                           year: Optional[int] = None) -> List[str]:
+    sections = []
+    with open("data/sections.csv", newline="", encoding="utf-8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if (
+                (not campus_id or int(row["campus_id"]) == campus_id)
+                and (not degree or row["degree"] == degree)
+                and (not stream or row["stream"] == stream)
+                and (not year or int(row["year"]) == year)
+            ):
+                sections.append(row["section"])
+    return sections
 
 def get_sections(cursor: Cursor, /, *,
                  campus_id: Optional[int] = None,
@@ -459,7 +371,7 @@ def get_section_id(cursor: Cursor, /, *,
                    stream: Optional[str] = None,
                    year: Optional[int] = None,
                    section: Optional[str] = None) -> Optional[int]:
-    sections = get_sections(cursor, campus_id=campus_id, degree=degree, stream=stream, year=year)
+    sections: Tuple[Dict[str, Union[int, str]], ...] = get_sections(cursor, campus_id=campus_id, degree=degree, stream=stream, year=year)
     if not (sections and campus_id and degree and stream and year and section):
         return None
 
@@ -613,7 +525,7 @@ def get_faculty_id(cursor: Cursor, /, *,
                         (join_year,))
     else:
         cursor.execute("""SELECT `id` FROM `faculties`""")
-    faculties = cursor.fetchall()
+    faculties: Tuple[Dict[str, int], ...] = cursor.fetchall()
     if not faculties:
         return None
     return [faculty["id"] for faculty in faculties]
@@ -704,7 +616,7 @@ def get_section_students(cursor: Cursor, /, *,
 def get_faculty_section_courses(cursor: Cursor, /, *,
                                faculty_id: Optional[int] = None,
                                section_id: Optional[int] = None,
-                               course_code: Optional[str] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
+                               course_code: Optional[str] = None,) -> Tuple[Dict[str, Union[int, str]], ...]:
     if faculty_id and section_id and course_code:
         cursor.execute("""SELECT `id`, `section_id`, `course_code`
                        FROM `faculty_section_course`
@@ -767,4 +679,21 @@ def get_student_electives(cursor: Cursor, /, *,
                        WHERE `course_code`=%s""", (course_code,))
     else:
         cursor.execute("""SELECT * FROM `student_electives`""")
+    return cursor.fetchall()
+
+def get_timetable(cursor: Cursor, /,
+                  degree: str,
+                  stream: str,
+                  year: str,
+                  campus: str,
+                  section: str) -> Optional[Tuple[Dict[str, Union[int, str]], ...]]:
+    cursor.execute("""
+        SELECT day, hour, course_code, room_no, building_id, faculty_id
+        FROM timetable_view
+        WHERE degree = %s
+          AND stream = %s
+          AND year = %s
+          AND campus = %s
+          AND section = %s
+    """, (degree, stream, year, campus, section))
     return cursor.fetchall()

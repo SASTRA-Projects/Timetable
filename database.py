@@ -31,7 +31,6 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	- **``streams``**: Specializations within a department.
 	- **``programmes``**: A combination of ``degrees`` and ``streams``.
 	- **``courses``**: Defines courses, including lecture (L), practical (P), and tutorial (T) hours.
-	- **``lab_departments``**: Maps lab courses to departments, if the course and lab don't match on department. 
 	- **``campus_programmes``**: Maps programmes to campuses.
 	- **``school_departments``**: Associates schools with departments.
 	- **``programme_courses``**: Assigns courses to programmes.
@@ -68,7 +67,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	- `name` \u2192 `id`
 	"""
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `campuses` (
-				   `id` TINYINT UNSIGNED AUTO_INCREMENT,
+				   `id` TINYINT UNSIGNED AUTO_INCREMENT, -- max=255
 				   `name` VARCHAR(40) NOT NULL,
 				   PRIMARY KEY(`id`),
 				   UNIQUE(`name`)
@@ -79,8 +78,8 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	- `id` \u2192 `name`, `campus_id`
 	- `name`, `campus_id` \u2192 `id`
 	"""
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `schools` (
-				   `id` SMALLINT UNSIGNED AUTO_INCREMENT,
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `schools` ( -- e.g., SRC, SOC, also Library
+				   `id` SMALLINT UNSIGNED AUTO_INCREMENT, -- max=65535
 				   `name` VARCHAR(40) NOT NULL,
 				   `campus_id` TINYINT UNSIGNED NOT NULL,
 				   PRIMARY KEY(`id`),
@@ -93,8 +92,8 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	=======================
 	- `id` \u2192 `school_id`, `rooms`
 	"""
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `buildings` (
-				   `id` SMALLINT UNSIGNED AUTO_INCREMENT,
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `buildings` ( -- a school can occupy multiple buildings, many to many
+				   `id` SMALLINT UNSIGNED AUTO_INCREMENT, -- max=65535
 				   `school_id` SMALLINT UNSIGNED NOT NULL,
 				   `rooms` SMALLINT UNSIGNED NOT NULL,
 				   PRIMARY KEY(`id`),
@@ -105,7 +104,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	=======================
 	None Exist
 	"""
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `departments` (
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `departments` ( -- e.g., CSE
 				   `name` VARCHAR(40),
 				   PRIMARY KEY(`name`)
 	)""")
@@ -114,9 +113,9 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	=======================
 	- `name` \u2192 `duration`
 	"""
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `degrees` (
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `degrees` ( -- e.g., B. Tech
 				   `name` VARCHAR(20),
-				   `duration` TINYINT UNSIGNED NOT NULL,
+				   `duration` TINYINT UNSIGNED NOT NULL, -- in yrs <= 10
 				   PRIMARY KEY(`name`),
 				   CHECK(`duration` <= 10 AND `duration` >= 1)
 	)""")
@@ -125,13 +124,12 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	=======================
 	- `name` \u2192 `department`
 	"""
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `streams` (
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `streams` ( -- e.g., CSE with AI
 				   `name` VARCHAR(60),
 				   `department` VARCHAR(40) NOT NULL,
 				   PRIMARY KEY(`name`),
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   CHECK(`department` != '')
+				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
 	"""
 	Functional Dependencies
@@ -139,7 +137,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	- `id` \u2192 `degree`, `stream`
 	- `degree`, `stream` \u2192 `id`
 	"""
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `programmes` (
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `programmes` ( -- e.g., B. Tech (CSE with AI)
 				   `id` MEDIUMINT UNSIGNED AUTO_INCREMENT,
 				   `degree` VARCHAR(20) NOT NULL,
 				   `stream` VARCHAR(60) NOT NULL,
@@ -160,31 +158,14 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   `name` VARCHAR(60) NOT NULL,
 				   `department` VARCHAR(40) NOT NULL,
 				   `credits` TINYINT UNSIGNED NOT NULL,
-				   `L` TINYINT UNSIGNED NOT NULL,
-				   `P` TINYINT UNSIGNED NOT NULL,
-				   `T` TINYINT UNSIGNED NOT NULL,
-				   `is_elective` BOOLEAN NOT NULL,
+				   `L` TINYINT UNSIGNED NOT NULL, -- lecture hours
+				   `P` TINYINT UNSIGNED NOT NULL, -- practical hours
+				   `T` TINYINT UNSIGNED NOT NULL, -- tutorial hours
+				   `is_elective` BOOLEAN NOT NULL, -- assumed: elective course have diff code than core, if same course
 				   PRIMARY KEY(`code`),
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   CHECK(`L` >= 0 AND `P` >= 0 AND `T` >= 0 AND (`L` + `P` + `T`) > 0),
-				   CHECK(`department` != '')
-	)""")
-	"""
-	Functional Dependencies
-	=======================
-	None Exist
-	"""
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `lab_departments` (
-				   `id` MEDIUMINT UNSIGNED AUTO_INCREMENT,
-				   `course_code` VARCHAR(10) NOT NULL, -- must be lab, trigger
-				   `department` VARCHAR(10) NOT NULL,
-				   PRIMARY KEY(`id`),
-				   FOREIGN KEY(`course_code`) REFERENCES `courses`(`code`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   UNIQUE(`course_code`, `department`)
+				   CHECK(`L` >= 0 AND `P` >= 0 AND `T` >= 0 AND (`L` + `P` + `T`) > 0)
 	)""")
 	"""
 	Functional Dependencies
@@ -212,8 +193,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   FOREIGN KEY(`school_id`) REFERENCES `schools`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   CHECK(`department` != '')
+				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
 	"""
 	Functional Dependencies
@@ -247,8 +227,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   UNIQUE(`building_id`, `room_no`),
-				   CHECK(`department` != '')
+				   UNIQUE(`building_id`, `room_no`)
 	)""")
 	"""
 	Functional Dependencies
@@ -285,8 +264,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   FOREIGN KEY(`campus_id`) REFERENCES `campuses`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   CHECK(`department` != '')
+				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
 	"""
 	Functional Dependencies
