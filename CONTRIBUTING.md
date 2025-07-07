@@ -161,7 +161,7 @@ add trigger creation for table updates
 * Follow the **Pull Request Template** (auto-loaded when opening a PR)
 * Use **Issue Template** to raise bugs/feature requests
 * PRs that do not follow the structure will be auto-requested for changes
-* Every PR **must** be linked to an Issue (or `Closes #<id>` in description)
+* Every PR **must** be linked to an Issue (by typing `Fixds #<id>` in description)
 
 ---
 
@@ -176,6 +176,7 @@ Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) to keep this a welcoming
 Raise an issue, open a discussion, or reach out to the maintainers via GitHub.
 
 Live site: [https://sastra-3yx3.onrender.com](https://sastra-3yx3.onrender.com)
+
 Maintained by [SASTRA-Projects](https://github.com/SASTRA-Projects)
 
 ---
