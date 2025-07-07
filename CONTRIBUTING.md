@@ -22,8 +22,9 @@ This guide outlines how to contribute effectively, ensuring consistency and code
 
 * Python 3.10+
 * MySQL client tools
-* Code editor with Python, HTML, and JS support (e.g., VS Code)
-* Familiarity with `venv`, type hints, doctring conventions, and raw SQL via PyMySQL
+* Git commands
+* Code editor with Python, HTML, and JS support (e.g., VSCode)
+* Familiarity with `venv` (Optional), type hints, doctring conventions, and raw SQL via PyMySQL
 
 ---
 
@@ -166,7 +167,7 @@ add trigger creation for table updates
 
 ## 👮 Code of Conduct
 
-Please follow our [Code of Conduct](./CODE_OF_CONDUCT.md) to keep this a welcoming space for all.
+Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) to keep this a welcoming space for all.
 
 ---
 
