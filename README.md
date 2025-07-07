@@ -111,7 +111,7 @@ Open [http://localhost:5000](http://localhost:5000) in your browser.
 
 ## 📜 License
 
-This project is licensed under the **Apache License 2.0**. See the [LICENSE](../LICENSE) file for detailed information.
+This project is licensed under the **Apache License 2.0**. See the [LICENSE](LICENSE) file for detailed information.
 
 Additional attribution details can be found in the [NOTICE](NOTICE) file.
 
@@ -120,7 +120,7 @@ Additional attribution details can be found in the [NOTICE](NOTICE) file.
 
 Contributions are welcome! Whether you want to report an issue, submit a pull request, or enhance the existing features, we’d love to have you on board.
 
-See the [CONTRIBUTING.md](../CONTRIBUTING.md) file for detailed information.
+See the [CONTRIBUTING.md](CONTRIBUTING.md) file for detailed information.
 
 Please follow the [Code of Conduct](../CODE_OF_CONDUCT.md) to ensure a collaborative and respectful environment.
 
