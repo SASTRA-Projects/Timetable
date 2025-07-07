@@ -122,9 +122,9 @@ Contributions are welcome! Whether you want to report an issue, submit a pull re
 
 See the [CONTRIBUTING.md](CONTRIBUTING.md) file for detailed information.
 
-Please follow the [Code of Conduct](../CODE_OF_CONDUCT.md) to ensure a collaborative and respectful environment.
+Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) to ensure a collaborative and respectful environment.
 
-1. **Fork the Repository:** Click the “Fork” button on the [GitHub page](https://github.com/your-repo/sastra-timetable).
+1. **Fork the Repository:** Click the “Fork” button on the [GitHub page](https://github.com/SASTRA-Projects/SASTRA/fork).
 2. **Create a Branch:**
 ```sh
   git checkout -b feature/your-feature-name
