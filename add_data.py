@@ -281,6 +281,36 @@ def add_course(db_connector: Connection,
 				   (code, course, department, credits, L, P, T, is_elective))
 	db_connector.commit()
 
+def add_lab_department(db_connector: Connection,
+					   cursor: Cursor, /, *,
+					   course_code: Optional[str] = None,
+					   department: Optional[str] = None) -> None:
+	r"""
+    Add a new course record to the `courses` table.
+
+    Parameters
+    ==========
+    - **db_connector** : Connection
+      The database connection object used to interact with the database.
+    - **cursor** : Cursor
+      Cursor object for executing SQL commands.
+    - **course_code** : Optional[str]
+      The couse code of the course (a.k.a subject).
+	- **department** : Optional[str]
+	  The name of the department. Department should be '' (or "") if the course has practical hours, but not lab.
+
+    Examples
+    ========
+    .. code-block:: python
+
+		>>> add_lab_department(connector, cursor, course_code="MEC102", department="")
+		>>> add_lab_department(connector, cursor, course_code="MEC103", department="CSE")
+		>>> add_lab_department(connector, cursor, course_code="MEC103", department="Drawing")
+	"""
+	cursor.execute("""INSERT INTO `lab_departments` (`course_code`, `department`)
+				   VALUES (%s, %s)""", (course_code, department))
+	db_connector.commit()
+
 def add_campus_programme(db_connector: Connection,
 						 cursor: Cursor, /, *,
 						 campus_id: Optional[int] = None,
