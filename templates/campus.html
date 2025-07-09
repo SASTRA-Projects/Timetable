@@ -1,27 +1,10 @@
 {% extends "layout.html" %}
 
+{% block title %}Select Campus{% endblock %}
+
 {% block head %}
-<meta name="description"
-      content="Shows all the campuses.
-               Click any Campus name to display the Schools inside it.">
 <style>
-    .section-title {
-        text-align: center;
-        font-size: 2.5rem;
-        margin: 1.5rem 0 1rem 0;
-        font-weight: 700;
-    }
-
-   .grid-list {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-top: 30px;
-    margin-bottom: 3rem; 
-    }
-
-    .campus-button {
+    .lux-button-link {
         display: inline-block;
         width: 322px;
         height: 122px;
@@ -37,34 +20,111 @@
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    .campus-button:hover {
+    .lux-button-link:hover {
         background-color: var(--accent-dark);
         transform: translateY(-2px);
         box-shadow: 0 6px 16px rgba(26, 145, 197, 0.65);
     }
 
-    .campus-button:active {
+    .lux-button-link:active {
         transform: scale(0.98);
     }
 
-    [data-theme="light"] .campus-button {
+    [data-theme="light"] .lux-button-link {
         background-color: var(--accent);
         color: white;
+    }
+
+    .grid-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 0.5rem;
+        padding: 1rem;
+        width: 70vw;
+        margin: 0 auto;
+    }
+
+    .section-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-top: 2rem;
+    }
+
+    .course-table {
+        width: 90%;
+        margin: 2rem auto;
+        border-collapse: collapse;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 1rem;
+    }
+
+    .course-table th, .course-table td {
+        border: 1px solid #ccc;
+        padding: 0.75rem;
+        text-align: center;
+    }
+
+    .course-table th {
+        background-color: var(--menu-footer-bg-dark);
+        color: white;
+    }
+
+    [data-theme="light"] .course-table th {
+        background-color: var(--accent);
+        color: white;
+    }
+
+    .course-table tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    .center-single {
+        display: flex;
+        justify-content: center;
+        margin-top: 1rem;
     }
 </style>
 {% endblock %}
 
-{% block title %}SASTRA Campuses{% endblock %}
-
 {% block content %}
-{% if not campuses %}
-    <p class="section-title">No Campus Found!</p>
+{% if degree and stream and year %}
+<p class="section-title">{{ degree }} - {{ stream }} ({{ year }})</p>
+{% elif degree and stream %}
+<p class="section-title">{{ degree }} - {{ stream }}</p>
 {% else %}
-    <p class="section-title">Campuses</p>
-    <div class="grid-list">
-        {% for campus in campuses %}
-            <a href="/campus/{{ campus.name }}" class="campus-button">{{ campus.name }}</a>
-        {% endfor %}
-    </div>
+<p class="section-title">Select a Campus</p>
+{% endif %}
+
+{% if campuses|length == 1 %}
+<div class="center-single">
+    {% if degree and stream and year %}
+        <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=year, campus=campuses[0].name) }}" class="lux-button-link">
+            {{ campuses[0].name }}
+        </a>
+    {% elif degree and stream %}
+        <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=1, campus=campuses[0].name) }}" class="lux-button-link">
+            {{ campuses[0].name }}
+        </a>
+    {% else %}
+        <a href="/campus/{{ campuses[0].name }}" class="lux-button-link">{{ campuses[0].name }}</a>
+    {% endif %}
+</div>
+{% else %}
+<div class="grid-list">
+    {% for campus in campuses %}
+        {% if degree and stream and year %}
+            <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=year, campus=campus.name) }}" class="lux-button-link">
+                {{ campus.name }}
+            </a>
+        {% elif degree and stream %}
+            <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=1, campus=campus.name) }}" class="lux-button-link">
+                {{ campus.name }}
+            </a>
+        {% else %}
+            <a href="/campus/{{ campus.name }}" class="lux-button-link">{{ campus.name }}</a>
+        {% endif %}
+    {% endfor %}
+</div>
 {% endif %}
 {% endblock %}

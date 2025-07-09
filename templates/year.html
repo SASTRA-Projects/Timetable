@@ -50,17 +50,28 @@
             margin-top: 0.8rem;
             margin-bottom: 1rem;
         }
+
+        .course-count {
+            display: block;
+            font-size: 0.9em;
+            margin-top: 5px;
+            color: #ccc;
+        }
+
+        [data-theme="light"] .course-count {
+            color: white;
+        }
     </style>
 {% endblock %}
 
 {% block title %}{{ degree }} - {{ stream }}{% endblock %}
 
 {% block content %}
-    <h1 class="year-title">{{ degree }} - {{ stream }}</h1>
+    <h1 class="year-title">{{ degree }} - {{ stream }} - {{ campus }}</h1>
 
     <div class="btn-container">
         {% for y in years %}
-            <a href="/programme/{{ degree }}/{{ stream }}/{{ y }}" class="lux-button-link">Year-{{ y }}</a>
+            <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=y, campus=campus) }}" class="lux-button-link">Year-{{ y }}</a>
         {% endfor %}
     </div>
 {% endblock %}
