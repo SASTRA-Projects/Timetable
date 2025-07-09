@@ -134,26 +134,28 @@ def show_degree_programmes(degree: str) -> str:
 
 # This handles /programme/B.Tech/CSE
 @app.route("/programme/<string:degree>/<string:stream>")
-def view_years(degree: str, stream: str):
-	durations = {
-		"B.Tech": 4,
-		"B.A": 3,
-		"B.Sc": 3,
-		"B.Com": 3,
-		"M.Tech": 2,
-		"M.A": 2,
-		"M.Sc": 2
-	}
-	duration = durations.get(degree, 4)
+def show_years(degree: str, stream: str):
+	duration = show_data.get_degree_duration(sql.cursor, degree=degree)
+	if duration is None:
+		return render_template("failed.html", reason="Degree not found.")
+
 	years = list(range(1, duration + 1))
-	all_courses = {}
-	for y in years:
-		courses = fetch_data.get_courses_by_degree_stream_year(sql.cursor, degree, stream, y)
-		all_courses[y] = courses
+	programme_id = show_data.get_programme_id(sql.cursor, degree=degree, stream=stream)
+	if programme_id is None:
+		return render_template("failed.html", reason="Programme not found.")
+
+	courses = fetch_data.get_courses(sql.cursor, programme_id=programme_id)
+	all_courses = {y: [] for y in years}
+	for course in courses:
+		year = course.get("year")
+		if year in all_courses:
+			all_courses[year].append(course)
+
 	return render_template("year.html", degree=degree, stream=stream, years=years, all_courses=all_courses)
 
+
 @app.route("/programme/<string:degree>/<string:stream>/all")
-def view_all_courses(degree: str, stream: str):
+def show_all_courses(degree: str, stream: str):
 	programme_id = show_data.get_programme_id(sql.cursor, degree=degree, stream=stream)
 	assert programme_id is not None, "Invalid programme"
 
@@ -167,7 +169,7 @@ def view_campuses(degree: str, stream: str, year: int):
 	return render_template("campuses.html", degree=degree, stream=stream, year=year, campuses=campuses, courses=courses)
 
 @app.route("/programme/<string:degree>/<string:stream>/<int:year>/<string:campus>")
-def view_sections(degree: str, stream: str, year: int, campus: str):
+def show_sections(degree: str, stream: str, year: int, campus: str):
 	campus_ids = {"SASTRA": 1, "SRC": 2, "Chennai Campus": 3}
 	campus_id = campus_ids.get(campus)
 	sections = fetch_data.get_sections_from_file(
