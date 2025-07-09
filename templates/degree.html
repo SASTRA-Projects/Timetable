@@ -5,7 +5,7 @@
           content="Shows all the Degrees (from all campuses).
                    Click any Degree name to display more info about it.">
 	<style>
-		.lux-button-link {
+		.button-link {
 			display: inline-block;
 			width: 20.125rem; /* 322px */
 			height: 7.625rem; /* 122px */
@@ -22,17 +22,17 @@
 			margin: 0.625rem; 
 		}
 
-		.lux-button-link:hover {
+		.button-link:hover {
 			background-color: var(--accent-dark);
 			transform: translateY(-0.125rem); 
 			box-shadow: 0 0.375rem 1rem rgba(26, 145, 197, 0.65); 
 		}
 
-		.lux-button-link:active {
+		.button-link:active {
 			transform: scale(0.98);
 		}
 
-		[data-theme="light"] .lux-button-link {
+		[data-theme="light"] .button-link {
 			background-color: var(--accent);
 			color: white;
 		}
@@ -55,7 +55,7 @@
 		<p style="margin: auto; text-align: center; font-size: 3em">Degrees</p>
 		<div class="btn-container">
 			{% for degree in degrees %}
-				<a href="/degree/{{ degree.name }}" class="lux-button-link">{{ degree["name"] }}</a>
+				<a href="/degree/{{ degree.name }}" class="button-link">{{ degree["name"] }}</a>
 			{% endfor %}
 		</div>
 	{% endif %}
