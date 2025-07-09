@@ -3,7 +3,7 @@
 {% block head %}
     <meta name="description" content="Displays all sections under a selected degree, stream, year, and campus.">
     <style>
-        .lux-button-link {
+        .button-link {
             display: inline-block;
             width: 322px;
             height: 122px;
@@ -20,17 +20,17 @@
             margin: 10px;
         }
 
-        .lux-button-link:hover {
+        .button-link:hover {
             background-color: var(--accent-dark);
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(26, 145, 197, 0.65);
         }
 
-        .lux-button-link:active {
+        .button-link:active {
             transform: scale(0.98);
         }
 
-        [data-theme="light"] .lux-button-link {
+        [data-theme="light"] .button-link {
             background-color: var(--accent);
             color: white;
         }
@@ -50,7 +50,7 @@
     <p style="text-align: center; font-size: 3em">{{ degree }} - {{ stream }} ({{ year }}) - {{ campus }}</p>
     <div class="btn-container">
         {% for section in sections %}
-            <a href="/degree/{{ degree }}/{{ stream }}/{{ year }}/{{ campus }}/{{ section }}" class="lux-button-link">Section {{ section }}</a>
+            <a href="/degree/{{ degree }}/{{ stream }}/{{ year }}/{{ campus }}/{{ section }}" class="button-link">Section {{ section }}</a>
         {% endfor %}
     </div>
 {% endblock %}

@@ -4,7 +4,7 @@
 
 {% block head %}
 <style>
-    .lux-button-link {
+    .button-link {
         display: inline-block;
         width: 20.125rem; 
         height: 7.625rem; 
@@ -20,17 +20,17 @@
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    .lux-button-link:hover {
+    .button-link:hover {
         background-color: var(--accent-dark);
         transform: translateY(-0.125rem); /* 2px */
         box-shadow: 0 0.375rem 1rem rgba(26, 145, 197, 0.65); /* 6px 16px */
     }
 
-    .lux-button-link:active {
+    .button-link:active {
         transform: scale(0.98);
     }
 
-    [data-theme="light"] .lux-button-link {
+    [data-theme="light"] .button-link {
         background-color: var(--accent);
         color: white;
     }
@@ -99,30 +99,30 @@
 {% if campuses|length == 1 %}
 <div class="center-single">
     {% if degree and stream and year %}
-        <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=year, campus=campuses[0].name) }}" class="lux-button-link">
+        <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=year, campus=campuses[0].name) }}" class="button-link">
             {{ campuses[0].name }}
         </a>
     {% elif degree and stream %}
-        <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=1, campus=campuses[0].name) }}" class="lux-button-link">
+        <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=1, campus=campuses[0].name) }}" class="button-link">
             {{ campuses[0].name }}
         </a>
     {% else %}
-        <a href="/campus/{{ campuses[0].name }}" class="lux-button-link">{{ campuses[0].name }}</a>
+        <a href="/campus/{{ campuses[0].name }}" class="button-link">{{ campuses[0].name }}</a>
     {% endif %}
 </div>
 {% else %}
 <div class="grid-list">
     {% for campus in campuses %}
         {% if degree and stream and year %}
-            <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=year, campus=campus.name) }}" class="lux-button-link">
+            <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=year, campus=campus.name) }}" class="button-link">
                 {{ campus.name }}
             </a>
         {% elif degree and stream %}
-            <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=1, campus=campus.name) }}" class="lux-button-link">
+            <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=1, campus=campus.name) }}" class="button-link">
                 {{ campus.name }}
             </a>
         {% else %}
-            <a href="/campus/{{ campus.name }}" class="lux-button-link">{{ campus.name }}</a>
+            <a href="/campus/{{ campus.name }}" class="button-link">{{ campus.name }}</a>
         {% endif %}
     {% endfor %}
 </div>

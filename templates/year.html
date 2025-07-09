@@ -3,7 +3,7 @@
 {% block head %}
     <meta name="description" content="Shows years for selected degree and stream.">
     <style>
-        .lux-button-link {
+        .button-link {
             display: inline-block;
             width: 322px;
             height: 122px;
@@ -20,17 +20,17 @@
             margin: 10px;
         }
 
-        .lux-button-link:hover {
+        .lux-button-:hover {
             background-color: var(--accent-dark);
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(26, 145, 197, 0.65);
         }
 
-        .lux-button-link:active {
+        .lux-button-:active {
             transform: scale(0.98);
         }
 
-        [data-theme="light"] .lux-button-link {
+        [data-theme="light"] .lux-button- {
             background-color: var(--accent);
             color: white;
         }
@@ -71,7 +71,7 @@
 
     <div class="btn-container">
         {% for y in years %}
-            <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=y, campus=campus) }}" class="lux-button-link">Year-{{ y }}</a>
+            <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=y, campus=campus) }}" class="lux-button-">Year-{{ y }}</a>
         {% endfor %}
     </div>
 {% endblock %}

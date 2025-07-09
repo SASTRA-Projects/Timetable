@@ -5,7 +5,7 @@
 			content="Shows all the Programmes (from all campuses).
 					Click any Programme name to display more info about it.">
 		<style>
-			.lux-button-link {
+			.button-link {
 				display: inline-block;
 				width: 322px;
 				height: 122px;
@@ -22,17 +22,17 @@
 				margin: 10px;
 			}
 
-			.lux-button-link:hover {
+			.button-link:hover {
 				background-color: var(--accent-dark);
 				transform: translateY(-2px);
 				box-shadow: 0 6px 16px rgba(26, 145, 197, 0.65);
 			}
 
-			.lux-button-link:active {
+			.button-link:active {
 				transform: scale(0.98);
 			}
 
-			[data-theme="light"] .lux-button-link {
+			[data-theme="light"] .button-link {
 				background-color: var(--accent);
 				color: white;
 			}
@@ -103,7 +103,7 @@
 					Programmes
 					<hr>
 					<div class="btn-container">
-						<a href="/programme/{{ degree }}" class="lux-button-link">{{ degree }}</a>
+						<a href="/programme/{{ degree }}" class="button-link">{{ degree }}</a>
 					</div>
 				{% else %}
 					<span style="font-size: 4em;">Programmes Found!!</span>
@@ -115,7 +115,7 @@
 			</p>
 			<div class="btn-container">
 				{% for programme in programmes %}
-					<a href="/programme/{{ degree }}/{{ programme.stream }}" class="lux-button-link">{{ programme["stream"] }}</a>
+					<a href="/programme/{{ degree }}/{{ programme.stream }}" class="button-link">{{ programme["stream"] }}</a>
 					<a href="/programme/{{ degree }}/{{ programme.stream }}/all" class="year-button">View All Courses</a>
 				{% endfor %}
 			</div>
