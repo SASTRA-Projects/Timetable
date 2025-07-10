@@ -42,9 +42,9 @@ Through precise rule enforcement, the system prevents common scheduling issues, 
 
 The database is meticulously designed with normalized tables, optimized queries, and robust constraints. Key components include:
 
-- **Campus, Schools, Departments** for organizing physical locations
+- **Campus, Schools, Departments, classes** for organizing physical locations
 - **Sections, Streams, Programmes, Courses** for curriculum management
-- **Faculty, Students, Classes** for mapping human and infrastructure resources
+- **Faculty, Students** for mapping human and infrastructure resources
 
 Triggers, stored procedures, and functions enforce data integrity, while the system architecture supports easy scalability.
 
@@ -120,9 +120,11 @@ Additional attribution details can be found in the [NOTICE](NOTICE) file.
 
 Contributions are welcome! Whether you want to report an issue, submit a pull request, or enhance the existing features, we’d love to have you on board.
 
+See the [CONTRIBUTING.md](CONTRIBUTING.md) file for detailed information.
+
 Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) to ensure a collaborative and respectful environment.
 
-1. **Fork the Repository:** Click the “Fork” button on the [GitHub page](https://github.com/your-repo/sastra-timetable).
+1. **Fork the Repository:** Click the “Fork” button on the [GitHub page](https://github.com/SASTRA-Projects/SASTRA/fork).
 2. **Create a Branch:**
 ```sh
   git checkout -b feature/your-feature-name
