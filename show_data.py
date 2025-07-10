@@ -112,7 +112,7 @@ def get_degrees(cursor: Cursor, /) -> Tuple[Optional[Dict[str, str]], ...]:
 def get_degree_duration(cursor: Cursor, /, *,
 						degree: Optional[str] = None) -> Optional[int]:
 	cursor.execute("""SELECT `duration` FROM `degrees`
-				   WHERE `degree` LIKE %s
+				   WHERE `name` LIKE %s
 				   LIMIT 1""", (degree,))
 	result: Optional[Dict[str, int]] = cursor.fetchone()
 	return result["duration"] if result else None
