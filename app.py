@@ -172,7 +172,8 @@ def view_campuses(degree: str, stream: str, year: int):
 def show_sections(degree: str, stream: str, year: int, campus: str):
 	campus_ids = {"SASTRA": 1, "SRC": 2, "Chennai Campus": 3}
 	campus_id = campus_ids.get(campus)
-	sections = fetch_data.get_sections_from_file(
+	sections = fetch_data.get_sections(
+		cursor=sql.cursor,
 		campus_id=campus_id,
 		degree=degree,
 		stream=stream,
@@ -197,7 +198,7 @@ def faculty_details() -> str:
 			raise ValueError("Illegal access or value is missing.")
 		faculty = session["faculty_details"]
 		return render_template("faculty.html", faculty=faculty, campus=show_data.get_campus_name(sql.cursor, id=faculty["campus_id"]))
-	return render_template("failed.html", reason="Unknown error occurred")
+	#return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/health")
 def health():
