@@ -132,7 +132,6 @@ def show_degree_programmes(degree: str) -> str:
 		return render_template("programme.html", programmes=programmes, degree=degree)
 	return render_template("failed.html", reason="Unknown error occurred")
 
-# This handles /programme/B.Tech/CSE
 @app.route("/programme/<string:degree>/<string:stream>")
 def show_years(degree: str, stream: str):
 	duration = show_data.get_degree_duration(sql.cursor, degree=degree)
@@ -144,30 +143,23 @@ def show_years(degree: str, stream: str):
 	if programme_id is None:
 		return render_template("failed.html", reason="Programme not found.")
 
-	courses = fetch_data.get_courses(sql.cursor, programme_id=programme_id)
-	all_courses = {y: [] for y in years}
-	for course in courses:
-		year = course.get("year")
-		if year in all_courses:
-			all_courses[year].append(course)
+	return render_template("year.html", degree=degree, stream=stream, years=years)
 
-	return render_template("year.html", degree=degree, stream=stream, years=years, all_courses=all_courses)
-
-
-@app.route("/programme/<string:degree>/<string:stream>/all")
-def show_all_courses(degree: str, stream: str):
+@app.route("/programme/<string:degree>/<string:stream>/course")#want to remove 'all' courses
+def show_courses(degree: str, stream: str):
 	programme_id = show_data.get_programme_id(sql.cursor, degree=degree, stream=stream)
 	assert programme_id is not None, "Invalid programme"
 
 	courses = fetch_data.get_courses(sql.cursor, programme_id=programme_id)
 	return render_template("course.html", degree=degree, stream=stream, courses=courses)
 
-@app.route("/programme/<string:degree>/<string:stream>/<int:year>")
-def view_campuses(degree: str, stream: str, year: int):
+@app.route("/programme/<string:degree>/<string:stream>")
+def show_programme_campuses(degree: str, stream: str, year: int):
 	campuses = ["SASTRA", "SRC", "Chennai Campus"]
-	courses = fetch_data.get_courses_by_degree_stream_year(sql.cursor, degree, stream, year)
-	return render_template("campuses.html", degree=degree, stream=stream, year=year, campuses=campuses, courses=courses)
+	courses = fetch_data.get_courses(sql.cursor, degree, stream, year)#programme_id ,campus_id
+	return render_template("campus.html", degree=degree, stream=stream,campuses=campuses)
 
+#program_campus
 @app.route("/programme/<string:degree>/<string:stream>/<int:year>/<string:campus>")
 def show_sections(degree: str, stream: str, year: int, campus: str):
 	campus_ids = {"SASTRA": 1, "SRC": 2, "Chennai Campus": 3}
@@ -202,7 +194,7 @@ def faculty_details() -> str:
 
 @app.route("/health")
 def health():
-    return "OK", 200
+	return "OK", 200
 
 @app.errorhandler(404)
 def page_not_found(error: NotFound) -> tuple[str, int]:
