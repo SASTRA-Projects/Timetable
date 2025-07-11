@@ -32,7 +32,7 @@ This guide outlines how to contribute effectively, ensuring consistency and code
 
 ### 1. Fork & Clone
 
-See [README.md](https://github.com/SASTRA-Projects/SASTRA/README.md) for other OS.
+See [README.md](https://github.com/SASTRA-Projects/SASTRA/blob/main/README.md) for other OS.
 
 (For Linux)
 ```bash
