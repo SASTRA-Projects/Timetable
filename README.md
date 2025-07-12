@@ -27,7 +27,7 @@ Despite being a leader in technological adoption, SASTRA has managed timetables 
 
 ## 🎯 Project Mission
 
-At SASTRA, the pursuit of academic excellence has always been supported by innovation. This project aligns with that legacy by removing the burden of manual timetable calculation. 
+At SASTRA, the pursuit of academic excellence has always been supported by innovation. This project aligns with that legacy by removing the burden of manual timetable calculation.
 
 The goal is simple: **Let people focus on teaching and learning — not on figuring out class schedules.**
 

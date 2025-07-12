@@ -4,7 +4,7 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
 	r"""
 	Creates relational constraints for the database by defining additional relations.
 
-	This function establishes foreign keys, uniqueness constraints, and checks on 
+	This function establishes foreign keys, uniqueness constraints, and checks on
 	relational tables that depend on the previously created schema.
 
 	Parameters
@@ -35,7 +35,7 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
 				password="secret_pwd",
 				host="localhost"
 			)
-		
+
 		>>> create_database(connector, cursor)
 		>>> create_relations(connector, cursor)
 

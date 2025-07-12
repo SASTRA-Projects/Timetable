@@ -4,8 +4,8 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	r"""
 	Initializes the database schema for a university management system.
 
-	This function **creates all necessary concrete tables** in a relational database, including 
-	campuses, schools, buildings, departments, degrees, streams, programmes, courses, 
+	This function **creates all necessary concrete tables** in a relational database, including
+	campuses, schools, buildings, departments, degrees, streams, programmes, courses,
 	faculties, students, and various mappings between them.
 
 	It ensures **data integrity** by enforcing:
@@ -31,7 +31,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	- **``streams``**: Specializations within a department.
 	- **``programmes``**: A combination of ``degrees`` and ``streams``.
 	- **``courses``**: Defines courses, including lecture (L), practical (P), and tutorial (T) hours.
-	- **``lab_departments``**: Maps lab courses to departments, if the course and lab don't match on department. 
+	- **``lab_departments``**: Maps lab courses to departments, if the course and lab don't match on department.
 	- **``campus_programmes``**: Maps programmes to campuses.
 	- **``school_departments``**: Associates schools with departments.
 	- **``programme_courses``**: Assigns courses to programmes.
@@ -52,7 +52,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				password="secret_pwd",
 				host="localhost"
 			) # Creates `SASTRA` by default, if not exists
-		
+
 		>>> create_database(connector, cursor)
 
 	See Also

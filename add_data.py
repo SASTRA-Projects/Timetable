@@ -34,7 +34,7 @@ def add_campus(db_connector: Connection,
 				password="secret_pwd",
 				host="localhost"
 			)
-        
+
 		>>> create_views(connector, cursor)
 		>>> create_triggers(connector, cursor)
 		>>> add_campus(connector, cursor, id=2, campus="SRC")
@@ -70,7 +70,7 @@ def add_school(db_connector: Connection,
 
 		>>> campus_id = get_campus_id(cursor, campus="SASTRA")
 		>>> add_school(connector, cursor, id=3, school="SoC", campus_id=campus_id)
-	
+
 	See Also
 	========
 	- :func:`get_campus_id` – To get the ID of the given campus.
@@ -276,7 +276,7 @@ def add_course(db_connector: Connection,
 											 `department`, `credits`,
 											 `L`, `P`, `T`,
 											 `is_elective`)
-				
+
 				   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
 				   (code, course, department, credits, L, P, T, is_elective))
 	db_connector.commit()
@@ -452,7 +452,7 @@ def add_class(db_connector: Connection,
 	cursor.execute("""INSERT INTO `classes` (`id`, `building_id`,
 											 `room_no`, `capacity`,
 											 `is_lab`, `department`)
-				   VALUES (%s, %s, %s, %s, %s, %s)""", 
+				   VALUES (%s, %s, %s, %s, %s, %s)""",
 				   (id, building_id, room_no, capacity, is_lab, department))
 	db_connector.commit()
 
@@ -514,19 +514,19 @@ def add_faculty(db_connector: Connection,
 
 	Parameters
 	==========
-	- **db_connector** : Connection  
+	- **db_connector** : Connection
 	  The database connection object used to interact with the database.
-	- **cursor** : Cursor  
+	- **cursor** : Cursor
 	  Cursor object for executing SQL commands.
-	- **id** : Optional[int]  
+	- **id** : Optional[int]
 	  The faculty ID (optional; if not provided, the database will auto-generate it).
-	- **name** : Optional[str]  
+	- **name** : Optional[str]
 	  The name of the faculty member.
-	- **campus_id** : Optional[int]  
+	- **campus_id** : Optional[int]
 	  The campus ID where the faculty is assigned.
-	- **department** : Optional[str]  
+	- **department** : Optional[str]
 	  The department where the faculty belongs.
-	- **join_year** : int  
+	- **join_year** : int
 	  The year the faculty joined (defaults to the current year).
 
 	Examples
@@ -563,23 +563,23 @@ def add_student(db_connector: Connection,
 
     Parameters
     ==========
-    - **db_connector** : Connection  
+    - **db_connector** : Connection
       The database connection object used to interact with the database.
-    - **cursor** : Cursor  
+    - **cursor** : Cursor
       Cursor object for executing SQL commands.
-    - **id** : Optional[int]  
+    - **id** : Optional[int]
       The student ID (optional; if not provided, the database will auto-generate it).
-    - **name** : Optional[str]  
+    - **name** : Optional[str]
       The name of the student.
-    - **campus_id** : Optional[int]  
+    - **campus_id** : Optional[int]
       The campus ID where the student is enrolled.
-    - **join_year** : int  
+    - **join_year** : int
       The year the student joined (defaults to the current year).
-    - **programme_id** : Optional[int]  
+    - **programme_id** : Optional[int]
       The ID of the programme the student is enrolled in.
-    - **roll_no** : Optional[int]  
+    - **roll_no** : Optional[int]
       The roll number assigned to the student (optional; if not provided, the database will auto-generate it).
-    - **phone** : Optional[Union[int, str]]  
+    - **phone** : Optional[Union[int, str]]
       The contact number of the student.
 
     Examples
@@ -591,7 +591,7 @@ def add_student(db_connector: Connection,
 				degree="B.Tech.",
 				stream="Artificial intelligence and data science"
 			)
-        
+
 		>>> add_student(connector, cursor, id=233, name="Sarvesh. S",
                         campus_id=1, join_year=2023, programme_id=programme_id,
                         roll_no=None, phone=9876543210) # phone can be either str, or int

@@ -4,7 +4,7 @@ from typehints import *
 def get_courses(cursor: Cursor, /, *,
                 programme_id: Optional[int] = None,
                 elective: Optional[bool] = None,
-                lab: Optional[bool] = None) -> Tuple[Dict[str, Union[bool, int, str]], ...]:
+                lab: Optional[bool] = None) -> List[Dict[str, Union[bool, int, str]], ...]:
     if programme_id:
         if elective is None and lab is None:
             cursor.execute("""SELECT `code`, `name`,
@@ -74,7 +74,7 @@ def get_courses(cursor: Cursor, /, *,
 def get_lab_departments(cursor: Cursor, /, *,
                         course_code: Optional[str] = None,
                         programme_id: Optional[int] = None,
-                        elective: Optional[bool] = None) -> Tuple[Dict[str, str], ...]:
+                        elective: Optional[bool] = None) -> List[Dict[str, str], ...]:
     if course_code:
         if programme_id:
             if elective is not None:
@@ -196,7 +196,7 @@ def get_course(cursor: Cursor, /, *,
 def get_programme_courses(cursor: Cursor, /, *,
                           campus_id: Optional[int] = None,
                           programme_id: Optional[int] = None,
-                          course_code: Optional[str] = None) -> Union[Tuple[Dict[str, Union[str, int]]], bool]:
+                          course_code: Optional[str] = None) -> Union[List[Dict[str, Union[str, int]]], bool]:
     if campus_id:
         if programme_id:
             if course_code:
@@ -259,7 +259,7 @@ def get_classes(cursor: Cursor, /, *,
                 building_id: Optional[int] = None,
                 lab: Optional[bool] = None,
                 department: Optional[str] = None,
-                section_id: Optional[int] = None) -> Tuple[Dict[str, Union[bool, int]], ...]:
+                section_id: Optional[int] = None) -> List[Dict[str, Union[bool, int]], ...]:
     if section_id:
         cursor.execute("""SELECT `classes`.`id` AS `id`, `room_no`, `capacity`
                        FROM `section_class`
@@ -334,7 +334,7 @@ def get_sections(cursor: Cursor, /, *,
                  campus_id: Optional[int] = None,
                  degree: Optional[str] = None,
                  stream: Optional[str] = None,
-                 year: Optional[int] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
+                 year: Optional[int] = None) -> List[Dict[str, Union[int, str]], ...]:
     if campus_id:
         if degree:
             if stream:
@@ -470,7 +470,7 @@ def get_section_id(cursor: Cursor, /, *,
 
 def get_section_classes(cursor: Cursor, /, *,
                         section_id: Optional[int] = None,
-                        class_id: Optional[int] = None) -> Tuple[Union[bool, Dict[str, Union[int, str]], ...]]:
+                        class_id: Optional[int] = None) -> List[Union[bool, Dict[str, Union[int, str]], ...]]:
     if section_id:
         if class_id:
             cursor.execute("""SELECT 1
@@ -498,7 +498,7 @@ def get_section_classes(cursor: Cursor, /, *,
 
 def get_faculties(cursor: Cursor, /, *,
                   campus_id: Optional[int] = None,
-                  department: Optional[str] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
+                  department: Optional[str] = None) -> List[Dict[str, Union[int, str]], ...]:
     if campus_id:
         if department:
             cursor.execute("""SELECT `id`, `name`, `join_year`
@@ -648,7 +648,7 @@ def get_faculty_id(cursor: Cursor, /, *,
 
 def get_students(cursor: Cursor, /, *,
                  campus_id: Optional[int] = None,
-                 programme_id: Optional[int] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
+                 programme_id: Optional[int] = None) -> List[Dict[str, Union[int, str]], ...]:
     if campus_id:
         if programme_id:
             cursor.execute("""SELECT `id`, `name`, `join_year`, `phone`
@@ -694,7 +694,7 @@ def get_faculty_details(cursor: Cursor, /, *,
             faculty: Optional[Dict[str, Union[float, int, str]]] = cursor.fetchone()
             if faculty:
                 pwd: Union[float, int, str] = faculty["password"]
-        
+
             PasswordHasher().verify(pwd, password)
         else:
             raise ValueError("Password must be a non-empty string")
@@ -706,7 +706,7 @@ def get_faculty_details(cursor: Cursor, /, *,
             raise AssertionError("Incorrect Password")
     return faculty
 
-def get_student_details(cursor: Cursor, /, *, 
+def get_student_details(cursor: Cursor, /, *,
                         campus_id: Optional[int] = None,
                         join_year: Optional[int] = None,
                         programme_id: Optional[int] = None,
@@ -732,7 +732,7 @@ def get_section_students(cursor: Cursor, /, *,
 def get_faculty_section_courses(cursor: Cursor, /, *,
                                faculty_id: Optional[int] = None,
                                section_id: Optional[int] = None,
-                               course_code: Optional[str] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
+                               course_code: Optional[str] = None) -> List[Dict[str, Union[int, str]], ...]:
     if faculty_id and section_id and course_code:
         cursor.execute("""SELECT `id`, `section_id`, `course_code`
                        FROM `faculty_section_course`
@@ -772,6 +772,13 @@ def get_faculty_section_courses(cursor: Cursor, /, *,
                        WHERE `course_code`=%s""", (course_code,))
     else:
         cursor.execute("""SELECT * FROM `faculty_section_course`""")
+    return cursor.fetchall()
+
+def get_faculty_section_course(cursor: Cursor, /, *,
+                               faculty_section_courses_id: Optional[int] = None) -> Optional[Dict[str, Union[int, str]]]:
+    cursor.execute("""SELECT `faculty_id`, `sectio_id`, `course_code`
+                   FROM `faculty_section_courses`
+                   WHERE `id`=%s""", (faculty_section_courses_id,))
     return cursor.fetchall()
 
 def get_student_electives(cursor: Cursor, /, *,

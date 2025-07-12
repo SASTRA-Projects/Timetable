@@ -211,7 +211,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   FOR EACH ROW
 				   BEGIN
 					DECLARE `room_count` INT;
-					SELECT COUNT(*) INTO `room_count` 
+					SELECT COUNT(*) INTO `room_count`
 					FROM `classes`
 					WHERE `building_id`=NEW.`building_id`;
 					IF `room_count` >= (SELECT `rooms`
@@ -239,7 +239,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						ON `CP`.`programme_id`=`programmes`.`id`
 						AND `CP`.`campus_id`=NEW.`campus_id`
 						AND ((NEW.`stream` IS NULL AND `programmes`.`degree`=NEW.`degree`)
-							OR 
+							OR
 							(NEW.`stream` IS NOT NULL AND `programmes`.`degree`=NEW.`degree`
 							AND `programmes`.`stream`=NEW.`stream`))
 						LIMIT 1
@@ -269,7 +269,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						ON `CP`.`programme_id`=`programmes`.`id`
 						AND `CP`.`campus_id`=NEW.`campus_id`
 						AND ((NEW.`stream` IS NULL AND `programmes`.`degree`=NEW.`degree`)
-							OR 
+							OR
 							(NEW.`stream` IS NOT NULL AND `programmes`.`degree`=NEW.`degree`
 							AND `programmes`.`stream`=NEW.`stream`))
 						LIMIT 1
@@ -377,22 +377,52 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					CALL `section_campus_student`(NEW.`section_id`, NEW.`student_id`);
 					CALL `section_student_programme`(NEW.`section_id`, NEW.`student_id`);
 				   END;
-	""")		
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `faculty_course_section_insert`
+	""")
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `faculty_section_course_insert`
 				   BEFORE INSERT ON `faculty_section_course`
 				   FOR EACH ROW
+				   BEGIN
+				    IF EXISTS (
+						SELECT 1
+						FROM `faculty_section_course`
+						JOIN `courses`
+						ON `code`=`course_code`
+						AND `id`=NEW.`id`
+						AND NOT `P`
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='Only lab classes can have more than 1 faculty';
+					END IF;
+
 					IF NOT `section_has_course`(NEW.`section_id`, NEW.`course_code`)
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT='Invalid Course: Course not found in given Section';
 					END IF;
+				   END;
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `faculty_course_section_update`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `faculty_section_course_update`
 				   BEFORE UPDATE ON `faculty_section_course`
 				   FOR EACH ROW
+				   BEGIN
+				    IF EXISTS (
+						SELECT 1
+						FROM `faculty_section_course`
+						JOIN `courses`
+						ON `code`=`course_code`
+						AND `id`=NEW.`id`
+						AND NOT `P`
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='Only lab classes can have more than 1 faculty';
+					END IF;
+
 					IF NOT `section_has_course`(NEW.`section_id`, NEW.`course_code`)
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT='Invalid Course: Course not found in given Section';
 					END IF;
+				   END;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `student_elective_section_course_insert`
 				   BEFORE INSERT ON `student_electives`

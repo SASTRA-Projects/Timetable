@@ -27,133 +27,126 @@ from functools import reduce
 from typehints import Connection, Cursor
 
 def generate_timetable(db_connector: Connection, cursor: Cursor,
-                       campus_id: Optional[int] = None,
-                       days: Tuple[str] = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"),
-                       period_ids: Tuple[int] = tuple(range(1,9)),
-                       minor_elective: int = 4) -> None:
-	def free_classes(day, period_id):
-		cursor.execute("""SELECT `id`
-					   FROM `timetables`
-					   JOIN `classes`
-				 	   ON `id`=`class_id`
-				 	   AND NOT `is_lab`
-				 	   AND `day`=%s
-				 	   AND `period_id`=%s""",
-					   (day, period_id))
-		return {id for id in cursor.fetchall()}
-
+					   campus_id: Optional[int] = None,
+					   days: Tuple[str] = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"),
+					   period_ids: Tuple[int] = tuple(range(1,9)),
+					   minor_elective: int = 4) -> None:
 	def class_capacity(class_id, day, period_id):
 		cursor.execute("""SELECT `capacity`
-				 	   FROM `timetables`
-				 	   JOIN `classes`
-				 	   ON `timetables`.`class_id`=%s
-				 	   AND `id`=%s
-				 	   AND `day`=%s
-				 	   AND `period_id`=%s""",
+					   FROM `timetables`
+					   JOIN `classes`
+					   ON `timetables`.`class_id`=%s
+					   AND `id`=%s
+					   AND `day`=%s
+					   AND `period_id`=%s""",
 					   (class_id, class_id, day, period_id))
 		return cursor.fetch()["capacity"]
 
 	def no_of_elective_students(degree, stream, elective):
 		cursor.execute("""SELECT `stream`
-				 	   FROM `student_electives` `SE`
-				 	   JOIN `section_students` `SS`
-				 	   ON `SS`.`student_id`=`SE`.`student_id`
-				 	   JOIN `sections`
-				 	   ON `sections`.`id`=`SS`.`section_id`
-				 	   AND `campus_id`=%s
-				 	   AND `degree`=%s
-				 	   AND `course_code`=%s""",
+					   FROM `student_electives` `SE`
+					   JOIN `section_students` `SS`
+					   ON `SS`.`student_id`=`SE`.`student_id`
+					   JOIN `sections`
+					   ON `sections`.`id`=`SS`.`section_id`
+					   AND `campus_id`=%s
+					   AND `degree`=%s
+					   AND `course_code`=%s""",
 					   (campus_id, degree, elective))
 		return len([1 for s in cursor.fetchall() if stream is s["stream"] or stream==s["stream"]])
 
-	def max_lab_capacity(department, day, period_id):
+	def sort_course(course_code):
+		course = fetch_data.get_course(cursor, code=course_code)
+		return (course["P"], course["L"]+course["P"]+course["T"])
+
+	def lab_capacities(department, day, period_id):
 		cursor.execute("""SELECT COUNT(*) / `P` AS `labs_per_week`,
-				 	   `section_id`, `degree`, `stream`, `course_code`
-				 	   FROM `timetables`
-				 	   JOIN `faculty_section_course` `FSC`
-				 	   ON `FSC`.`id`=`faculty_section_course_id`
-				 	   JOIN `courses`
-				 	   ON `course_code`=`code`
+					   `section_id`, `degree`, `stream`, `course_code`
+					   FROM `timetables`
+					   JOIN `faculty_section_course` `FSC`
+					   ON `FSC`.`id`=`faculty_section_course_id`
+					   JOIN `courses`
+					   ON `course_code`=`code`
 					   JOIN `classes`
-				 	   ON `classes`.`id`=`class_id`
-				 	   AND `is_lab`
-				 	   JOIN `sections`
-				 	   ON `sections`.`id`=`section_id`
-				 	   AND `campus_id`=%s
-				 	   AND `classes`.`department`=%s
-				 	   GROUP BY `section_id`, `course_code`""",
+					   ON `classes`.`id`=`class_id`
+					   AND `is_lab`
+					   JOIN `sections`
+					   ON `sections`.`id`=`section_id`
+					   AND `campus_id`=%s
+					   AND `classes`.`department`=%s
+					   GROUP BY `section_id`, `course_code`""",
 					   (campus_id, department))
 		sec_crs = cursor.fetchall()
 		cursor.execute("""SELECT COUNT(*) AS `no_of_students`,
-				 	   `FSC`.`section_id`, `course_code`
-				 	   FROM `faculty_section_course` `FSC`
-				 	   JOIN `courses`
-				 	   ON `course_code`=`code`
-				 	   AND NOT `is_elective`
-				 	   JOIN `sections`
-				 	   ON `sections`.`id`=`FSC`.`section_id`
-				 	   JOIN `section_students` `SS`
-				 	   ON `SS`.`section_id`=`sections`.`id`
-				 	   AND `campus_id`=%s
-				 	   AND `courses`.`department`=%s
-				 	   GROUP BY `FSC`.`section_id`, `code`""",
+					   `FSC`.`section_id`, `course_code`
+					   FROM `faculty_section_course` `FSC`
+					   JOIN `courses`
+					   ON `course_code`=`code`
+					   AND NOT `is_elective`
+					   JOIN `sections`
+					   ON `sections`.`id`=`FSC`.`section_id`
+					   JOIN `section_students` `SS`
+					   ON `SS`.`section_id`=`sections`.`id`
+					   AND `campus_id`=%s
+					   AND `courses`.`department`=%s
+					   GROUP BY `FSC`.`section_id`, `code`""",
 					   (campus_id, department))
 		no_of_students = cursor.fetchall()
 		cursor.execute("""SELECT COUNT(*) AS `no_of_sections`,
-				 	   `course_code`, `degree`, `stream`
-				 	   FROM `faculty_section_course` `FSC`
-				 	   JOIN `sections`
-				 	   ON `sections`.`id`=`FSC`.`section_id`
-				 	   JOIN `courses`
-				 	   ON `code`=`course_code`
-				 	   AND `campus_id`=%s
-				 	   AND `department`=%s
-				 	   AND `is_elective`
-				 	   AND `P`
-				 	   GROUP BY `code`, `degree`, `stream`""",
+					   `course_code`, `degree`, `stream`
+					   FROM `faculty_section_course` `FSC`
+					   JOIN `sections`
+					   ON `sections`.`id`=`FSC`.`section_id`
+					   JOIN `courses`
+					   ON `code`=`course_code`
+					   AND `campus_id`=%s
+					   AND `department`=%s
+					   AND `is_elective`
+					   AND `P`
+					   GROUP BY `code`, `degree`, `stream`""",
 					   (campus_id, department))
 		no_of_sections = cursor.fetchall()
 		cursor.execute("""SELECT COUNT(*) AS `no_of_students`,
-				 	   `course_code`, `degree`, `stream`
+					   `course_code`, `degree`, `stream`
 					   FROM `section_students` `SS`
-				 	   JOIN `sections`
-				 	   ON `SS`.`section_id`=`sections`.`id`
-				 	   JOIN `student_electives` `SE`
+					   JOIN `sections`
+					   ON `SS`.`section_id`=`sections`.`id`
+					   JOIN `student_electives` `SE`
 					   ON `SS`.`student_id`=`SE`.`student_id`
 					   JOIN `courses`
 					   ON `course_code`=`code`
-				 	   AND `is_elective`
-				 	   AND `P`
-				 	   AND `campus_id`=%s
-				 	   AND `department`=%s
-				 	   GROUP BY `code`, `degree`, `stream`""",
+					   AND `is_elective`
+					   AND `P`
+					   AND `campus_id`=%s
+					   AND `department`=%s
+					   GROUP BY `code`, `degree`, `stream`""",
 					   (campus_id, department))
 		no_of_elective_students = cursor.fetchall()
 		cursor.execute("""SELECT `class_id`, `capacity`, `section_id`,
-				 	   `course_code`, `degree`, `stream`, `is_elective`
-				 	   FROM `timetables`
+					   `course_code`, `degree`, `stream`, `is_elective`
+					   FROM `timetables`
 					   JOIN `faculty_section_course` `FSC`
-				 	   ON `FSC`.`id`=`faculty_section_course_id`
-				 	   JOIN `classes`
-				 	   ON `classes`.`id`=`class_id`
-				 	   AND `is_lab`
-				 	   AND `day`=%s
-				 	   AND `period_id`=%s
-				 	   JOIN `courses`
-				 	   ON `course_code`=`code`
-				 	   JOIN `sections`
-				 	   ON `section_id`=`sections`.`id`
-				 	   AND `campus_id`=%s
-				 	   AND `courses`.`department`=%s""",
+					   ON `FSC`.`id`=`faculty_section_course_id`
+					   JOIN `classes`
+					   ON `classes`.`id`=`class_id`
+					   AND `is_lab`
+					   AND `day`=%s
+					   AND `period_id`=%s
+					   JOIN `courses`
+					   ON `course_code`=`code`
+					   JOIN `sections`
+					   ON `section_id`=`sections`.`id`
+					   AND `campus_id`=%s
+					   AND `courses`.`department`=%s""",
 					   (day, period_id, campus_id, department))
 		class_capacity = list(cursor.fetchall())
 		cursor.execute("""SELECT `classes`.`id` AS `class_id`, `capacity`
-				 	   FROM `classes`
-				 	   JOIN `campus_buildings` `CB`
-				 	   ON `CB`.`building_id`=`classes`.`building_id`
-				 	   AND `is_lab`
-				 	   AND `campus_id`=%s
-				 	   AND `department`=%s""", ( campus_id, department))
+					   FROM `classes`
+					   JOIN `campus_buildings` `CB`
+					   ON `CB`.`building_id`=`classes`.`building_id`
+					   AND `is_lab`
+					   AND `campus_id`=%s
+					   AND `department`=%s""", ( campus_id, department))
 		classes = cursor.fetchall()
 		elective_std_sec = {(std["degree"], std["stream"], std["course_code"]): std["no_of_students"] // sec["no_of_sections"]
 					  		for std in no_of_elective_students
@@ -162,12 +155,12 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 							and std["stream"] == sec["stream"]
 							and std["course_code"] == sec["course_code"]}
 		cls_sec_crs = {(sc["course_code"], sc["section_id"]): sc["labs_per_week"]
-				 	   for cls in class_capacity
+						for cls in class_capacity
 					   for sc in sec_crs
 					   if sc["course_code"] == cls["course_code"]
 					   and sc["section_id"] == cls["section_id"]}
 		std_sec = {(std["section_id"], std["course_code"]): std["no_of_students"]
-			 	   for std in no_of_students
+					for std in no_of_students
 				   for cls in class_capacity
 				   if std["course_code"] == cls["course_code"]
 				   and std["section_id"] == cls["section_id"]}
@@ -181,19 +174,12 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 			if not any(cls["class_id"] == c["class_id"] for c in class_capacity):
 				class_capacity.append(cls)
 
+		return class_capacity
+
+	def max_lab_capacity(department, day, period):
+		class_capacity = lab_capacities(department, day, period_id)
 		class_capacity = sorted(list({(cls["class_id"], int(cls["capacity"])) for cls in class_capacity}), key=lambda x: x[1], reverse=True)
 		return [[*cls] for cls in class_capacity]
-
-	def is_faculty_free(faculty_id, day, period):
-		cursor.execute("""SELECT 1
-				 	   FROM `timetables`
-				 	   JOIN `faculty_section_course` `FSC`
-				 	   ON `FSC`.`id`=`faculty_section_course_id`
-				 	   AND `faculty_id`=%s
-				 	   AND `day`=%s
-				 	   AND `period_id`=%s
-				 	   LIMIT 1""", (faculty_id, day, period_id))
-		return not cursor.fetchone()
 
 	def sorted_and_reverse(courses=None, no_of_electives=None, combs=[]):
 		rev = lambda combs: sorted(combs | {c for comb in combs if (c := comb[::-1]) and c not in combs}, key=lambda x: (-len(x), x))
@@ -213,14 +199,138 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 			return None
 
 	def try_compress(section_id):
-		cursor.execute("""SELECT `day`, `period_id`, `faculty_section_course_id`, `class_id`
-				 	   FROM `timetables`
-				 	   JOIN `faculty_section_course`
+		def compress(day, period_id, faculty_id, section_id, course_code, class_id, *, forward=0):
+			course = fetch_data.get_course(cursor, code=course_code)
+			from_to = (day, period_id, day, period_id + forward)
+			if course["is_elective"]:
+				section = fetch_data.get_section(cursor, section_id=section_id)
+				degree, stream = section["degree"], section["stream"]
+				possible = True
+				for section in fetch_data.get_sections(cursor, campus_id=campus_id, degree=degree):
+					faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course_code)
+					section_course = (section["id"], course_code)
+					possible = all(possible and is_transfer_possible(*from_to, faculty["faculty_id"], *section_course)[0]
+					   			   for faculty in faculties)
+					if not possible:
+						print(f"Unable to compress {day}{period_id}",
+							  f"{section["year"]}{section["degree"]}-{section["stream"]}{section["section"]}")
+						return False
+			else:
+				faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course_code)
+				possible = all(is_transfer_possible(*from_to, faculty["faculty_id"], section_id, course_code, class_id)[0]
+					  		   for faculty in faculties)
+				if not possible:
+					print(f"Unable to compress {day}{period_id}",
+						f"{section["year"]}{section["degree"]}-{section["stream"]}{section["section"]}")
+					return False
+
+			timetable["period_id"] -= forward
+			delete_data.delete_timetable(db_connector, cursor, **timetable)
+			timetable["period_id"] += forward
+			insert_data.add_timetable(db_connector, cursor, **timetable)
+			return True
+
+		cursor.execute("""SELECT `day`, `period_id`, `faculty_id``class_id`
+					   FROM `timetables`
+					   JOIN `faculty_section_course`
 					   ON `id`=`faculty_section_course_id`
-				 	   AND `section_id`=%s
-				 	   ORDER BY `day`, `period_id`""", (section_id,))
-		timetable = cursor.fetchall()
+					   AND `section_id`=%s
+					   ORDER BY `day`, `period_id`""", (section_id,))
+		timetable = dict.fromkeys(days, [])
+		for period in cursor.fetchall():
+			timetable[period["day"]].append((period["period_id"], period["faculty_id"], section_id, period["class_id"]))
+
+		for day in days:
+			for period in timetable[day]:
+				if period[0] == 5:
+					for i in range(3, 0, -1):
+						if not compress(day, i, *period[1:4], forward=1): return
+					if not compress(day, 8, *period[1:4], forward=-1): return
+					break
+			else:
+				for i in range(4, 0, -1):
+					if not compress(day, i, *period[1:4], forward=1): return
+				for i in range(7, 9):
+					if not compress(day, i, *period[1:4], forward=-1): return
+
+	def is_section_busy(section_id, day, period_id):
+		cursor.execute("""SELECT 1
+					   FROM `timetables`
+					   JOIN `faculty_section_course` `FSC`
+					   ON `FSC`.`id`=`faculty_section_course_id`
+					   AND `section_id`=%s
+					   AND `day`=%s
+					   AND `period_id`=%s""", (section_id, day, period_id))
+		return cursor.fetchone()
+
+	def is_faculty_busy(faculty_id, day, period_id):
+		cursor.execute("""SELECT 1
+					   FROM `timetables`
+					   JOIN `faculty_section_course` `FSC`
+					   ON `FSC`.`id`=`faculty_section_course_id`
+					   AND `faculty_id`=%s
+					   AND `day`=%s
+					   AND `period_id`=%s
+					   LIMIT 1""", (faculty_id, day, period_id))
+		return cursor.fetchone()
+
+	def faculty_came_thrice(faculty_id, section_id, day):
+		cursor.execute("""SELECT COUNT(*) AS `cnt`
+					   FROM `timetables`
+					   JOIN `faculty_section_course` `FSC`
+					   ON `FSC`.`id`=`faculty_section_course_id`
+					   AND `faculty_id`=%s
+					   AND `section_id`=%s
+					   AND `day`=%s
+					   LIMIT 1""", (faculty_id, section_id, day))
+		return cursor.fetchone()["cnt"] == 3
+
+	def is_third_lab(section_id, course, day):
 		... # TODO
+
+	def is_transfer_possible(from_day, from_period_id, to_day, to_period_id, faculty_id, section_id, course_code, class_id):
+		if (from_day, from_period_id) == (to_day, to_period_id):
+			return (True, "Same period")
+
+		course = fetch_data.get_course(cursor, code=course_code)
+		cls = fetch_data.get_class(cursor, class_id=class_id)
+		if is_section_busy(section_id, to_day, to_period_id):
+			return (False, "Section has other class")
+
+		if is_faculty_busy(faculty_id, to_day, to_period_id):
+			return (False, "Faculty has other class")
+
+		if course["is_elective"]:
+			section = fetch_data.get_section(cursor, section_id=section_id)
+			degree, stream = section["degree"], section["stream"]
+			sections = fetch_data.get_sections(cursor, campus_id=campus_id, degree=degree, stream=stream)
+
+		if cls["is_lab"]:
+			lab_capacity = lab_capacities(cls["department"], to_day, to_period_id)
+			if course["is_elective"]:
+				no_of_sections = len(section_ids)
+				cursor.execute("""SELECT 1
+							   FROM `section_students` `SS`
+							   JOIN `sections`
+							   ON `SS`.`section_id`=`sections`.`id`
+							   JOIN `student_electives` `SE`
+							   ON `SS`.`student_id`=`SE`.`student_id`
+							   AND `campus_id`=%s
+							   AND `degree`=%s
+							   AND `stream`=%s
+							   AND `course_code`=%s""",
+							   (campus_id, degree, stream, course_code))
+				no_of_students = -(-len(cursor.fetchall()) // no_of_sections)
+			else:
+				no_of_students = len(fetch_data.get_section_students(cursor, section_id=section_id))
+			if lab_capacity < no_of_students:
+				return (False, "Lab has lesser capacity")
+		return (True, course["is_elective"])
+
+	def can_allocate(day, period_id, section_id, course_code, class_id):
+		faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course_code)
+		if any(is_faculty_busy(faculty["faculty_id"], day, period_id) for faculty in faculties):
+			return (False, "Faculty is busy")
 
 	programmes = show_data.get_programmes(cursor, campus_id=campus_id)
 	sections = fetch_data.get_sections(cursor, campus_id=campus_id)
@@ -236,8 +346,8 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 			_student_ids = {student["student_id"] for section_id in _section_ids
 							for student in fetch_data.get_section_students(cursor, section_id=section_id)}
 			_student_electives = {course["code"]: student_ids for course in courses
-						 		  if (student_ids := {se["student_id"] for se in student_electives
-							   						  if se["course_code"] == course["code"] and se["student_id"] in _student_ids})}
+								  if (student_ids := {se["student_id"] for se in student_electives
+													  if se["course_code"] == course["code"] and se["student_id"] in _student_ids})}
 			if not _student_electives:
 				continue
 			_courses = set(_student_electives.keys())
@@ -293,7 +403,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 					if course not in allowed:
 						allowed.insert(0, course)
 
-				allowed = sorted((tuple(sorted(course)) for course in allowed), key=lambda x: (-len(x), x))
+				allowed = sorted(tuple(sorted(course, key=sort_course) for course in allowed), key=lambda x: -len(x))
 				over = set()
 				not_allowed = set()
 				for course in allowed:
@@ -325,8 +435,9 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 				periods.remove(("Thursday", 8))
 				periods.remove(("Friday", 7))
 				periods.remove(("Friday", 8))
+
+			lab_periods = {period for period in periods if period[1] % 2 == 1}
 			# TODO
-			print(allowed)
 
 	# 2. Allocate lab courses
 	for section_id in section_ids:
@@ -348,6 +459,12 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 				continue
 			course = course[0]
 			hrs = course["P"]
+			faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=fc["course_code"])
+			for fsc in faculties:
+				fsc.update({"course_code": fc["course_code"]})
+				if fsc["id"] != fc["id"]:
+					faculty_courses.remove(fsc)
+
 			lab_departments = course["lab_departments"]
 			no_of_labs = len(lab_departments)
 			assert no_of_labs == 1 or 2 * no_of_labs == hrs, "Number of lab-departments does not match with practical hours"
@@ -390,16 +507,18 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 							ctwice = False # Lab is too busy at this time...
 							continue
 						return None
-					insert_data.add_timetable(db_connector, cursor, 
-											day=day,
-											period_id=period_id,
-											faculty_section_course_id=fc["id"],
-											class_id=class_id)
-					insert_data.add_timetable(db_connector, cursor,
-											day=day,
-											period_id=period_id+1,
-											faculty_section_course_id=fc["id"],
-											class_id=class_id)
+
+					for fsc in faculties:
+						insert_data.add_timetable(db_connector, cursor,
+												  day=day,
+												  period_id=period_id,
+												  faculty_section_course_id=fsc["id"],
+												  class_id=class_id)
+						insert_data.add_timetable(db_connector, cursor,
+												  day=day,
+												  period_id=period_id+1,
+												  faculty_section_course_id=fsc["id"],
+												  class_id=class_id)
 					class_day_period[0][0][0][1] -= no_of_students // no_of_times
 					prev_day = day
 					if no_of_times-1:
@@ -421,16 +540,18 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 							ctwice = False
 						if capacity < no_of_students // 2:
 							print("Too many students & too less capacity in all the labs...", class_day_period, capacity, no_of_students)
-						insert_data.add_timetable(db_connector, cursor, 
-												day=day,
-												period_id=period_id,
-												faculty_section_course_id=fc["id"],
-												class_id=class_id)
-						insert_data.add_timetable(db_connector, cursor,
-												day=day,
-												period_id=period_id+1,
-												faculty_section_course_id=fc["id"],
-												class_id=class_id)
+
+						for fsc in faculties:
+							insert_data.add_timetable(db_connector, cursor,
+													  day=day,
+													  period_id=period_id,
+													  faculty_section_course_id=fsc["id"],
+													  class_id=class_id)
+							insert_data.add_timetable(db_connector, cursor,
+													  day=day,
+													  period_id=period_id+1,
+													  faculty_section_course_id=fsc["id"],
+													  class_id=class_id)
 						class_day_period[1][0][0][1] -= no_of_students // no_of_times
 						if ctwice:
 							twice.append((day, period_id))
@@ -444,10 +565,11 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 					db_connector.commit()
 				except Exception as exception:
 					exception = exception.args
-					delete_data.delete_timetable(db_connector, cursor,
-												day=day, period_id=period_id, faculty_section_course_id=fc["id"], class_id=class_id)
-					delete_data.delete_timetable(db_connector, cursor,
-												day=day, period_id=period_id+1, faculty_section_course_id=fc["id"], class_id=class_id)
+					for fsc in faculties:
+						delete_data.delete_timetable(db_connector, cursor,
+													 day=day, period_id=period_id, faculty_section_course_id=fsc["id"], class_id=class_id)
+						delete_data.delete_timetable(db_connector, cursor,
+													 day=day, period_id=period_id+1, faculty_section_course_id=fsc["id"], class_id=class_id)
 					if exception[1] == "Same faculty cannot take more than 3 class for the same section on the same day":
 						for cdp in class_day_period:
 							if cdp[1][0] == day:
