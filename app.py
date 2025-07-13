@@ -153,8 +153,8 @@ def show_courses(degree: str, stream: str):
 	courses = fetch_data.get_courses(sql.cursor, programme_id=programme_id)
 	return render_template("course.html", degree=degree, stream=stream, courses=courses)
 
-@app.route("/programme/<string:degree>/<string:stream>")
-def show_programme_campuses(degree: str, stream: str, year: int):
+#@app.route("/programme/<string:degree>/<string:stream>")
+#def show_programme_campuses(degree: str, stream: str, year: int):
 	campuses = ["SASTRA", "SRC", "Chennai Campus"]
 	courses = fetch_data.get_courses(sql.cursor, degree, stream, year)#programme_id ,campus_id
 	return render_template("campus.html", degree=degree, stream=stream,campuses=campuses)
