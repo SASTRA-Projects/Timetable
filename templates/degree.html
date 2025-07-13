@@ -55,7 +55,7 @@
 		<p style="margin: auto; text-align: center; font-size: 3em">Degrees</p>
 		<div class="btn-container">
 			{% for degree in degrees %}
-				<a href="/degree/{{ degree["degree"] }}" class="button-link">{{ degree["name"] }}</a>
+				<a href="/degree/{{ degree['name'] }}" class="button-link">{{ degree["name"] }}</a>
 			{% endfor %}
 		</div>
 	{% endif %}
