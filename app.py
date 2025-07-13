@@ -132,7 +132,7 @@ def show_degree_programmes(degree: str) -> str:
 		return render_template("programme.html", programmes=programmes, degree=degree)
 	return render_template("failed.html", reason="Unknown error occurred")
 
-@app.route("/programme/<string:degree>/<string:stream>")
+@app.route("/degree/<string:degree>/<string:stream>")
 def show_years(degree: str, stream: str):
 	duration = show_data.get_degree_duration(sql.cursor, degree=degree)
 	if duration is None:

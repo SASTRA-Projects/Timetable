@@ -115,8 +115,8 @@
 			</p>
 			<div class="btn-container">
 				{% for programme in programmes %}
-					<a href="/programme/{{ degree }}/{{ programme.stream }}" class="button-link">{{ programme["stream"] }}</a>
-					<a href="/programme/{{ degree }}/{{ programme.stream }}/all" class="year-button">View All Courses</a>
+					<a href="/degree/{{ degree }}/{{ programme.stream }}" class="button-link">{{ programme["stream"] }}</a>
+					<a href="/degree/{{ degree }}/{{ programme.stream }}/course" class="year-button">View All Courses</a>
 				{% endfor %}
 			</div>
 		{% endif %}

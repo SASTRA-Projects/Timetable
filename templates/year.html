@@ -70,8 +70,8 @@
     <h1 class="year-title">{{ degree }} - {{ stream }} - {{ campus }}</h1>
 
     <div class="btn-container">
-        {% for y in years %}
-            <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=y, campus=campus) }}" class="lux-button-">Year-{{ y }}</a>
+        {% for year in years %}
+            <a href="/" class="lux-button-">Year-{{ y }}</a>
         {% endfor %}
     </div>
 {% endblock %}
