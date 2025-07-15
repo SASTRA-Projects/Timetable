@@ -9,7 +9,7 @@ Flask==3.1.1
 itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.2
-mypy==1.16.1
+mypy==1.17.0
 mypy-extensions==1.1.0
 pycparser==2.22
 PyMySQL==1.1.1
