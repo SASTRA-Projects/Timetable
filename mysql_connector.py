@@ -20,10 +20,10 @@ def connect(user: str,
     port=17216,
     user=user,
     write_timeout=timeout,
+    autocommit=False
   )
   if db_connector:
     cursor = db_connector.cursor()
-    db_connector.autocommit(False)
   if cursor:
     cursor.execute("""CREATE DATABASE IF NOT EXISTS `SASTRA`""")
     cursor.execute("""USE `SASTRA`""")

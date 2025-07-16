@@ -66,7 +66,7 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
 	=======================
 	- `student_id` \u2192 `section_id`
 	"""
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `section_class` ( -- check section class capacity
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `section_class` (
 				   `section_id` MEDIUMINT UNSIGNED NOT NULL,
 				   `class_id` MEDIUMINT UNSIGNED NOT NULL,
 				   PRIMARY KEY(`section_id`),
@@ -81,7 +81,7 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
 	=======================
 	- `student_id` \u2192 `section_id`
 	"""
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `section_students` ( -- check section class capacity
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `section_students` (
 				   `section_id` MEDIUMINT UNSIGNED NOT NULL,
 				   `student_id` INT UNSIGNED NOT NULL,
 				   PRIMARY KEY(`student_id`),
@@ -117,7 +117,7 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
 	"""
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `student_electives` (
 				   `student_id` INT UNSIGNED NOT NULL, -- check student is in this section,
-				   `course_code` VARCHAR(10) NOT NULL, -- is this course elective of this student's programme?
+				   `course_code` VARCHAR(10) NOT NULL,
 				   PRIMARY KEY(`student_id`, `course_code`),
 				   FOREIGN KEY(`student_id`) REFERENCES `students`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,

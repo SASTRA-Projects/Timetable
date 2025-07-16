@@ -236,12 +236,12 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	- `building_id`, `room_no` \u2192 `id`, `capacity`, `is_lab`
 	"""
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `classes` (
-				   `id` MEDIUMINT UNSIGNED AUTO_INCREMENT, -- check id <=`buildings`.`rooms`
+				   `id` MEDIUMINT UNSIGNED AUTO_INCREMENT,
 				   `building_id` SMALLINT UNSIGNED NOT NULL,
 				   `room_no` SMALLINT UNSIGNED NOT NULL,
-				   `capacity` SMALLINT UNSIGNED NOT NULL, -- capacity check for students_classes
+				   `capacity` SMALLINT UNSIGNED NOT NULL,
 				   `is_lab` BOOLEAN NOT NULL,
-				   `department` VARCHAR(40) NULL, -- check department in campus
+				   `department` VARCHAR(40) NULL,
 				   PRIMARY KEY(`id`),
 				   FOREIGN KEY(`building_id`) REFERENCES `buildings`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -262,7 +262,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   `degree` VARCHAR(40) NOT NULL,
 				   `stream` VARCHAR(40) NULL,
 				   `section` VARCHAR(2) NOT NULL,
-				   `year` TINYINT UNSIGNED NOT NULL, -- check 0 < `year` <= `degree`.`duration`
+				   `year` TINYINT UNSIGNED NOT NULL,
 				   PRIMARY KEY(`id`),
 				   FOREIGN KEY(`degree`) REFERENCES `degrees`(`name`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -279,8 +279,8 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   `id` MEDIUMINT UNSIGNED AUTO_INCREMENT,
 				   `name` VARCHAR(40) NOT NULL,
 				   `campus_id` TINYINT UNSIGNED NOT NULL,
-				   `department` VARCHAR(40) NOT NULL, -- desig, salary separate, check dept in campus
-				   `join_year` SMALLINT UNSIGNED NOT NULL, -- trigger to ensure join_year <= current_year
+				   `department` VARCHAR(40) NOT NULL,
+				   `join_year` SMALLINT UNSIGNED NOT NULL,
 				   PRIMARY KEY(`id`),
 				   FOREIGN KEY(`campus_id`) REFERENCES `campuses`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -294,13 +294,13 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	- `id` \u2192 `name`, `campus_id`, `join_year`, `programme_id`, `roll_no`, `phone`
 	- `campus_id`, `join_year`, `programme_id`, `roll_no` \u2192 `id`, `name`
 	"""
-	cursor.execute("""CREATE TABLE IF NOT EXISTS `students` ( -- grades & attendance separate
-				   `id` INT UNSIGNED AUTO_INCREMENT, -- e.g., max=4,294,967,296
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `students` (
+				   `id` INT UNSIGNED AUTO_INCREMENT,
 				   `name` VARCHAR(40) NOT NULL,
 				   `campus_id` TINYINT UNSIGNED NOT NULL,
-				   `join_year` SMALLINT UNSIGNED NOT NULL, -- trigger to ensure join_year <= current_year
+				   `join_year` SMALLINT UNSIGNED NOT NULL,
 				   `programme_id` MEDIUMINT UNSIGNED NOT NULL,
-				   `roll_no` SMALLINT UNSIGNED NOT NULL, -- trigger to auto_increment
+				   `roll_no` SMALLINT UNSIGNED NOT NULL,
 				   `phone` CHAR(10) NOT NULL,
 				   PRIMARY KEY(`id`),
 				   FOREIGN KEY(`campus_id`, `programme_id`)

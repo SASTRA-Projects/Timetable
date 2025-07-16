@@ -35,7 +35,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					LIMIT 1
 				   )
 					THEN SIGNAL SQLSTATE '45000'
-					SET MESSAGE_TEXT='Invalid Class: Class does not belong to the given Department';
+					SET MESSAGE_TEXT='Invalid Class: Class does not belong to the given Department (not in the campus of the class)';
 				   END IF;
 	""")
 	cursor.execute("""CREATE PROCEDURE IF NOT EXISTS `section_campus_class`
@@ -131,7 +131,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 							FROM `courses`
 							WHERE `code`=`course_code`);
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `campus_has_programme_department`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `campus_has_programme_department_insert`
 				   BEFORE INSERT ON `campus_programmes`
 				   FOR EACH ROW
 				   BEGIN
@@ -144,6 +144,46 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 
 					CALL `department_exists`(NEW.`campus_id`, `dept`);
 				   END;
+	""")
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `campus_has_programme_department_update`
+				   BEFORE UPDATE ON `campus_programmes`
+				   FOR EACH ROW
+				   BEGIN
+					DECLARE `dept` VARCHAR(40);
+					SELECT `streams`.`department` INTO `dept`
+					FROM `programmes`
+					JOIN `streams`
+					ON `streams`.`name`=`programmes`.`stream`
+					AND NEW.`programme_id`=`id`;
+
+					CALL `department_exists`(NEW.`campus_id`, `dept`);
+				   END;
+	""")
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `course_is_lab_insert`
+				   BEFORE INSERT ON `lab_departments`
+				   FOR EACH ROW
+				   IF (
+					SELECT `P` < 2
+					FROM `courses`
+					WHERE `code`=NEW.`course_code`
+					LIMIT 1
+				   )
+					THEN SIGNAL SQLSTATE '45000'
+					SET MESSAGE_TEXT='Lab course must have atleast 2 hours for practical';
+				   END IF;
+	""")
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `course_is_lab_update`
+				   BEFORE UPDATE ON `lab_departments`
+				   FOR EACH ROW
+				   IF (
+					SELECT `P` < 2
+					FROM `courses`
+					WHERE `code`=NEW.`course_code`
+					LIMIT 1
+				   )
+					THEN SIGNAL SQLSTATE '45000'
+					SET MESSAGE_TEXT='Lab course must have atleast 2 hours for practical';
+				   END IF;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `no_of_rooms_dept_insert`
 				   BEFORE INSERT ON `classes`
@@ -354,59 +394,106 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						SET MESSAGE_TEXT='Invalid Course: Course not found in given Section';
 					END IF;
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `student_elective_insert`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `student_elective_section_course_insert`
 				   BEFORE INSERT ON `student_electives`
 				   FOR EACH ROW
-					IF NOT EXISTS (
-						SELECT 1
-						FROM `students`
-						JOIN `programme_courses` `PC`
-						ON `students`.`programme_id`=`PC`.`programme_id`
-						AND `PC`.`course_code`=NEW.`course_code`
-						AND `get_is_elective`(NEW.`course_code`)
-						AND `students`.`id`=NEW.`student_id`
-						LIMIT 1
-					)
+				   BEGIN
+					DECLARE `new_section_id` MEDIUMINT UNSIGNED;
+
+					SELECT `section_id` INTO `new_section_id`
+					FROM `section_students`
+					WHERE `student_id`=NEW.`student_id`
+					LIMIT 1;
+
+					IF NOT `section_has_course`(`new_section_id`, NEW.`course_code`)
 						THEN SIGNAL SQLSTATE '45000'
 				   		SET MESSAGE_TEXT='Invalid Course: Course is not valid elective for the Student''s programme';
 				   	END IF;
+				   END;
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `student_elective_update`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `student_elective_section_course_update`
 				   BEFORE UPDATE ON `student_electives`
 				   FOR EACH ROW
-					IF NOT EXISTS (
-						SELECT 1
-						FROM `students`
-						JOIN `programme_courses` `PC`
-						ON `students`.`programme_id`=`PC`.`programme_id`
-						AND `PC`.`course_code`=NEW.`course_code`
-						AND `get_is_elective`(NEW.`course_code`)
-						AND `students`.`id`=NEW.`student_id`
-						LIMIT 1
-					)
+				   BEGIN
+					DECLARE `new_section_id` MEDIUMINT UNSIGNED;
+
+					SELECT `section_id` INTO `new_section_id`
+					FROM `section_students`
+					WHERE `student_id`=NEW.`student_id`
+					LIMIT 1;
+
+					IF NOT `section_has_course`(`new_section_id`, NEW.`course_code`)
 						THEN SIGNAL SQLSTATE '45000'
 				   		SET MESSAGE_TEXT='Invalid Course: Course is not valid elective for the Student''s programme';
 				   	END IF;
+				   END;
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `timetable_same_fac_class_full_insert`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `timetable_same_fac_class_full_lunch_conflict_insert`
 				   BEFORE INSERT ON `timetables`
 				   FOR EACH ROW
 				   BEGIN
+					DECLARE `new_is_lab`, `new_is_elective` BOOLEAN;
 					DECLARE `class_count` TINYINT UNSIGNED;
 					DECLARE `new_faculty_id`, `new_section_id`, `no_of_students` MEDIUMINT UNSIGNED;
+					DECLARE `new_course_code` VARCHAR(10);
 
-					SELECT `faculty_id`, `section_id`
-					INTO `new_faculty_id`, `new_section_id`
-					FROM `faculty_section_course`
-					WHERE `id`=NEW.`faculty_section_course_id`;
+					IF EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `classes`
+						ON `classes`.`id`=NEW.`class_id`
+						AND NOT `is_lab`
+						JOIN `courses`
+						ON `code`=`new_course_code`
+						AND NOT `is_elective`
+						AND `class_id`=NEW.`class_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='Non-lab classes can only be occupied by one section at a time';
+					END IF;
+
+					SELECT `faculty_id`, `section_id`, `course_code`, `is_lab`, `is_elective`
+					INTO `new_faculty_id`, `new_section_id`, `new_course_code`,
+					`new_is_lab`, `new_is_elective`
+					FROM `faculty_section_course` `FSC`
+					JOIN `classes`
+					ON `classes`.`id`=NEW.`class_id`
+					JOIN `courses`
+					ON `course_code`=`code`
+					AND `FSC`.`id`=NEW.`faculty_section_course_id`;
+
+					IF ((NEW.`period_id`=3 AND NOT `new_is_lab`) OR (NEW.`period_id`=4)) AND EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						AND `FSC`.`section_id`=`new_section_id`
+						AND `period_id`=5
+						AND `day`=NEW.`day`
+					)
+					OR NEW.`period_id`=5 AND EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						AND `FSC`.`section_id`=`new_section_id`
+						AND `period_id`=4
+						AND `day`=NEW.`day`
+					)
+						THEN SIGNAL SQLSTATE '45000'
+				   		SET MESSAGE_TEXT='Invalid Schedule: This hour is supposed for lunch';
+					END IF;
 
 					SELECT COUNT(*) INTO `class_count`
 					FROM `timetables`
 					JOIN `faculty_section_course` `FSC`
 					ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
-					WHERE `FSC`.`faculty_id`=`new_faculty_id`
+					AND `FSC`.`faculty_id`=`new_faculty_id`
 					AND `FSC`.`section_id`=`new_section_id`
-					AND `timetables`.`day`=NEW.`day`;
+					AND `day`=NEW.`day`;
 
 					IF `class_count` >= 3
 						THEN SIGNAL SQLSTATE '45000'
@@ -416,59 +503,232 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					IF EXISTS (
 						SELECT 1
 						FROM `timetables`
-						JOIN `faculty_section_course` `FSC1`
-						ON `FSC1`.`id`=`faculty_section_course_id`
-						JOIN `faculty_section_course` `FSC2`
-						ON `FSC2`.`id`=NEW.`faculty_section_course_id`
-						AND `FSC1`.`faculty_id`=`FSC2`.`faculty_id`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						AND `faculty_id`=`new_faculty_id`
 						AND `day`=NEW.`day`
 						AND `period_id`=NEW.`period_id`
 						LIMIT 1
 					)
 						THEN SIGNAL SQLSTATE '45000'
 				   		SET MESSAGE_TEXT='Same faculty cannot take more than one class at the same time';
+					END IF;
+
+					IF (NOT `new_is_elective` AND NOT `new_is_lab` AND EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						AND `section_id`=`new_section_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						LIMIT 1
+					))
+					OR EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						JOIN `courses`
+						ON `code`=`course_code`
+						JOIN `classes`
+						ON `classes`.`id`=`class_id`
+						AND `section_id`=`new_section_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						AND NOT `is_elective`
+						AND NOT `is_lab`
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='Invalid Schedule: Two courses can''t be taught at same time, unless elective or lab';
+
+					ELSEIF (`new_is_elective` AND EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						JOIN `courses`
+						ON `course_code`=`code`
+						AND `section_id`=`new_section_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						AND NOT `is_elective`
+					))
+					OR NOT `new_is_elective` AND EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						JOIN `courses`
+						ON `course_code`=`code`
+						AND `section_id`=`new_section_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						AND `is_elective`
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='Invalid Schedule: Elective & non-elective courses can''t be taught at same time';
+
+					ELSEIF `new_is_lab` AND NOT `new_is_elective` AND (
+						SELECT COUNT(*) > 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						JOIN `courses`
+						ON `course_code`=`code`
+						AND `section_id`=`new_section_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='Invalid Schedule: Can''t have more than 2 labs at same time';
 					END IF;
 				   END;
 	""")
-	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `timetable_same_fac_class_full_update`
+	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `timetable_same_fac_class_full_lunch_conflict_update`
 				   BEFORE UPDATE ON `timetables`
 				   FOR EACH ROW
 				   BEGIN
-					DECLARE `class_count` TINYINT UNSIGNED;
-					DECLARE `new_faculty_id`, `new_section_id` MEDIUMINT UNSIGNED;
+					DECLARE `new_is_lab`, `new_is_elective` BOOLEAN;
+					DECLARE `new_faculty_id`, `new_section_id`, `no_of_students` MEDIUMINT UNSIGNED;
+					DECLARE `new_course_code` VARCHAR(10);
 
-					SELECT `faculty_id`, `section_id`
-					INTO `new_faculty_id`, `new_section_id`
-					FROM `faculty_section_course`
-					WHERE `id`=NEW.`faculty_section_course_id`;
-
-					SELECT COUNT(*) INTO `class_count`
-					FROM `timetables`
-					JOIN `faculty_section_course` `FSC`
-					ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
-					WHERE `FSC`.`faculty_id`=`new_faculty_id`
-					AND `FSC`.`section_id`=`new_section_id`
-					AND `timetables`.`day`=NEW.`day`;
-
-					IF `class_count` >= 3
+					IF EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `classes`
+						ON `classes`.`id`=NEW.`class_id`
+						AND NOT `is_lab`
+						JOIN `courses`
+						ON `code`=`new_course_code`
+						AND NOT `is_elective`
+						AND `class_id`=NEW.`class_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						LIMIT 1
+					)
 						THEN SIGNAL SQLSTATE '45000'
-				   		SET MESSAGE_TEXT='Same faculty cannot take more than 3 class for the same section on the same day';
+						SET MESSAGE_TEXT='Non-lab classes can only be occupied by one section at a time';
+					END IF;
+
+					SELECT `faculty_id`, `section_id`, `course_code`, `is_lab`, `is_elective`
+					INTO `new_faculty_id`, `new_section_id`, `new_course_code`,
+					`new_is_lab`, `new_is_elective`
+					FROM `faculty_section_course` `FSC`
+					JOIN `classes`
+					ON `classes`.`id`=NEW.`class_id`
+					JOIN `courses`
+					ON `course_code`=`code`
+					AND `FSC`.`id`=NEW.`faculty_section_course_id`;
+
+					IF ((NEW.`period_id`=3 AND NOT `new_is_lab`) OR (NEW.`period_id`=4)) AND EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						AND `FSC`.`section_id`=`new_section_id`
+						AND `period_id`=5
+						AND `day`=NEW.`day`
+					)
+					OR NEW.`period_id`=5 AND EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						AND `FSC`.`section_id`=`new_section_id`
+						AND `period_id`=4
+						AND `day`=NEW.`day`
+					)
+						THEN SIGNAL SQLSTATE '45000'
+				   		SET MESSAGE_TEXT='Invalid Schedule: This hour is supposed for lunch';
 					END IF;
 
 					IF EXISTS (
 						SELECT 1
 						FROM `timetables`
-						JOIN `faculty_section_course` `FSC1`
-						ON `FSC1`.`id`=`faculty_section_course_id`
-						JOIN `faculty_section_course` `FSC2`
-						ON `FSC2`.`id`=NEW.`faculty_section_course_id`
-						AND `FSC1`.`faculty_id`=`FSC2`.`faculty_id`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						AND `faculty_id`=`new_faculty_id`
 						AND `day`=NEW.`day`
 						AND `period_id`=NEW.`period_id`
 						LIMIT 1
 					)
 						THEN SIGNAL SQLSTATE '45000'
 				   		SET MESSAGE_TEXT='Same faculty cannot take more than one class at the same time';
+					END IF;
+
+					IF (NOT `new_is_elective` AND NOT `new_is_lab` AND EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						AND `section_id`=`new_section_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						LIMIT 1
+					))
+					OR EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						JOIN `courses`
+						ON `code`=`course_code`
+						JOIN `classes`
+						ON `classes`.`id`=`class_id`
+						AND `section_id`=`new_section_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						AND NOT `is_elective`
+						AND NOT `is_lab`
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='Invalid Schedule: Two courses can''t be taught at same time, unless elective or lab';
+
+					ELSEIF (`new_is_elective` AND EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						JOIN `courses`
+						ON `course_code`=`code`
+						AND `section_id`=`new_section_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						AND NOT `is_elective`
+					))
+					OR NOT `new_is_elective` AND EXISTS (
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						JOIN `courses`
+						ON `course_code`=`code`
+						AND `section_id`=`new_section_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						AND `is_elective`
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='Invalid Schedule: Elective & non-elective courses can''t be taught at same time';
+
+					ELSEIF `new_is_lab` AND NOT `new_is_elective` AND (
+						SELECT COUNT(*) > 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						JOIN `courses`
+						ON `course_code`=`code`
+						AND `section_id`=`new_section_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='Invalid Schedule: Can''t have more than 2 labs at same time';
 					END IF;
 				   END;
 	""")

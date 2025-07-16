@@ -261,7 +261,7 @@ def get_classes(cursor: Cursor, /, *,
                 department: Optional[str] = None,
                 section_id: Optional[int] = None) -> Tuple[Dict[str, Union[bool, int]], ...]:
     if section_id:
-        cursor.execute("""SELECT `id`, `room_no`, `capacity`
+        cursor.execute("""SELECT `classes`.`id` AS `id`, `room_no`, `capacity`
                        FROM `section_class`
                        JOIN `classes`
                        ON `class_id`=`classes`.`id`
@@ -467,6 +467,34 @@ def get_section_id(cursor: Cursor, /, *,
         if s["section"] == section and isinstance(s["id"], int):
             return s["id"]
     return None
+
+def get_section_classes(cursor: Cursor, /, *,
+                        section_id: Optional[int] = None,
+                        class_id: Optional[int] = None) -> Tuple[Union[bool, Dict[str, Union[int, str]], ...]]:
+    if section_id:
+        if class_id:
+            cursor.execute("""SELECT 1
+                           FROM `section_class`
+                           WHERE `section_id`=%s
+                           AND `class_id`=%s
+                           LIMIT 1""", (section_id, class_id))
+            return (True,) if cursor.fetchone() else (False,)
+
+        else:
+            cursor.execute("""SELECT `class_id`
+                           FROM `section_class`
+                           WHERE `section_id`=%s
+                           LIMIT 1""", (section_id,))
+    else:
+        if class_id:
+            cursor.execute("""SELECT `section_id`
+                           FROM `section_class`
+                           WHERE `class_id`=%s
+                           LIMIT 1""", (class_id,))
+        else:
+            cursor.execute("""SELECT `section_id`, `class_id`
+                           FROM `section_class`""")
+    return cursor.fetchall()
 
 def get_faculties(cursor: Cursor, /, *,
                   campus_id: Optional[int] = None,

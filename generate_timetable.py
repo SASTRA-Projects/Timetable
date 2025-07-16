@@ -12,14 +12,15 @@ Assumptions made: * There are two lunch break, one at P-4 and other at P-5.
 				  (So that can be allotted at same time for all).
 				  * For Minor Electives also call the generate timetable manually.
 Considerations:  * while (no_of_times_allotted)*Class capacity < Student Strength:
-					* Allocate # no_of_times_allotted = 0, initially
+					* no_of_times_allotted = 0, initially
 """
 from typehints import *
 import show_data
 import insert_data
 import fetch_data
+import delete_data
 import random
-from typing import Optional, Dict, List, Tuple
+from typing import *
 import random
 from itertools import combinations
 from functools import reduce
@@ -27,8 +28,8 @@ from typehints import Connection, Cursor
 
 def generate_timetable(db_connector: Connection, cursor: Cursor,
                        campus_id: Optional[int] = None,
-                       days: List[str] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                       period_ids: List[int] = list(range(1,9)),
+                       days: Tuple[str] = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"),
+                       period_ids: Tuple[int] = tuple(range(1,9)),
                        minor_elective: int = 4) -> None:
 	def free_classes(day, period_id):
 		cursor.execute("""SELECT `id`
@@ -211,113 +212,127 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 		else:
 			return None
 
+	def try_compress(section_id):
+		cursor.execute("""SELECT `day`, `period_id`, `faculty_section_course_id`, `class_id`
+				 	   FROM `timetables`
+				 	   JOIN `faculty_section_course`
+					   ON `id`=`faculty_section_course_id`
+				 	   AND `section_id`=%s
+				 	   ORDER BY `day`, `period_id`""", (section_id,))
+		timetable = cursor.fetchall()
+		... # TODO
+
 	programmes = show_data.get_programmes(cursor, campus_id=campus_id)
 	sections = fetch_data.get_sections(cursor, campus_id=campus_id)
 	section_ids = {section["id"] for section in sections}
 	student_electives = fetch_data.get_student_electives(cursor)
 
-	# # 1. Allocate elective labs: Assume no elective if stream is None
-	# for programme in programmes:
-	# 	courses = fetch_data.get_courses(cursor, programme_id=programme["id"], elective=True)
-	# 	_sections =  [section for section in sections if section["programme_id"]=programme["id"]]
-	# 	for year in range(show_data.get_degree_duration(cursor, degree=programme["degree"])):
-	# 		_section_ids = {section["id"] for section in _sections if section["year"]==year}
-	# 		_student_ids = {student["student_id"] for section_id in _section_ids
-	# 						for student in fetch_data.get_section_students(cursor, section_id=section_id)}
-	# 		_student_electives = {course["code"]: student_ids for course in courses
-	# 					 		  if (student_ids := {student_id for se in student_electives
-	# 						   						  if se["course_code"]==course["code"] and se["student_id"] in _student_ids})}
-	# 		courses = set(_student_electives.keys())
-	# 		no_of_electives = 0
-	# 		student_id = student_electives[0][1][0]
-	# 		for se in student_electives:
-	# 			if student_id in se[1]:
-	# 				no_of_electives += 1
+	# 1. Allocate elective labs: Assume no elective if stream is None
+	for programme in programmes:
+		courses = fetch_data.get_courses(cursor, programme_id=programme["id"], elective=True)
+		_sections =  [section for section in sections if section["degree"]==programme["degree"]]
+		for year in range(show_data.get_degree_duration(cursor, degree=programme["degree"])):
+			_section_ids = {section["id"] for section in _sections if section["year"]==year}
+			_student_ids = {student["student_id"] for section_id in _section_ids
+							for student in fetch_data.get_section_students(cursor, section_id=section_id)}
+			_student_electives = {course["code"]: student_ids for course in courses
+						 		  if (student_ids := {se["student_id"] for se in student_electives
+							   						  if se["course_code"] == course["code"] and se["student_id"] in _student_ids})}
+			if not _student_electives:
+				continue
+			_courses = set(_student_electives.keys())
+			no_of_electives = 0
+			student_id = tuple(_student_electives[tuple(_courses)[0]])[0]
+			for course, student_ids in _student_electives.items():
+				if student_id in student_ids:
+					no_of_electives += 1
 
-	# 		if no_of_electives > 1:
-	# 			allowed = set(sorted_and_reverse(courses=courses, no_of_electives=no_of_electives))
-	# 			not_allowed = set()
-	# 			students = set()
-	# 			for se1 in student_electives:
-	# 				for student_id in se1[1]:
-	# 					if student_id in students:
-	# 						continue
-	# 					else:
-	# 						students.add(student_id)
-	# 					num = 0
-	# 					electives = set()
-	# 					for se2 in student_electives:
-	# 						if student_id in se2[1]:
-	# 							num += 1
-	# 							electives.add(se2["course_code"])
-	# 							if num == no_of_electives:
-	# 								break
-	# 					electives = tuple(sorted(electives))
-	# 					not_allowed.add(electives)
-	# 					not_allowed.add(electives[::-1])
+			if no_of_electives > 1:
+				allowed = set(sorted_and_reverse(courses=_courses, no_of_electives=no_of_electives))
+				not_allowed = set()
+				students = set()
+				for se1 in student_electives:
+					for student_id in se1[1]:
+						if student_id in students:
+							continue
+						else:
+							students.add(student_id)
+						num = 0
+						electives = set()
+						for se2 in student_electives:
+							if student_id in se2[1]:
+								num += 1
+								electives.add(se2["course_code"])
+								if num == no_of_electives:
+									break
+						electives = tuple(sorted(electives))
+						not_allowed.add(electives)
+						not_allowed.add(electives[::-1])
 
-	# 			allowed -= not_allowed
-	# 			allowed = sorted_and_reverse(combs=allowed)
-	# 			for c1 in allowed:
-	# 				for c2 in allowed:
-	# 					if c1 != c2 and c1[-1] == c2[0]:
-	# 						allowed.remove(c1)
-	# 						allowed.remove(c2)
-	# 						course = transitive(allowed, c1, c2)
-	# 						if not course:
-	# 							allowed.append(c1)
-	# 							allowed.append(c2)
-	# 						else:
-	# 							allowed.append(course)
-	# 							course = course[::-1]
-	# 							if course not in allowed:
-	# 								allowed.append(course)
-	# 							break
+				allowed -= not_allowed
+				allowed = sorted_and_reverse(combs=allowed)
+				for c1 in allowed:
+					for c2 in allowed:
+						if c1 != c2 and c1[-1] == c2[0]:
+							allowed.remove(c1)
+							allowed.remove(c2)
+							course = transitive(allowed, c1, c2)
+							if not course:
+								allowed.append(c1)
+								allowed.append(c2)
+							else:
+								allowed.append(course)
+								course = course[::-1]
+								if course not in allowed:
+									allowed.append(course)
+								break
 
-	# 			allowed = [set(course) for course in allowed]
-	# 			for course in allowed:
-	# 				allowed.remove(course)
-	# 				if course not in allowed:
-	# 					allowed.insert(0, course)
+				allowed = [set(course) for course in allowed]
+				for course in allowed:
+					allowed.remove(course)
+					if course not in allowed:
+						allowed.insert(0, course)
 
-	# 			allowed = sorted((tuple(sorted(course)) for course in allowed), key=lambda x: (-len(x), x))
-	# 			over = set()
-	# 			not_allowed = set()
-	# 			for course in allowed:
-	# 				if all(c in over for c in course):
-	# 					not_allowed.add(course)
-	# 				elif not any(c in over for c in course):
-	# 					over |= set(course)
-	# 				else:
-	# 					for c2 in course:
-	# 						if c2 not in over:
-	# 							if (c2,) == course:
-	# 								print(c2, course, 1)
-	# 								break # not deleting it
-	# 							elif (c2,) not in allowed:
-	# 								allowed.append((c2,))
-	# 					else:
-	# 						not_allowed.add(course)
+				allowed = sorted((tuple(sorted(course)) for course in allowed), key=lambda x: (-len(x), x))
+				over = set()
+				not_allowed = set()
+				for course in allowed:
+					if all(c in over for c in course):
+						not_allowed.add(course)
+					elif not any(c in over for c in course):
+						over |= set(course)
+					else:
+						for c2 in course:
+							if c2 not in over:
+								if (c2,) == course:
+									break # not deleting it
+								elif (c2,) not in allowed:
+									allowed.append((c2,))
+						else:
+							not_allowed.add(course)
 
-	# 			assert course != over, "Unable to allot for all the electives"
-	# 			for course in not_allowed:
-	# 				allowed.remove(course)
+				assert course != over, "Unable to allot for all the electives"
+				for course in not_allowed:
+					allowed.remove(course)
 
-	# 		else:
-	# 			allowed = [tuple(courses)]
+			else:
+				allowed = [tuple(_courses)]
 
-	# 		assert len(allowed) <= no_of_electives+1, f"Cannot allocate efficiently within {no_of_electives+1} periods"
-	# 		periods = {(day, period_id) for day in days for period_id in period_ids}
-	# 		if minor_elective:
-	# 			periods.remove(("Thursday", 7))
-	# 			periods.remove(("Thursday", 8))
-	# 			periods.remove(("Friday", 7))
-	# 			periods.remove(("Friday", 8))
+			assert len(allowed) <= no_of_electives+1, f"Cannot allocate efficiently within {no_of_electives+1} periods"
+			periods = {(day, period_id) for day in days for period_id in period_ids}
+			if minor_elective:
+				periods.remove(("Thursday", 7))
+				periods.remove(("Thursday", 8))
+				periods.remove(("Friday", 7))
+				periods.remove(("Friday", 8))
+			# TODO
+			print(allowed)
 
 	# 2. Allocate lab courses
 	for section_id in section_ids:
 		periods = {(day, period_id)
-				   for day in days for period_id in period_ids
+				   for day in days[::-1]
+				   for period_id in period_ids
 				   if period_id % 2 == 1}
 		if minor_elective:
 			periods.remove(("Thursday", 7))
@@ -326,7 +341,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 		cls = fetch_data.get_classes(cursor, section_id=section_id)[0]
 		faculty_courses = fetch_data.get_faculty_section_courses(cursor, section_id=section_id)
 		twice = []
-		db_connector.autocommit(False)
+		ctwice = False
 		for fc in faculty_courses:
 			course = fetch_data.get_lab_departments(cursor, course_code=fc["course_code"], elective=False)
 			if not course:
@@ -335,7 +350,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 			hrs = course["P"]
 			lab_departments = course["lab_departments"]
 			no_of_labs = len(lab_departments)
-			assert no_of_labs == 1 or 2* no_of_labs == hrs, "Number of lab-departments does not match with practical hours"
+			assert no_of_labs == 1 or 2 * no_of_labs == hrs, "Number of lab-departments does not match with practical hours"
 
 			labs = []
 			for ld in lab_departments:
@@ -354,45 +369,42 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 			while hrs:
 				try:
 					no_of_times = 1
-					class_day_period = labs[-1]
-					class_id = capacity = day = period_id = None
-					class_day_period = sorted(class_day_period, key=lambda x: x[0][0][1], reverse=True)
-					if not twice:
-						while class_day_period[0][1] not in periods:
-							class_day_period.pop(0)
-						class_id, capacity = class_day_period[0][0][0]
-						day, period_id = class_day_period[0][1]
-						if capacity < no_of_students // no_of_times:
-							no_of_times = 2
-					else:
+					class_day_period = sorted(labs[-1], key=lambda x: x[0][0][1], reverse=True)
+					while class_day_period[0][1] not in periods:
+						class_day_period.pop(0)
+					class_id, capacity = class_day_period[0][0][0]
+					day, period_id = class_day_period[0][1]
+					if capacity < no_of_students // no_of_times:
+						if ctwice:
+							for cdp in class_day_period:
+								if cdp[1] == twice[0]:
+									class_id, capacity = cdp[0][0]
+									day, period_id = twice[0]
+									break
 						no_of_times = 2
-						for cdp in class_day_period:
-							if cdp[1] == twice[0]:
-								class_id, capacity = cdp[0][0]
-								day, period_id = twice[0]
-								break
 
 					if capacity < no_of_students // no_of_times or not class_day_period:
-						if not twice:
+						if not ctwice:
 							print("Too many students & too less capacity in all the labs...", class_day_period, capacity, no_of_students)
 						else:
-							twice.clear() # Lab is too busy at this time...
+							ctwice = False # Lab is too busy at this time...
 							continue
-						return None	
+						return None
 					insert_data.add_timetable(db_connector, cursor, 
-											  day=day,
-											  period_id=period_id,
-											  faculty_section_course_id=fc["id"],
-											  class_id=class_id)
+											day=day,
+											period_id=period_id,
+											faculty_section_course_id=fc["id"],
+											class_id=class_id)
 					insert_data.add_timetable(db_connector, cursor,
-											  day=day,
-											  period_id=period_id+1,
-											  faculty_section_course_id=fc["id"],
-											  class_id=class_id)
+											day=day,
+											period_id=period_id+1,
+											faculty_section_course_id=fc["id"],
+											class_id=class_id)
 					class_day_period[0][0][0][1] -= no_of_students // no_of_times
 					prev_day = day
 					if no_of_times-1:
-						if not twice:
+						if not ctwice:
+							ctwice = True
 							twice.append((day, period_id))
 							while class_day_period[1][1] not in periods or class_day_period[1][1][0] == prev_day:
 								class_day_period.pop(1)
@@ -406,92 +418,110 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 									day, period_id = twice[1]
 									break
 							twice.clear()
+							ctwice = False
 						if capacity < no_of_students // 2:
 							print("Too many students & too less capacity in all the labs...", class_day_period, capacity, no_of_students)
 						insert_data.add_timetable(db_connector, cursor, 
-												  day=day,
-												  period_id=period_id,
-												  faculty_section_course_id=fc["id"],
-												  class_id=class_id)
+												day=day,
+												period_id=period_id,
+												faculty_section_course_id=fc["id"],
+												class_id=class_id)
 						insert_data.add_timetable(db_connector, cursor,
-												  day=day,
-												  period_id=period_id+1,
-												  faculty_section_course_id=fc["id"],
-												  class_id=class_id)
+												day=day,
+												period_id=period_id+1,
+												faculty_section_course_id=fc["id"],
+												class_id=class_id)
 						class_day_period[1][0][0][1] -= no_of_students // no_of_times
-						if twice:
+						if ctwice:
 							twice.append((day, period_id))
-					if not twice:
+							ctwice = True
+					if not ctwice:
 						periods.remove((day, period_id))
+					ctwice = True if twice else False
 					hrs -= 2
 					labs.pop()
 					print(section_id, day, period_id, fc, class_id)
 					db_connector.commit()
 				except Exception as exception:
 					exception = exception.args
-					db_connector.rollback()
-					if exception == (1644, "Same faculty cannot take more than 3 class for the same section on the same day"):
-						class_day_period.pop(no_of_times-1)
+					delete_data.delete_timetable(db_connector, cursor,
+												day=day, period_id=period_id, faculty_section_course_id=fc["id"], class_id=class_id)
+					delete_data.delete_timetable(db_connector, cursor,
+												day=day, period_id=period_id+1, faculty_section_course_id=fc["id"], class_id=class_id)
+					if exception[1] == "Same faculty cannot take more than 3 class for the same section on the same day":
+						for cdp in class_day_period:
+							if cdp[1][0] == day:
+								labs[-1].remove(cdp)
+						ctwice = False
+					elif exception[1] == "Same faculty cannot take more than one class at the same time":
+						for cdp in class_day_period:
+							if cdp[1] == (day, period_id):
+								labs[-1].remove(cdp)
+								break
+					elif exception[1] == "Invalid Schedule: This hour is supposed for lunch":
+						for cdp in class_day_period:
+							if cdp[1] == (day, period_id):
+								labs[-1].remove(cdp)
+								break
+						periods.remove((day, period_id))
 					elif exception == ("list index out of range",):
-						print("Can't allocate without having more than 3 classes a day...")
 						return None
-					print(f"Error {section_id}, {fc['faculty_id']}, {fc['id']} {fc['course_code']}: {exception}{no_of_students}")
+					print(f"Error {section_id} {day}{period_id} {fc["faculty_id"]}, {fc["id"]} {fc["course_code"]}: {exception}{no_of_students}")
 					continue
 
-	# Allocate electives
-	# courses = fetch_data.get_courses(cursor, elective=True)
-	# for course in courses:
-	# 	periods = [(day, period_id) for day in days for period_id in period_ids1]
-	# 	if minor_elective:
-	# 		periods.remove(("Thursday", 7))
-	# 		periods.remove(("Thursday", 8))
-	# 		periods.remove(("Friday", 7))
-	# 		periods.remove(("Friday", 8))
-	# 	hrs = course["P"]
-	# 	lab_classes = fetch_data.get_classes(cursor, campus_id=campus_id, lab=True, department=course["department"])
-	# 	while hrs:
-	# 		try:
-	# 			day, period_id = random.choice(periods)
-	# 			if period_id % 2 == 0:
-	# 				continue
-	# 			faculty_sections = [
-	# 				fs for fs in fetch_data.get_faculty_section_courses(cursor, course_code=course["code"])
-	# 				if fs["section_id"] in section_ids
-	# 			]
-	# 			section = fetch_data.get_section(cursor, faculty_sections[0]["section_id"])
-	# 			while True:
-	# 				no_of_students = no_of_elective_students(section["degree"], section["stream"], course["code"])
-	# 				classes = set()
-	# 				for _ in range(len(faculty_sections)):
-	# 					class_id = random.choice(lab_classes)["id"]
-	# 					capacity = class_capacity(class_id, day, period_id)
-	# 					no_of_students -= capacity
-	# 					if no_of_students <= 0:
-	# 						break
-	# 				insert_data.add_timetable(db_connector, cursor, 
-	# 											day=day,
-	# 											period_id=period_id,
-	# 											faculty_section_course_id=fs["id"],
-	# 											class_id=class_id)
-	# 				insert_data.add_timetable(db_connector, cursor, 
-	# 											day=day,
-	# 											period_id=period_id+1,
-	# 											faculty_section_course_id=fs["id"],
-	# 											class_id=class_id)
-	# 				hrs -= 2
-	# 				periods.remove((day, period_id))
-	# 				periods.remove((day, period_id+1))
-	# 				print(day, period_id, fs, class_id)
-	# 				break
-	# 		except Exception as exception:
-	# 			# if exception due to lab full
-	# 			# try:
-	# 			# another lab, if not possible then allocate at some other day, period_id
-	# 			exception = exception.args
-	# 			if exception[0] != 1062:
-	# 				...
-	# 			if exception[0] == 1644:
-	# 				...
-	# 			print(f"Error {fs}: {exception}")
-	# 			db_connector.rollback()
-	# 			continue
+	# 3. Allocate non-elective, non-lab hrs
+	for section in sections[::-1]:
+		period_ids = (1, 2, 3, 4, 6, 7, 8)
+		period_ids_weights = (6, 8, 11, 11, 11, 6, 4)
+		days_weights = 5 * (1,)
+		periods = [(day, period_id) for period_id in period_ids for day in days]
+		periods_weights = [day_w * period_w for period_w in period_ids_weights for day_w in days_weights]
+		if minor_elective:
+			idx = periods.index(("Thursday", 7))
+			periods_weights.pop(idx)
+			periods.pop(idx)
+			idx = periods.index(("Thursday", 8))
+			periods_weights.pop(idx)
+			periods.pop(idx)
+			idx = periods.index(("Friday", 7))
+			periods_weights.pop(idx)
+			periods.pop(idx)
+			idx = periods.index(("Friday", 8))
+			periods_weights.pop(idx)
+			periods.pop(idx)
+
+		faculty_courses = fetch_data.get_faculty_section_courses(cursor, section_id=section["id"])
+		class_id = fetch_data.get_section_classes(cursor, section_id=section["id"])[0]["class_id"]
+		print(section)
+		for fc in faculty_courses:
+			course = fetch_data.get_course(cursor, code=fc["course_code"])
+			if not course or course["is_elective"]:
+				continue
+			hrs = course["L"] + course["T"]
+			while hrs:
+				try:
+					day, period_id = random.choices(periods, weights=periods_weights)[0]
+					insert_data.add_timetable(db_connector, cursor,
+											  day=day,
+											  period_id=period_id,
+											  faculty_section_course_id=fc["id"],
+											  class_id=class_id)
+					hrs -= 1
+					idx = periods.index((day, period_id))
+					periods_weights.pop(idx)
+					periods.pop(idx)
+					db_connector.commit()
+				except Exception as exception:
+					exception = exception.args
+					delete_data.delete_timetable(db_connector, cursor,
+												day=day, period_id=period_id, faculty_section_course_id=fc["id"], class_id=class_id)
+					if exception[0] == 1644 and exception[1].find("Same faculty") == -1:
+						idx = periods.index((day, period_id))
+						periods_weights.pop(idx)
+						periods.pop(idx)
+						print(periods_weights, len(periods))
+					elif exception == ("list index out of range",):
+						print("list index out of range")
+						return None
+					print(f"Error {section["id"]},{day}{period_id} {fc["faculty_id"]}, {fc["id"]} {fc["course_code"]}: {exception}")
+					continue
