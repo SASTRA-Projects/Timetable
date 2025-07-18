@@ -5,7 +5,7 @@
 
 The **SASTRA Timetable Generation System** is an initiative to automate the complex process of class scheduling at [`SASTRA DEEMED To Be University`](https://www.sastra.edu). This system leverages modern technologies to create conflict-free timetables, reducing manual work and enhancing efficiency.
 
-Despite being a leader in technological adoption, SASTRA has managed timetables manually — at least until **January 2025**. This project addresses that gap by automating the timetable generation process using a well-structured database and an intelligent scheduling algorithm.
+Despite being a leader in technological adoption, SASTRA DEEMED UNIVERSITY has always managed timetables manually — at least until **July 2025**. This project addresses that gap by automating the timetable generation process using a well-structured database and an intelligent scheduling algorithm.
 
 
 ## 🚀 Features
@@ -25,9 +25,9 @@ Despite being a leader in technological adoption, SASTRA has managed timetables 
 - **Visualization:** [Mermaid.js](https://mermaid-js.github.io/) for ER diagrams
 
 
-## 🎯 Project Mission
+## 🎯 Project Vission & Mission
 
-At SASTRA, the pursuit of academic excellence has always been supported by innovation. This project aligns with that legacy by removing the burden of manual timetable calculation.
+At SASTRA DEEMED UNIVERSITY, the pursuit of academic excellence has always been supported by innovation. This project aligns with that legacy by removing the burden of manual timetable calculation.
 
 The goal is simple: **Let people focus on teaching and learning — not on figuring out class schedules.**
 
@@ -37,6 +37,22 @@ Through precise rule enforcement, the system prevents common scheduling issues, 
 - Elective clashes across sections
 - Invalid class-to-stream/course mappings
 
+## ⚔️ Challenges in Current Allocation System
+
+The manual timetabling process at SASTRA DEEMED UNIVERSITY, while functional, is far from straightforward. It demands significant coordination among the faculties. This hands-on approach, though managed effectively within tight deadlines, is both time-consuming and error-prone.
+
+### Problems Faced
+
+- **High Complexity:** Scheduling isn't just about assigning classes to time slots. It requires meticulous coordination across departments, especially when faculty teach students from multiple programs. The complexity escalates when handling shared electives and cross-department course combinations.
+
+- **Error-Prone & Time-Consuming:** Given the scale and variety of constraints (like room availability, elective preferences, and faculty clashes), even the most careful manual planning is vulnerable to mistakes, which may lead to last-minute changes, scheduling conflicts, or overbooked classrooms.
+
+- **Classrooms Shortages:** One of the most persistent issues is the lack of explicitly assigned classrooms during electives or overlapping sessions. Students often find themselves searching for an available room which causes confusion, stress, and a loss of valuable class time.
+
+- **Elective Allocation Complexity:**
+Students select electives, but managing various combinations can be overwhelming. When students choose different pairings of courses, allocating classrooms without overlaps becomes a puzzle.
+
+These struggles highlight a critical need for change. This project aims to ease these burdens by automating the process, creating a fair and efficient schedule that benefits everyone. Please, let’s work together to make this a reality!
 
 ## 🏗️ Database & Schema Design
 
@@ -124,10 +140,10 @@ See the [CONTRIBUTING.md](CONTRIBUTING.md) file for detailed information.
 
 Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) to ensure a collaborative and respectful environment.
 
-1. **Fork the Repository:** Click the “Fork” button on the [GitHub page](https://github.com/SASTRA-Projects/SASTRA/fork).
+1. **Fork the Repository:** Click the [“Fork”](https://github.com/SASTRA-Projects/SASTRA/fork) button on the [GitHub page](https://github.com/SASTRA-Projects/SASTRA).
 2. **Create a Branch:**
 ```sh
-  git checkout -b feature/your-feature-name
+  git checkout -b feature-name
 ```
 3. **Commit Your Changes:**
 ```sh
@@ -135,7 +151,7 @@ Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) to ensure a collaborativ
 ```
 4. **Push to Your Branch:**
 ```sh
-  git push origin feature/your-feature-name
+  git push origin feature-name
 ```
 5. **Submit a Pull Request:** Navigate to the **Pull Requests** tab on GitHub and submit your PR.
 
