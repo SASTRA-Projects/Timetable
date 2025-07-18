@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import Flask, redirect, render_template, request, session, url_for, make_response
 from typehints import *
 import secrets
 import show_data
@@ -16,7 +16,18 @@ def check_login() -> Optional[Response]:
 		return redirect(url_for("login"))
 	return None
 
+def nocache(view):
+	def no_cache_response(*args, **kwargs):
+		response = make_response(view(*args, **kwargs))
+		response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+		response.headers["Pragma"] = "no-cache"
+		response.headers["Expires"] = "0"
+		return response
+	no_cache_response.__name__ = view.__name__
+	return no_cache_response
+
 @app.route("/login", methods=["GET", "POST"])
+@nocache
 def login() -> Union[Response, str]:
 	if request.method == "GET":
 		if session.get("logged_in"):
@@ -47,6 +58,7 @@ def login() -> Union[Response, str]:
 		return render_template("failed.html", reason="Login information not entered properly!")
 
 @app.route("/faculty")
+@nocache
 def log_faculty() -> Union[Response, str]:
 	if not session.get("faculty") or not session.get("faculty_details"):
 		return render_template("login.html", user="ID", userType="number", auth="/auth_faculty", role="faculty")
@@ -153,9 +165,10 @@ def page_not_found(error: NotFound) -> tuple[str, int]:
 	return (render_template("404.html"), 404)
 
 if __name__ == "__main__":
-	app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
-	app.config['SESSION_COOKIE_HTTPONLY'] = True
-	app.config['SESSION_COOKIE_SECURE'] = True
+	app.config.update(
+		SESSION_COOKIE_SAMESITE="Strict",
+		SESSION_COOKIE_HTTPONLY=True,
+		SESSION_COOKIE_SECURE=True
+	)
 
-	app.config.update(SESSION_COOKIE_SECURE=True, SESSION_COOKIE_HTTPSONLY=True)
 	app.run(host="0.0.0.0", port=5000, debug=False)
