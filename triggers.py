@@ -382,17 +382,44 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   BEFORE INSERT ON `faculty_section_course`
 				   FOR EACH ROW
 				   BEGIN
+					IF NOT EXISTS (
+						SELECT `faculties`.`campus_id`=`sections`.`campus_id`
+						FROM `faculties`
+						JOIN `sections`
+						ON `faculties`.`id`=NEW.`faculty_id`
+						AND `sections`.`id`=NEW.`section_id`
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='Faculty and section are not from same campus';
+					END IF;
+
 				    IF EXISTS (
 						SELECT 1
 						FROM `faculty_section_course`
 						JOIN `courses`
 						ON `code`=`course_code`
-						AND `id`=NEW.`id`
+						AND `section_id`=NEW.`section_id`
+						AND `code`=NEw.`course_code`
 						AND NOT `P`
 						LIMIT 1
 					)
 						THEN SIGNAL SQLSTATE '45000'
-						SET MESSAGE_TEXT='Only lab classes can have more than 1 faculty';
+						SET MESSAGE_TEXT='Only lab courses can have more than 1 faculty';
+					END IF;
+
+					IF EXISTS (
+						SELECT 1
+						FROM `faculty_section_course`
+						JOIN `courses`
+						ON `code`=`course_code`
+						AND `is_elective`
+						AND `code`=NEW.`course_code`
+						AND `faculty_id`=NEW.`faculty_id`
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='Faculty can teach this elective for only one class';
 					END IF;
 
 					IF NOT `section_has_course`(NEW.`section_id`, NEW.`course_code`)
@@ -405,17 +432,44 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   BEFORE UPDATE ON `faculty_section_course`
 				   FOR EACH ROW
 				   BEGIN
+					IF NOT EXISTS (
+						SELECT `faculties`.`campus_id`=`sections`.`campus_id`
+						FROM `faculties`
+						JOIN `sections`
+						ON `faculties`.`id`=NEW.`faculty_id`
+						AND `sections`.`id`=NEW.`section_id`
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='Faculty and section are not from same campus';
+					END IF;
+
 				    IF EXISTS (
 						SELECT 1
 						FROM `faculty_section_course`
 						JOIN `courses`
 						ON `code`=`course_code`
-						AND `id`=NEW.`id`
+						AND `section_id`=NEW.`section_id`
+						AND `code`=NEw.`course_code`
 						AND NOT `P`
 						LIMIT 1
 					)
 						THEN SIGNAL SQLSTATE '45000'
-						SET MESSAGE_TEXT='Only lab classes can have more than 1 faculty';
+						SET MESSAGE_TEXT='Only lab courses can have more than 1 faculty';
+					END IF;
+
+					IF EXISTS (
+						SELECT 1
+						FROM `faculty_section_course`
+						JOIN `courses`
+						ON `code`=`course_code`
+						AND `is_elective`
+						AND `code`=NEW.`course_code`
+						AND `faculty_id`=NEW.`faculty_id`
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='Faculty can teach this elective for only one class';
 					END IF;
 
 					IF NOT `section_has_course`(NEW.`section_id`, NEW.`course_code`)
