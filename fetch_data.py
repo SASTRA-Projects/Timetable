@@ -1,6 +1,10 @@
 from argon2 import PasswordHasher, exceptions
-from typehints import *
+from typehints import Cursor, Dict, Optional, Tuple, Union
 
+"""
+Shows the data for tables,
+for which data will change frequently.
+"""
 def get_courses(cursor: Cursor, /, *,
                 programme_id: Optional[int] = None,
                 elective: Optional[bool] = None,
@@ -706,17 +710,31 @@ def get_faculty_details(cursor: Cursor, /, *,
             raise AssertionError("Incorrect Password")
     return faculty
 
-def get_student_details(cursor: Cursor, /, *,
-                        campus_id: Optional[int] = None,
-                        join_year: Optional[int] = None,
-                        programme_id: Optional[int] = None,
-                        roll_no: Optional[int] = None) -> None:
-    # TODO: ...
-    ...
+def get_section_minor_electives(cursor: Cursor, /, *,
+                                campus_id: Optional[int] = None,
+                                section_id: Optional[int] = None,
+                                course_code: Optional[str] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
+    if campus_id:
+        cursor.execute("""SELECT `section_id`, `course_code`
+                       FROM `section_minor_electives`
+                       JOIN `sections`
+                       ON `section_id`=`sections`.`id`
+                       AND `campus_id`=%s""", (campus_id,))
+    elif section_id:
+        cursor.execute("""SELECT `course_code`
+                       FROM `section_minor_electives`
+                       WHERE `section_id`=%s""", (section_id,))
+    elif course_code:
+        cursor.execute("""SELECT `section_id`
+                       FROM `section_minor_electives`
+                       WHERE `course_code`=%s""", (course_code,))
+    else:
+        cursor.execute("""SELECT * FROM `section_minor_electives`""")
+    return cursor.fetchall()
 
 def get_section_students(cursor: Cursor, /, *,
                          section_id: Optional[int] = None,
-                         student_id: Optional[int] = None):
+                         student_id: Optional[int] = None) -> Tuple[Dict[str, int], ...]:
     if section_id:
         cursor.execute("""SELECT `student_id`
                        FROM `section_students`

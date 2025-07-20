@@ -1,5 +1,7 @@
-from typehints import *
+from typehints import Connection, Cursor, Optional
 
+"""Delete rows from tables.
+"""
 def delete_timetable(db_connector: Connection,
 					 cursor: Cursor, /, *,
 					 day: Optional[str] = None,

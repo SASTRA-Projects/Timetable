@@ -1,4 +1,5 @@
-from typehints import *
+from typehints import Connection, Cursor
+
 
 def create_views(db_connector: Connection, cursor: Cursor) -> None:
 	r"""

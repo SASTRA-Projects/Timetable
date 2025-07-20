@@ -1,4 +1,5 @@
-from typehints import *
+from typehints import Connection, Cursor
+
 
 def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	r"""
@@ -253,8 +254,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	"""
 	Functional Dependencies
 	=======================
-	- `id` \u2192 `campus_id`, `degree`, `stream`, `section`, `year`
-	- `campus_id`, `degree`, `stream`, `section`, `year` \u2192 `id`
+	None Exist
 	"""
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `sections` (
 				   `id` MEDIUMINT UNSIGNED AUTO_INCREMENT,

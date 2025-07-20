@@ -1,5 +1,9 @@
-from typehints import *
+from typehints import Cursor, Dict, List, Optional, Tuple, Union
 
+"""
+Shows the data for tables,
+for which data won't change frequently.
+"""
 def get_campuses(cursor: Cursor, /, *,
 				 programme_id: Optional[int] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
 	if programme_id:

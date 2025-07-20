@@ -1,9 +1,9 @@
-from flask import Flask, redirect, render_template, request, session, url_for, make_response
-from typehints import *
-import secrets
-import show_data
+from flask import Flask, make_response, redirect, render_template, request, session, url_for
+from typehints import NotFound, Optional, Response, Union
 import fetch_data
 import mysql_connector as sql
+import secrets
+import show_data
 
 app = Flask(__name__, template_folder="templates")
 app.jinja_env.filters.pop("attr", None)

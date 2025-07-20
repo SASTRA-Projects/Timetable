@@ -1,38 +1,31 @@
-"""
-By Harikirshna Srinivasan.
-Assumptions made: * There are two lunch break, one at P-4 and other at P-5.
-					Either of which can be left out for lunch (mostly not both).
-				  * Lab hour (or practical) only start at odd period and spans 2 periods continuously. (For all course with P > 0).
-				  Sample Periods:
-					   1			2		   3		   4		   5		   6		   7		   8
-				  08:45-09:45  09:45-10:45 11:00-12:00 12:00-01:00 01:00-02:00 02:00-03:00 03:15-04:15 04:15-05:15
-				  E.g., Lab hour may start at Period 5 (i.e., at 01:00) and end at 03:00
-				  * First, allotted for core non-elective courses
-				  * Manually, call generate timetable for Major Electives.
-				  (So that can be allotted at same time for all).
-				  * For Minor Electives also call the generate timetable manually.
-Considerations:  * while (no_of_times_allotted)*Class capacity < Student Strength:
-					* no_of_times_allotted = 0, initially
-"""
-from typehints import *
-import show_data
-import insert_data
-import fetch_data
-import delete_data
-import random
-from typing import *
-import random
 from itertools import combinations
-from functools import reduce
-from typehints import Connection, Cursor
+from typehints import Connection, Cursor, Optional, Tuple
+import delete_data
+import fetch_data
+import insert_data
+import random
+import show_data
+
 
 def generate_timetable(db_connector: Connection, cursor: Cursor,
 					   campus_id: Optional[int] = None,
 					   days: Tuple[str] = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"),
-					   period_ids: Tuple[int] = tuple(range(1,9)),
-					   minor_elective: int = 4) -> None:
+					   period_ids: Tuple[int] = tuple(range(1,9))) -> None:
 
 	PERIODS = {(day, period_id) for day in days for period_id in period_ids}
+
+	def get_minor_elective_hrs(section_id):
+		minor_electives = {crs["course_code"] for crs in fetch_data.get_section_minor_electives(cursor, section_id=section_id)}
+		if not minor_electives:
+			return set()
+
+		cursor.execute("""SELECT `day`, `period_id`
+					   FROM `timetables`
+					   JOIN `faculty_section_course`
+					   ON `id`=`faculty_section_course_id`
+					   AND `course_code` IN %s
+					   AND `section_id`=%s""", (minor_electives, section_id))
+		return {(period["day"], period["period_id"]) for period in cursor.fetchall()}
 
 	def get_free_classes(no_of_students, day, period_id):
 		cursor.execute("""SELECT `id`
@@ -56,10 +49,10 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 		cursor.execute("""SELECT `day`, `period_id`
 				 	   FROM `timetables`
 					   JOIN `faculty_section_course` `FSC`
-					   ON `fsc`.`id`=`faculty_section_course_id`
+					   ON `FSC`.`id`=`faculty_section_course_id`
 					   AND `section_id`=%s""", (section_id,))
 		day_periods = {(dp["day"], dp["period_id"]) for dp in cursor.fetchall()}
-		return PERIODS - day_periods
+		return PERIODS - get_minor_elective_hrs(section_id) - day_periods
 
 	def no_of_elective_students(degree, stream, elective):
 		cursor.execute("""SELECT `stream`
@@ -218,7 +211,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 
 		return class_capacity
 
-	def max_lab_capacity(department, day, period_id, no_of_students = 0):
+	def max_lab_capacity(department, day, period_id, no_of_students=0):
 		class_capacity = lab_capacities(department, day, period_id)
 		class_capacity = sorted(list({(cls["class_id"], int(cls["capacity"])) for cls in class_capacity}), key=lambda x: x[1], reverse=True)
 		return [[*cls] for cls in class_capacity if cls[1] > no_of_students]
@@ -326,9 +319,6 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 					   AND `day`=%s
 					   LIMIT 1""", (faculty_id, section_id, day))
 		return cursor.fetchone()["cnt"] == 3
-
-	def is_third_lab(section_id, course, day):
-		... # TODO
 
 	def is_transfer_possible(from_day, from_period_id, to_day, to_period_id, faculty_id, section_id, course_code, class_id):
 		if (from_day, from_period_id) == (to_day, to_period_id):
@@ -471,13 +461,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 				allowed = [tuple(_courses)]
 
 			assert len(allowed) <= no_of_electives+1, f"Cannot allocate efficiently within {no_of_electives+1} periods"
-			periods = {(day, period_id) for day in days for period_id in period_ids}
-			if minor_elective:
-				periods.remove(("Thursday", 7))
-				periods.remove(("Thursday", 8))
-				periods.remove(("Friday", 7))
-				periods.remove(("Friday", 8))
-
+			periods = PERIODS - get_minor_elective_hrs(list(_section_ids)[0])
 			allowed = [tuple(sorted(((course, crs["L"], crs["P"], crs["T"])
 									  for _courses in allowed
 									  for course in _courses
@@ -538,9 +522,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 										if cdp[1] in _elective_hrs:
 											_lab_idx = idx
 											break
-
 									_labs.extend(tuple(range(no_of_sections)))
-
 								else:
 									class_day_period = sorted(labs[-1][0],
 								   					   key=lambda cdp: tuple(cdp[0][i][1] for i in range(len(cdp[0]))),
@@ -654,9 +636,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 
 								for section_id in _section_ids:
 									faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course[0])
-									if labs[-1][1] == "":
-										_faculties = faculties[0:1]
-									elif no_of_times == 2:
+									if no_of_times == 2:
 										_no_of_students = _half
 										mid = -(-len(faculties) // 2)
 										_faculties = faculties[:mid]
@@ -705,9 +685,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 								print(exception, course, faculties, 1, day, period_id)
 								for section_id in _section_ids:
 									faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course[0])
-									if labs[-1][1] == "":
-										_faculties = faculties[0]
-									elif _second_labs:
+									if _second_labs:
 										_faculties = faculties[:-(-len(faculties) // 2)]
 									else:
 										_faculties = faculties
@@ -817,13 +795,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 
 	# 2. Allocate lab courses
 	for section_id in section_ids:
-		periods = {(day, period_id)
-				   for day in days[::-1]
-				   for period_id in period_ids
-				   if period_id % 2 == 1}
-		if minor_elective:
-			periods.remove(("Thursday", 7))
-			periods.remove(("Friday", 7))
+		periods = {(day, period_id) for day, period_id in get_free_periods(section_id) if period_id % 2}
 		no_of_students = len(fetch_data.get_section_students(cursor, section_id=section_id))
 		cls = fetch_data.get_classes(cursor, section_id=section_id)[0]
 		faculty_courses = fetch_data.get_faculty_section_courses(cursor, section_id=section_id)
@@ -890,9 +862,6 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 						return None
 
 					_faculties = faculties
-					if labs[-1][1] == "":
-						_faculties = faculties[0:1]
-
 					for fsc in _faculties:
 						insert_data.add_timetable(db_connector, cursor,
 												  day=day,
@@ -951,7 +920,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 													 day=day, period_id=period_id, faculty_section_course_id=fsc["id"], class_id=class_id)
 						delete_data.delete_timetable(db_connector, cursor,
 													 day=day, period_id=period_id+1, faculty_section_course_id=fsc["id"], class_id=class_id)
-					if exception[1] == "Same faculty cannot take more than 3 class for the same section on the same day":
+					if "more than 3 class" in exception[1] or "more than 2 labs" in exception[1]:
 						for cdp in class_day_period:
 							if cdp[1][0] == day:
 								labs[-1][0].remove(cdp)
@@ -980,17 +949,9 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 		days_weights = 5 * (1,)
 		periods = [(day, period_id) for period_id in period_ids for day in days]
 		periods_weights = [day_w * period_w for period_w in period_ids_weights for day_w in days_weights]
-		if minor_elective:
-			idx = periods.index(("Thursday", 7))
-			periods_weights.pop(idx)
-			periods.pop(idx)
-			idx = periods.index(("Thursday", 8))
-			periods_weights.pop(idx)
-			periods.pop(idx)
-			idx = periods.index(("Friday", 7))
-			periods_weights.pop(idx)
-			periods.pop(idx)
-			idx = periods.index(("Friday", 8))
+		minor_electives = get_minor_elective_hrs(section["id"])
+		for period in minor_electives:
+			idx = periods.index(period)
 			periods_weights.pop(idx)
 			periods.pop(idx)
 

@@ -1,4 +1,5 @@
-from typehints import *
+from typehints import Connection, Cursor
+
 
 def create_relations(db_connector: Connection, cursor: Cursor) -> None:
 	r"""
@@ -18,6 +19,7 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
 	Tables Created
 	==============
 	- **``faculty_info``**: Stores faculty phone, salary, and password.
+	- **``section_minor_electives``**: Maps minor electives for each section.
 	- **``section_class``**: Links sections to classrooms (non-labs).
 	- **``section_students``**: Maps students to their sections.
 	- **``faculty_section_course``**: Assigns faculties to teach courses in sections.
@@ -60,6 +62,20 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
 				   FOREIGN KEY(`faculty_id`) REFERENCES `faculties`(`id`)
 				   ON UPDATE CASCADE ON DELETE CASCADE,
 				   CHECK(`phone` REGEXP '^[6789][0-9]{9}$')
+	)""")
+	"""
+	Functional Dependencies
+	=======================
+	None Exist
+	"""
+	cursor.execute("""CREATE TABLE IF NOT EXISTS `section_minor_electives` (
+				   `section_id` MEDIUMINT UNSIGNED NOT NULL,
+				   `course_code` VARCHAR(10) NOT NULL,
+				   FOREIGN KEY(`section_id`) REFERENCES `sections`(`id`)
+				   ON UPDATE CASCADE ON DELETE RESTRICT,
+				   FOREIGN KEY(`course_code`) REFERENCES `courses`(`code`)
+				   ON UPDATE CASCADE ON DELETE RESTRICT,
+				   PRIMARY KEY(`section_id`, `course_code`)
 	)""")
 	"""
 	Functional Dependencies
