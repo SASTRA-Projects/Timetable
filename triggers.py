@@ -209,23 +209,11 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `no_of_rooms_dept_update`
 				   BEFORE UPDATE ON `classes`
 				   FOR EACH ROW
-				   BEGIN
-					DECLARE `room_count` INT;
-					SELECT COUNT(*) INTO `room_count`
-					FROM `classes`
-					WHERE `building_id`=NEW.`building_id`;
-					IF `room_count` >= (SELECT `rooms`
-									  FROM `buildings`
-									  WHERE `id`=NEW.`building_id`)
-						THEN SIGNAL SQLSTATE '45000'
-						SET MESSAGE_TEXT='Limit Exceeded: Number of classrooms cannot exceed the number of rooms in the building';
-					END IF;
 					IF NEW.`is_lab` AND NEW.`department` IS NULL
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT='Missing Department: Lab classes must have a department';
 						CALL `dept_class`(NEW.`department`, NEW.`id`);
 					END IF;
-				   END;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `section_yr_programme_chk_insert`
 				  BEFORE INSERT ON `sections`
@@ -671,6 +659,22 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT='Invalid Schedule: Can''t have more than 2 labs at same time';
 					END IF;
+
+					IF `new_is_lab` AND (
+						SELECT COUNT(*)
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`faculty_section_course_id`
+						JOIN `courses`
+						ON `course_code`=`code`
+						AND `P`
+						AND `day`=NEW.`day`
+						AND `section_id`=`new_section_id`
+						AND `course_code`=`new_course_code`
+					) >= 2
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='A section cannot have more than 2 labs on the same day';
+					END IF;
 				   END;
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `timetable_same_fac_class_full_lunch_conflict_update`
@@ -800,23 +804,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					)
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT='Invalid Schedule: Elective & non-elective courses can''t be taught at same time';
-
-					ELSEIF `new_is_lab` AND NOT `new_is_elective` AND (
-						SELECT COUNT(*) > 1
-						FROM `timetables`
-						JOIN `faculty_section_course` `FSC`
-						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
-						JOIN `courses`
-						ON `course_code`=`code`
-						AND `section_id`=`new_section_id`
-						AND `day`=NEW.`day`
-						AND `period_id`=NEW.`period_id`
-						LIMIT 1
-					)
-						THEN SIGNAL SQLSTATE '45000'
-						SET MESSAGE_TEXT='Invalid Schedule: Can''t have more than 2 labs at same time';
 					END IF;
 				   END;
 	""")
 	db_connector.commit()
-# Trigger that a section can have atmost 2 labs (except electives) on the same day
