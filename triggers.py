@@ -382,12 +382,13 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   BEFORE INSERT ON `faculty_section_course`
 				   FOR EACH ROW
 				   BEGIN
-					IF NOT EXISTS (
-						SELECT `faculties`.`campus_id`=`sections`.`campus_id`
+					IF EXISTS (
+						SELECT 1
 						FROM `faculties`
 						JOIN `sections`
 						ON `faculties`.`id`=NEW.`faculty_id`
 						AND `sections`.`id`=NEW.`section_id`
+						AND `faculties`.`campus_id`!=`sections`.`campus_id`
 						LIMIT 1
 					)
 						THEN SIGNAL SQLSTATE '45000'
@@ -400,7 +401,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						JOIN `courses`
 						ON `code`=`course_code`
 						AND `section_id`=NEW.`section_id`
-						AND `code`=NEw.`course_code`
+						AND `code`=NEW.`course_code`
 						AND NOT `P`
 						LIMIT 1
 					)
@@ -432,12 +433,13 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   BEFORE UPDATE ON `faculty_section_course`
 				   FOR EACH ROW
 				   BEGIN
-					IF NOT EXISTS (
-						SELECT `faculties`.`campus_id`=`sections`.`campus_id`
+					IF EXISTS (
+						SELECT 1
 						FROM `faculties`
 						JOIN `sections`
 						ON `faculties`.`id`=NEW.`faculty_id`
 						AND `sections`.`id`=NEW.`section_id`
+						AND `faculties`.`campus_id`!=`sections`.`campus_id`
 						LIMIT 1
 					)
 						THEN SIGNAL SQLSTATE '45000'
