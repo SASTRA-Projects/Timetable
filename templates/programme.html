@@ -95,7 +95,7 @@
         <p style="text-align: center; font-size: 2em;">Available Campuses</p>
         <div class="btn-container">
             {% for campus in campuses %}
-                <a href="/programme/{{ degree }}/{{ stream }}/1/{{ campus }}" class="button-link">{{ campus }}</a>
+                <a href="/programme/{{ degree }}/{{ stream }}/ campus.name " class="button-link">{{ campus.name }}</a>
             {% endfor %}
         </div>
     {% endif %}
