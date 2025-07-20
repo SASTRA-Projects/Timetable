@@ -1,6 +1,12 @@
 from argon2 import PasswordHasher
-from typehints import *
+from typehints import Connection, Cursor, IntegrityError, Optional, Union
 
+
+"""
+Adds the data to the correspoding tables.
+For datas that will be added frequently,
+the functions are defined here.
+"""
 def add_faculty_info(db_connector: Connection,
 					 cursor: Cursor, /, *,
 					 faculty_id: Optional[int] = None,
@@ -17,7 +23,7 @@ def add_faculty_info(db_connector: Connection,
 					   (faculty_id, phone, salary, ph.hash(password)))
 		db_connector.commit()
 	except Exception as exception:
-		exception: tuple = exception.args
+		exception = exception.args
 		db_connector.rollback()
 		if verbose:
 			if exception[0] == 1062:
@@ -26,6 +32,15 @@ def add_faculty_info(db_connector: Connection,
 			elif exception[0] == 1452:
 				raise IntegrityError("Faculty ID does not exist in `faculties` table.")
 		raise ValueError("Faculty ID does not exist in `faculties` table or Faculty information already exists")
+
+def add_section_minor_elective(db_connector: Connection,
+							   cursor: Cursor, /, *,
+							   section_id: Optional[int] = None,
+							   course_code: Optional[str] = None) -> None:
+	cursor.execute("""INSERT INTO `section_minor_electives`
+				   (`section_id`, `course_code`)
+				   VALUES (%s, %s)""", (section_id, course_code))
+	db_connector.commit()
 
 def add_section_class(db_connector: Connection,
 					  cursor: Cursor, /, *,

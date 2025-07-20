@@ -1,7 +1,11 @@
-from typehints import *
+from typehints import Cursor, Dict, List, Optional, Tuple, Union
 
+"""
+Shows the data for tables,
+for which data won't change frequently.
+"""
 def get_campuses(cursor: Cursor, /, *,
-				 programme_id: Optional[int] = None) -> Tuple[Optional[Dict[str, Union[int, str]]], ...]:
+				 programme_id: Optional[int] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
 	if programme_id:
 		cursor.execute("""SELECT `campuses`.`id`,
 					   `campuses`.`name`
@@ -34,7 +38,7 @@ def get_campus_name(cursor: Cursor, /, *,
 
 def get_schools(cursor: Cursor, /, *,
 				campus_id: Optional[int] = None,
-				department: Optional[str] = None) -> Tuple[Optional[Dict[str, Union[int, str]]], ...]:
+				department: Optional[str] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
 	if campus_id and department:
 		cursor.execute("""SELECT `schools`.`id`, `schools`.`name`
 					   FROM `schools`
@@ -76,7 +80,7 @@ def get_school_id(cursor: Cursor, /, *,
 
 def get_buildings(cursor: Cursor, /, *,
 				  school_id: Optional[int] = None,
-				  campus_id: Optional[int] = None) -> Tuple[Optional[Dict[str, int]], ...]:
+				  campus_id: Optional[int] = None) -> Tuple[Dict[str, int], ...]:
 	if school_id:
 		cursor.execute("""SELECT `id`, `rooms` FROM `buildings`
 					   WHERE `school_id`=%s""", (school_id,))
@@ -91,13 +95,13 @@ def get_buildings(cursor: Cursor, /, *,
 def get_building_id(cursor: Cursor, /, *,
 					school_id: Optional[int] = None,
 					campus_id: Optional[int] = None) -> Optional[List[int]]:
-	buildings: Tuple[Optional[Dict[str, int]], ...] = get_buildings(cursor, school_id=school_id, campus_id=campus_id)
+	buildings = get_buildings(cursor, school_id=school_id, campus_id=campus_id)
 	if not buildings:
 		return None
 	return [building["id"] for building in buildings]
 
 def get_departments(cursor: Cursor, /, *,
-					school_id: Optional[int] = None) -> Tuple[Optional[Dict[str, str]], ...]:
+					school_id: Optional[int] = None) -> Tuple[Dict[str, str], ...]:
 	if school_id:
 		cursor.execute("""SELECT `department` FROM `school_departments`
 					   WHERE `school_id`=%s""", (school_id,))
@@ -105,7 +109,7 @@ def get_departments(cursor: Cursor, /, *,
 		cursor.execute("""SELECT * FROM `departments`""")
 	return cursor.fetchall()
 
-def get_degrees(cursor: Cursor, /) -> Tuple[Optional[Dict[str, str]], ...]:
+def get_degrees(cursor: Cursor, /) -> Tuple[Dict[str, str], ...]:
 	cursor.execute("""SELECT * FROM `degrees`""")
 	return cursor.fetchall()
 
@@ -118,7 +122,7 @@ def get_degree_duration(cursor: Cursor, /, *,
 	return result["duration"] if result else None
 
 def get_streams(cursor: Cursor, /, *,
-				department: Optional[str] = None) -> Tuple[Optional[Dict[str, str]], ...]:
+				department: Optional[str] = None) -> Tuple[Dict[str, str], ...]:
 	if department:
 		cursor.execute("""SELECT `stream`
 					   FROM `school_streams`
@@ -130,7 +134,7 @@ def get_streams(cursor: Cursor, /, *,
 def get_programmes(cursor: Cursor, /, *,
 				   campus_id: Optional[int] = None,
 				   degree: Optional[str] = None,
-				   stream: Optional[str] = None) -> Tuple[Optional[Dict[str, str]], ...]:
+				   stream: Optional[str] = None) -> Tuple[Dict[str, str], ...]:
 	if campus_id:
 		if degree and stream:
 			cursor.execute("""SELECT `id`, `degree`, `stream`

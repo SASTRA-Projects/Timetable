@@ -92,7 +92,7 @@ def add_campus(db_connector: Connection,
     .. code-block:: python
 
         >>> from SASTRA.mysql_connector import *
-        >>> 
+        >>>
         >>> connector, cursor = connect(
 				user=user,
 				password=password,
@@ -113,11 +113,11 @@ def add_campus(db_connector: Connection,
 
 > [!IMPORTANT]
 > The table & column names in the queries are case-sensitive.
-> 
+>
 > Use single quotes ('') in `mysql` (client), not double quotes("").
-> 
+>
 > Use backticks (\`\`) for table & column names.
-> 
+>
 > Use triple double-quotes (""" """) for queries in `pymysql`
 > for consistent styling.
 

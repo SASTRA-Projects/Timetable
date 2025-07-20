@@ -1,4 +1,5 @@
-from typehints import *
+from typehints import Connection, Cursor
+
 
 def create_timetable(db_connector: Connection, cursor: Cursor) -> None:
 	r"""
@@ -29,7 +30,7 @@ def create_timetable(db_connector: Connection, cursor: Cursor) -> None:
 				password="secret_pwd",
 				host="localhost"
 			)
-		
+
 		>>> create_database(connector, cursor)
 		>>> create_relations(connector, cursor)
 		>>> create_timetable(connector, cursor)
