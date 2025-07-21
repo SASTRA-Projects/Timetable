@@ -164,11 +164,11 @@ def faculty_details() -> str:
 def page_not_found(error: NotFound) -> tuple[str, int]:
 	return (render_template("404.html"), 404)
 
+
 if __name__ == "__main__":
 	app.config.update(
 		SESSION_COOKIE_SAMESITE="Strict",
 		SESSION_COOKIE_HTTPONLY=True,
 		SESSION_COOKIE_SECURE=True
 	)
-
 	app.run(host="0.0.0.0", port=5000, debug=False)

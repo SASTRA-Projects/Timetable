@@ -5,7 +5,7 @@
 
 The **SASTRA Timetable Generation System** is an initiative to automate the complex process of class scheduling at [`SASTRA DEEMED To Be University`](https://www.sastra.edu). This system leverages modern technologies to create conflict-free timetables, reducing manual work and enhancing efficiency.
 
-Despite being a leader in technological adoption, SASTRA DEEMED UNIVERSITY has always managed timetables manually — at least until **July 2025**. This project addresses that gap by automating the timetable generation process using a well-structured database and an intelligent scheduling algorithm.
+Although technologically advanced, SASTRA DEEMED UNIVERSITY has always managed timetables manually — at least until **July 2025**. This project addresses that gap by automating the timetable generation process using a well-structured database and an intelligent scheduling algorithm.
 
 
 ## 🚀 Features
@@ -25,7 +25,7 @@ Despite being a leader in technological adoption, SASTRA DEEMED UNIVERSITY has a
 - **Visualization:** [Mermaid.js](https://mermaid-js.github.io/) for ER diagrams
 
 
-## 🎯 Project Vission & Mission
+## 🎯 Project Vision & Mission
 
 At SASTRA DEEMED UNIVERSITY, the pursuit of academic excellence has always been supported by innovation. This project aligns with that legacy by removing the burden of manual timetable calculation.
 
@@ -39,7 +39,7 @@ Through precise rule enforcement, the system prevents common scheduling issues, 
 
 ## ⚔️ Challenges in Current Allocation System
 
-The manual timetabling process at SASTRA DEEMED UNIVERSITY, while functional, is far from straightforward. It demands significant coordination among the faculties. This hands-on approach, though managed effectively within tight deadlines, is both time-consuming and error-prone.
+The manual timetabling process at SASTRA DEEMED UNIVERSITY, while functional, is far from straightforward. It demands significant coordination among the faculties. While managed effectively within tight deadlines, this hands-on approach is both time-consuming and error-prone.
 
 ### Problems Faced
 
@@ -82,23 +82,32 @@ Triggers, stored procedures, and functions enforce data integrity, while the sys
 
 2. **Set Up a Virtual Environment:**
 
-- **Linux/macOS:**
-```sh
-  python3 -m venv venv
-  source venv/bin/activate
-```
+- <details>
+    <summary><strong>Linux/macOS</strong></summary>
 
-- **Windows (CMD):**
-```sh
-  python -m venv venv
-  venv\Scripts\activate
-```
+    ```sh
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+  </details>
 
-- **Windows (PowerShell):**
-```sh
-  python -m venv venv
-  .\venv\Scripts\Activate.ps1
-```
+- <details>
+    <summary><strong>Windows (CMD)</strong></summary>
+
+    ```sh
+      python -m venv venv
+      venv\Scripts\activate
+    ```
+  </details>
+
+- <details>
+    <summary><strong>Windows (PowerShell)</strong></summary>
+
+    ```sh
+      python -m venv venv
+      .\venv\Scripts\Activate.ps1
+    ```
+  </details>
 
 3. **Install Dependencies:**
 ```sh
@@ -109,13 +118,34 @@ Triggers, stored procedures, and functions enforce data integrity, while the sys
 Create a `.env` file for your DB credentials.
 
 5. **Run the Application:**
-```sh
-  python app.py
-```
+
+- <details>
+    <summary><strong>In Developer Mode</strong></summary>
+
+    ```sh
+      python app.py
+    ```
+  </details>
+
+- <details>
+    <summary><strong>In production level</strong></summary>
+
+    - **Windows:**
+    ```sh
+      waitress-serve --host=localhost --port=5000 app:app
+    ```
+
+    - **Linux/macOS:**
+    ```sh
+      gunicorn app:app --bind 0.0.0.0:5000
+    ```
+</details>
 
 6. **Access the Web Interface:**
 Open [http://localhost:5000](http://localhost:5000) in your browser.
 
+## 📊 System Overview (Coming Soon)
+*A high-level system diagram showing module interaction will be added shortly.*
 
 ## 🧠 Future Scope
 

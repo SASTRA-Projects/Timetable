@@ -1,6 +1,6 @@
 import importlib
 
-__version__ = "1.0.0a0"
+__version__ = "1.0.0b1"
 
 __all__ = [
     "add_data",

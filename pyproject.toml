@@ -1,8 +1,8 @@
 [project]
 name = "sastra-webapp"
-version = "1.0.0a0"
+version = "1.0.0b1"
 description = "SASTRA Timetable Web Application"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 dependencies = [
     "Flask==3.1.1",
