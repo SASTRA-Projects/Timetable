@@ -34,7 +34,6 @@ def login() -> Union[Response, str]:
 			return redirect(url_for("index"))
 		else:
 			return render_template("login.html", user="User", auth="/login", role="User")
-
 	elif request.form.get("user") and request.form.get("password"):
 		try:
 			sql.connect(user=request.form["user"], password=request.form["password"])
@@ -46,12 +45,7 @@ def login() -> Union[Response, str]:
 				session["logged_in"] = True
 			return redirect(url_for("index"))
 		except sql.pymysql.err.OperationalError:
-			return render_template("login.html",
-						user="User",
-						auth="/authenticate",
-						error_message="Invalid username or password",
-						role="User"
-				)
+			return render_template("login.html", user="User", auth="/authenticate", error_message="Invalid username or password", role="User")
 		except Exception:
 			return render_template("failed.html", reason="Unknown error occurred")
 	else:
@@ -69,11 +63,7 @@ def auth_faculty() -> Union[Response, str]:
 	if request.form.get("user") and request.form.get("password"):
 		try:
 			if sql.cursor:
-				session["faculty_details"] = fetch_data.get_faculty_details(
-												sql.cursor,
-												id=int(request.form["user"]),
-												password=request.form["password"]
-											)
+				session["faculty_details"] = fetch_data.get_faculty_details(sql.cursor, id=int(request.form["user"]), password=request.form["password"])
 				session["faculty"] = True
 				return redirect(url_for("faculty_details"))
 			return render_template("failed.html", reason="Unauthorized Login!")
@@ -158,6 +148,23 @@ def show_courses(degree, stream) -> str:
 	if sql.cursor:
 		courses = fetch_data.get_courses(sql.cursor, programme_id=show_data.get_programme_id(sql.cursor, degree=degree, stream=stream))
 		return render_template("course.html", courses=courses, degree=degree, stream=stream)
+	return render_template("failed.html", reason="Unknown error occurred")
+
+@app.route("/programme/<string:degree>/<string:stream>/<string:campus>")
+def show_years(degree: str, stream: str, campus: str) -> str:
+	if sql.cursor:
+		duration = show_data.get_degree_duration(sql.cursor, degree=degree)
+		if duration is None:
+			return render_template("failed.html", reason="Invalid Degree or Duration not found")
+		years = list(range(1, duration + 1))
+		return render_template("year.html", degree=degree, stream=stream, campus=campus, years=years)
+	return render_template("failed.html", reason="Unknown error occurred")
+
+@app.route("/programme/<string:degree>/<string:stream>/<int:year>/<string:campus>")
+def show_sections(degree: str, stream: str, year: int, campus: str) -> str:
+	if sql.cursor:
+		sections = fetch_data.get_sections(sql.cursor, degree=degree, stream=stream, year=year, campus=campus)
+		return render_template("section.html", sections=sections, degree=degree, stream=stream, year=year, campus=campus)
 	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/faculty/details")
