@@ -327,7 +327,7 @@ def add_campus_programme(db_connector: Connection,
       Cursor object for executing SQL commands.
     - **campus_id** : Optional[int]
       The campus ID (Programme offering campus).
-	- **programm_id** : Optional[int]
+	- **programme_id** : Optional[int]
 	  The programme ID.
 
     Examples

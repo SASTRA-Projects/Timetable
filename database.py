@@ -154,7 +154,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	"""
 	Functional Dependencies
 	=======================
-	- `code` \u2192 `name`, `department`, `credits`, `L`, `P`, `T`, `is_elective`
+	- `code` \u2192 `name`, `department`, `credits`, `L`, `P`, `T`
 	"""
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `courses` (
 				   `code` VARCHAR(10),
@@ -164,7 +164,6 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   `L` TINYINT UNSIGNED NOT NULL,
 				   `P` TINYINT UNSIGNED NOT NULL,
 				   `T` TINYINT UNSIGNED NOT NULL,
-				   `is_elective` BOOLEAN NOT NULL,
 				   PRIMARY KEY(`code`),
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -219,11 +218,12 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 	"""
 	Functional Dependencies
 	=======================
-	None Exist
+	- `course_code`, `is_elective` \u2192 `is_elective`
 	"""
 	cursor.execute("""CREATE TABLE IF NOT EXISTS `programme_courses` (
 				   `course_code` VARCHAR(10) NOT NULL,
 				   `programme_id` MEDIUMINT UNSIGNED NOT NULL,
+				   `is_elective` BOOLEAN NOT NULL,
 				   PRIMARY KEY(`course_code`, `programme_id`),
 				   FOREIGN KEY(`course_code`) REFERENCES `courses`(`code`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
