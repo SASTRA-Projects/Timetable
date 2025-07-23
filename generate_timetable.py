@@ -265,7 +265,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 			insert_data.add_timetable(db_connector, cursor, **timetable)
 			return True
 
-		cursor.execute("""SELECT `day`, `period_id`, `faculty_id``class_id`
+		cursor.execute("""SELECT `day`, `period_id`, `faculty_id`, `class_id`
 					   FROM `timetables`
 					   JOIN `faculty_section_course`
 					   ON `id`=`faculty_section_course_id`
