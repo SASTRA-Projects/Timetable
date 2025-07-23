@@ -144,7 +144,16 @@ def show_degree_programmes(degree: str) -> str:
 		return render_template("programme.html", programmes=programmes, degree=degree)
 	return render_template("failed.html", reason="Unknown error occurred")
 
-@app.route("/programme/<string:degree>/<string:stream>")
+@app.route("/programme/<string:programme>")
+def show_programme_campuses(programme: str) -> str:
+	if sql.cursor:
+		sections = fetch_data.get_sections_by_programme(sql.cursor, programme=programme)
+		campus_ids = {section["campus_id"] for section in sections if "campus_id" in section}
+		campuses = [ {"name": show_data.get_campus_name(sql.cursor, id=cid)} for cid in campus_ids ]
+		return render_template("programme.html", campuses=campuses, programme=programme)
+	return render_template("failed.html", reason="Unknown error occurred")
+
+@app.route("/programme/<string:degree>/<string:stream>/course")
 def show_courses(degree, stream) -> str:
 	if sql.cursor:
 		courses = fetch_data.get_courses(sql.cursor, programme_id=show_data.get_programme_id(sql.cursor, degree=degree, stream=stream))
@@ -163,7 +172,6 @@ def faculty_details() -> str:
 @app.errorhandler(404)
 def page_not_found(error: NotFound) -> tuple[str, int]:
 	return (render_template("404.html"), 404)
-
 
 if __name__ == "__main__":
 	app.config.update(
