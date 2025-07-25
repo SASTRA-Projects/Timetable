@@ -2,49 +2,24 @@
 
 {% block head %}
     <meta name="description"
-          content="Welcome to the home page! Shows Campuses, Departments, Degrees, and Faculty Details.">
+          content="Welcome to the home page! Shows Campuses, Degrees, and Faculty Details.">
     <style>
-        .lux-button {
-            padding: 1rem 2rem;
-            font-size: 1.2rem;
-            min-width: 260px;
-            text-align: center;
-            background-color: var(--menu-footer-bg-dark);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 3px 8px rgba(26, 145, 197, 0.4); /* subtle blue shadow */
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            cursor: pointer;
-        }
-
-        .lux-button:hover {
-            background-color: var(--accent-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 12px rgba(26, 145, 197, 0.5);
-        }
-
-        .lux-button:active {
-            transform: scale(0.97);
-        }
-
-        [data-theme="light"] .lux-button {
+        [data-theme="light"] .button {
             background-color: var(--accent);
             color: white;
         }
 
-        [data-theme="light"] .lux-button:hover {
+        [data-theme="light"] .button:hover {
             background-color: var(--accent-dark);
         }
 
-        .lux-wrapper {
+        .wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.6rem; /* slightly reduced vertical space */
+            gap: 0.6rem;
             margin-top: 1.5rem;
-            margin-bottom: 2rem; /* enough space to keep footer in view */
+            margin-bottom: 2rem;
         }
 
         html, body {
@@ -59,7 +34,7 @@
         }
 
         main {
-            flex: 1; /* makes footer stick to bottom if content is short */
+            flex: 1;
         }
     </style>
 {% endblock %}
@@ -70,25 +45,17 @@
 <main>
     <h1 style="text-align: center; font-size: 3em; margin-bottom: 1rem;">Welcome to the Home Page!</h1>
 
-    <div class="lux-wrapper">
+    <div class="wrapper">
         <form action="/campus">
-            <button type="submit" class="lux-button">Campuses</button>
-        </form>
-
-        <form action="/department">
-            <button type="submit" class="lux-button">Departments</button>
+            <button type="submit" class="button">Campuses</button>
         </form>
 
         <form action="/degree">
-            <button type="submit" class="lux-button">Degrees</button>
+            <button type="submit" class="button">Degrees</button>
         </form>
 
         <form action="/faculty">
-            <button type="submit" class="lux-button">Faculty Details</button>
-        </form>
-
-        <form action="/generate_timetable">
-            <button type="submit" class="lux-button">Generate Timetable</button>
+            <button type="submit" class="button">Faculty Details</button>
         </form>
     </div>
 </main>

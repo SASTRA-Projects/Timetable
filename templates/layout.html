@@ -25,8 +25,8 @@
       --input-border-light: #d1d5db;
       --input-border-dark: #3f4a4b;
       --error: #ef4444;
-      --shadow: 0 2px 12px rgba(26,145,197,0.5);
-      --footer-shadow: 0 -6px 12px rgb(26,145,197,0.5);
+      --shadow: 0 0.125rem 0.75rem rgba(26,145,197,0.5);
+      --footer-shadow: 0 -0.375rem 0.75rem rgb(26,145,197,0.5);
       --transition: all 0.3s ease;
     }
 
@@ -48,7 +48,7 @@
 
     body {
       font-family: Arial, "sans-serif";
-      line-height: 1.6;
+      line-height: 1.2;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -97,7 +97,7 @@
       font-size: 1.3rem;
       font-weight: 600;
       padding: 0.5rem 1rem;
-      border-radius: 6px;
+      border-radius: 0.375rem;
       background: none;
       border: none;
       cursor: pointer;
@@ -117,15 +117,15 @@
     }
 
     #themeToggle svg {
-      width: 20px;
-      height: 20px;
+      width: 1.25rem;
+      height: 1.25rem;
       fill: currentColor;
       transition: var(--transition);
     }
 
     #content {
       padding: 1rem 1.5rem;
-      max-width: 900px;
+      max-width: 56.25rem;
       margin: auto;
       flex: 1;
       animation: fadeIn 0.5s ease-in;
@@ -134,7 +134,7 @@
     @keyframes fadeIn {
       from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(0.625rem);
       }
       to {
         opacity: 1;
@@ -144,9 +144,8 @@
 
     h1 {
       text-align: center;
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-      font-weight: 600;
+      margin: 3rem 0;
+      font-weight: 800;
     }
 
     footer {
@@ -168,7 +167,7 @@
 
     hr {
       border: 0;
-      height: 1px;
+      height: 0.0625rem;
       background: var(--input-border-light);
       margin: 0.5rem 0;
       transition: var(--transition);
@@ -178,7 +177,7 @@
       background: var(--input-border-dark);
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 37.5rem) {
       nav ul {
         justify-content: space-between;
         gap: 0.5rem;
@@ -191,13 +190,13 @@
     .button {
       display: block;
       width: 100%;
-      max-width: 400px;
+      max-width: 25rem;
       margin: 1rem auto;
       padding: 1rem;
       background-color: var(--accent);
       color: white;
       text-align: center;
-      border-radius: 12px;
+      border-radius: 0.75rem;
       font-size: 1.2em;
       transition: background-color 0.3s, transform 0.2s;
     }
@@ -216,7 +215,7 @@
       margin: 1rem 0;
       padding: 1rem;
       background-color: var(--input-bg-light);
-      border-radius: 12px;
+      border-radius: 0.75rem;
       box-shadow: var(--shadow);
       transition: transform 0.2s ease;
     }
