@@ -125,7 +125,6 @@
 
     #content {
       padding: 1rem 1.5rem;
-      max-width: 56.25rem;
       margin: auto;
       flex: 1;
       animation: fadeIn 0.5s ease-in;
@@ -193,17 +192,25 @@
       max-width: 25rem;
       margin: 1rem auto;
       padding: 1rem;
-      background-color: var(--accent);
-      color: white;
+      background-color: var(--input-bg-dark);
+      color: var(--accent);
       text-align: center;
       border-radius: 0.75rem;
       font-size: 1.2em;
       transition: background-color 0.3s, transform 0.2s;
+      box-shadow: var(--shadow);
     }
 
-    .button:hover {
-      background-color: var(--accent-dark);
+    button:hover {
+      background-color: var(--input-bg-dark);
+      color: var(--accent);
       transform: scale(1.05);
+      cursor: pointer;
+    }
+    
+    [data-theme="light"] .button, [data-theme="light"] button:hover {
+        background-color: var(--input-bg-light);
+        color: var(--accent-dark);
     }
 
     .nobulletins {

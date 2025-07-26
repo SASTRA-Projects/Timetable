@@ -4,37 +4,13 @@
     <meta name="description"
           content="Welcome to the home page! Shows Campuses, Degrees, and Faculty Details.">
     <style>
-        [data-theme="light"] .button {
-            background-color: var(--accent);
-            color: white;
-        }
-
-        [data-theme="light"] .button:hover {
-            background-color: var(--accent-dark);
-        }
-
         .wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 0.6rem;
             margin-top: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            display: flex;
-            flex-direction: column;
-        }
-
-        main {
-            flex: 1;
+            margin-bottom: 1.5rem;
         }
     </style>
 {% endblock %}
@@ -42,7 +18,6 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<main>
     <h1 style="text-align: center; font-size: 3em; margin-bottom: 1rem;">Welcome to the Home Page!</h1>
 
     <div class="wrapper">
@@ -58,12 +33,4 @@
             <button type="submit" class="button">Faculty Details</button>
         </form>
     </div>
-</main>
-
-<script>
-    window.history.pushState(null, "", window.location.href);
-    window.onpopstate = function () {
-        window.location.href = "/login";
-    };
-</script>
 {% endblock %}
