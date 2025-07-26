@@ -8,16 +8,18 @@ cursor: Optional[Cursor] = None
 
 def connect(user: str,
 			password: str, *,
-			host: str = "mysql-93e938b-harikrishnasri3.f.aivencloud.com") -> Tuple[Connection, Cursor]:
+			host: str = "mysql-93e938b-harikrishnasri3.f.aivencloud.com",
+			charset: str = "utf8mb4",
+			port: int = 17216) -> Tuple[Connection, Cursor]:
 	global db_connector, cursor
 	db_connector = pymysql.connect(
-		charset="utf8mb4",
+		charset=charset,
 		connect_timeout=timeout,
 		cursorclass=Cursor,
 		host=host,
 		password=password,
 		read_timeout=timeout,
-		port=17216,
+		port=port,
 		user=user,
 		write_timeout=timeout,
 		autocommit=False
