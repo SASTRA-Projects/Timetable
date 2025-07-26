@@ -119,12 +119,6 @@ def show_buildings(campus: str, school: str) -> str:
 		return render_template("building.html", buildings=show_data.get_buildings(sql.cursor, school_id=school_id), school=school)
 	return render_template("failed.html", reason="Unknown error occurred")
 
-@app.route("/department")
-def show_departments() -> str:
-	if sql.cursor:
-		return render_template("department.html", departments=show_data.get_departments(sql.cursor))
-	return render_template("failed.html", reason="Unknown error occurred")
-
 @app.route("/degree")
 def show_degrees() -> str:
 	if sql.cursor:
