@@ -755,15 +755,16 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 										break
 
 								day, period_id = class_day_period[_cls_idx][1]
+								classes = class_day_period[_cls_idx][0][:no_of_sections]
 								for idx, section_id in enumerate(_section_ids):
-									class_id = class_day_period[_cls_idx][0][idx][0]
-									fsc = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course[0])[0]
-									insert_data.add_timetable(db_connector,
-															  cursor,
-															  day=day,
-															  period_id=period_id,
-															  faculty_section_course_id=fsc["id"],
-															  class_id=class_id)
+									fsc = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course[0])
+									for _fsc, class_id in zip(sorted(fsc, key=lambda x: x["id"]), classes):
+										insert_data.add_timetable(db_connector,
+																  cursor,
+																  day=day,
+																  period_id=period_id,
+																  faculty_section_course_id=_fsc["id"],
+																  class_id=class_id)
 									class_day_period.pop(_cls_idx)
 								_elective_hrs.add((day, period_id))
 								print(day, period_id, course, "theory")

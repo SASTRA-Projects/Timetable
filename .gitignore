@@ -1,4 +1,5 @@
 *.pem
+*.pdf
 a.py
 .*
 !.github/
