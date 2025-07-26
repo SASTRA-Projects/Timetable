@@ -985,7 +985,6 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 					idx = periods.index((day, period_id))
 					periods_weights.pop(idx)
 					periods.pop(idx)
-					print("Success")
 				except Exception as exception:
 					exception = exception.args
 					delete_data.delete_timetable(db_connector, cursor,
@@ -1000,5 +999,5 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 						return None
 					print(f"Error {section["id"]},{day}{period_id} {fc["faculty_id"]}, {fc["id"]} {fc["course_code"]}: {exception}")
 					continue
-
+			print("Success")
 			db_connector.commit()

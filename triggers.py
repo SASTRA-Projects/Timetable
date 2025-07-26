@@ -146,10 +146,27 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   RETURNS BOOLEAN
 				   NOT DETERMINISTIC
 				   READS SQL DATA
-					RETURN (SELECT `is_elective`
-							FROM `programme_courses`
-							WHERE `course_code`=`code`
-							AND `programme_id`=`get_section_programme_id`(`section_id`));
+					RETURN (SELECT EXISTS (
+								SELECT 1
+								FROM `programme_courses`
+								WHERE `course_code`=`code`
+								AND `is_elective`
+								AND `programme_id` IN (
+									SELECT `programmes`.`id`
+									FROM `programmes`
+									JOIN `campus_programmes` `CP`
+									ON `CP`.`programme_id`=`programmes`.`id`
+									JOIN `sections`
+									ON `sections`.`id`=`section_id`
+									AND `sections`.`degree`=`programmes`.`degree`
+									AND (`sections`.`stream` IS NULL
+										AND `sections`.`campus_id`=`CP`.`campus_id`
+										OR `sections`.`stream`=`programmes`.`stream`)
+									)
+								LIMIT 1
+							)
+						AS `is_elective`
+					)
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `campus_has_programme_department_insert`
 				   BEFORE INSERT ON `campus_programmes`
@@ -580,6 +597,9 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					SELECT `get_is_elective`(`new_course_code`, `new_section_id`)
 					INTO `new_is_elective`;
 
+					SELECT `new_is_elective` IS NOT NULL AND `new_is_elective`
+					INTO `new_is_elective`;
+
 					IF ((NEW.`period_id`=3 AND NOT `new_is_lab`) OR (NEW.`period_id`=4)) AND EXISTS (
 						SELECT 1
 						FROM `timetables`
@@ -758,6 +778,9 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					AND `FSC`.`id`=NEW.`faculty_section_course_id`;
 
 					SELECT `get_is_elective`(`new_course_code`, `new_section_id`)
+					INTO `new_is_elective`;
+
+					SELECT `new_is_elective` IS NOT NULL AND `new_is_elective`
 					INTO `new_is_elective`;
 
 					IF ((NEW.`period_id`=3 AND NOT `new_is_lab`) OR (NEW.`period_id`=4)) AND EXISTS (
