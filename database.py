@@ -131,8 +131,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   `department` VARCHAR(40) NOT NULL,
 				   PRIMARY KEY(`name`),
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   CHECK(`department` != '')
+				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
 	"""
 	Functional Dependencies
@@ -167,8 +166,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   PRIMARY KEY(`code`),
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   CHECK(`L` >= 0 AND `P` >= 0 AND `T` >= 0 AND (`L` + `P` + `T`) > 0),
-				   CHECK(`department` != '')
+				   CHECK(`L` >= 0 AND `P` >= 0 AND `T` >= 0 AND (`L` + `P` + `T`) > 0)
 	)""")
 	"""
 	Functional Dependencies
@@ -212,8 +210,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   FOREIGN KEY(`school_id`) REFERENCES `schools`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   CHECK(`department` != '')
+				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
 	"""
 	Functional Dependencies
@@ -248,8 +245,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   UNIQUE(`building_id`, `room_no`),
-				   CHECK(`department` != '')
+				   UNIQUE(`building_id`, `room_no`)
 	)""")
 	"""
 	Functional Dependencies
@@ -285,8 +281,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 				   FOREIGN KEY(`campus_id`) REFERENCES `campuses`(`id`)
 				   ON UPDATE CASCADE ON DELETE RESTRICT,
 				   FOREIGN KEY(`department`) REFERENCES `departments`(`name`)
-				   ON UPDATE CASCADE ON DELETE RESTRICT,
-				   CHECK(`department` != '')
+				   ON UPDATE CASCADE ON DELETE RESTRICT
 	)""")
 	"""
 	Functional Dependencies

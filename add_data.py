@@ -239,8 +239,7 @@ def add_course(db_connector: Connection,
 			   credits: Optional[int] = None,
 			   L: Optional[int] = None,
 			   P: Optional[int] = None,
-			   T: Optional[int] = None,
-			   is_elective: bool = False) -> None:
+			   T: Optional[int] = None) -> None:
 	r"""
     Add a new course record to the `courses` table.
 
@@ -264,8 +263,6 @@ def add_course(db_connector: Connection,
 	  The number of practical hours.
 	- **T** : Optional[int]
 	  The number of tutorial hours.
-    - **is_elective** : bool
-      True if the course is elective, False otherwise. (False by default)
 
     Examples
     ========
@@ -273,13 +270,10 @@ def add_course(db_connector: Connection,
 
 		>>> add_course(connector, cursor, code="EIE101R01", course="Basic Electronics Engineering", credits=3, L=2, P=2, T=0)
 	"""
-	cursor.execute("""INSERT INTO `courses` (`code`, `name`,
-											 `department`, `credits`,
-											 `L`, `P`, `T`,
-											 `is_elective`)
-
-				   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-				   (code, course, department, credits, L, P, T, is_elective))
+	cursor.execute("""INSERT INTO `courses`
+				   (`code`, `name`, `department`, `credits`, `L`, `P`, `T`)
+				   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+				   (code, course, department, credits, L, P, T))
 	db_connector.commit()
 
 def add_lab_department(db_connector: Connection,
@@ -382,7 +376,8 @@ def add_school_department(db_connector: Connection,
 def add_programme_course(db_connector: Connection,
 						 cursor: Cursor, /, *,
 						 programme_id: Optional[int] = None,
-						 course_code: Optional[str] = None) -> None:
+						 course_code: Optional[str] = None,
+						 elective: bool = False) -> None:
 	r"""
     Add a new programme-course record to the `programme_courses` table.
 
@@ -396,6 +391,8 @@ def add_programme_course(db_connector: Connection,
       The programme ID (Programme that has the course).
 	- **course_code** : Optional[str]
 	  The course code.
+    - **elective** : bool
+      True if the course is elective, False otherwise. (False by default)
 
     Examples
     ========
@@ -405,8 +402,9 @@ def add_programme_course(db_connector: Connection,
 		>>> add_programme_course(connector, cursor, campus_id=campus_id, programme_id=programme_id, course_code="EIE101R01")
 
 	"""
-	cursor.execute("""INSERT INTO `programme_courses` (`programme_id`, `course_code`)
-				   VALUES (%s, %s)""", (programme_id, course_code))
+	cursor.execute("""INSERT INTO `programme_courses`
+				   (`programme_id`, `course_code`, `is_elective`)
+				   VALUES (%s, %s, %s)""", (programme_id, course_code, elective))
 	db_connector.commit()
 
 def add_class(db_connector: Connection,

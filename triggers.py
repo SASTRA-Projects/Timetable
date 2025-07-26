@@ -124,13 +124,48 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 							LIMIT 1
 					);
 	""")
-	cursor.execute("""CREATE FUNCTION IF NOT EXISTS `get_is_elective`(`course_code` VARCHAR(10))
+	cursor.execute("""CREATE FUNCTION IF NOT EXISTS `get_section_programme_id`
+				   (`section_id` MEDIUMINT UNSIGNED)
+				   RETURNS MEDIUMINT UNSIGNED
+				   NOT DETERMINISTIC
+				   READS SQL DATA
+					RETURN (SELECT `programmes`.`id`
+							FROM `programmes`
+							JOIN `campus_programmes` `CP`
+							ON `CP`.`programme_id`=`programmes`.`id`
+							JOIN `sections`
+							ON `sections`.`id`=`section_id`
+							AND `sections`.`degree`=`programmes`.`degree`
+							AND (`sections`.`stream` IS NULL
+								AND `sections`.`campus_id`=`CP`.`campus_id`
+								OR `sections`.`stream`=`programmes`.`stream`)
+							LIMIT 1);
+	""")
+	cursor.execute("""CREATE FUNCTION IF NOT EXISTS `get_is_elective`
+				   (`code` VARCHAR(10), `section_id` MEDIUMINT UNSIGNED)
 				   RETURNS BOOLEAN
 				   NOT DETERMINISTIC
 				   READS SQL DATA
-					RETURN (SELECT `is_elective`
-							FROM `courses`
-							WHERE `code`=`course_code`);
+					RETURN (EXISTS (
+								SELECT 1
+								FROM `programme_courses`
+								WHERE `course_code`=`code`
+								AND `is_elective`
+								AND `programme_id` IN (
+									SELECT `programmes`.`id`
+									FROM `programmes`
+									JOIN `campus_programmes` `CP`
+									ON `CP`.`programme_id`=`programmes`.`id`
+									JOIN `sections`
+									ON `sections`.`id`=`section_id`
+									AND `sections`.`degree`=`programmes`.`degree`
+									AND (`sections`.`stream` IS NULL
+										AND `sections`.`campus_id`=`CP`.`campus_id`
+										OR `sections`.`stream`=`programmes`.`stream`)
+									)
+								LIMIT 1
+							)
+					);
 	""")
 	cursor.execute("""CREATE TRIGGER IF NOT EXISTS `campus_has_programme_department_insert`
 				   BEFORE INSERT ON `campus_programmes`
@@ -324,12 +359,8 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						SET MESSAGE_TEXT='Invalid Course: Course not found in given Section';
 					END IF;
 
-					IF NOT (
-						SELECT `is_elective`
-						FROM `courses`
-						WHERE `code`=NEW.`course_code`
-						LIMIT 1
-					) OR EXISTS (
+					IF NOT `get_is_elective`(NEW.`course_code`, NEW.`section_id`)
+					OR EXISTS (
 						SELECT 1
 						FROM `faculty_section_course`
 						WHERE `section_id`=NEW.`section_id`
@@ -350,12 +381,8 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						SET MESSAGE_TEXT='Invalid Course: Course not found in given Section';
 					END IF;
 
-					IF NOT (
-						SELECT `is_elective`
-						FROM `courses`
-						WHERE `code`=NEW.`course_code`
-						LIMIT 1
-					) OR EXISTS (
+					IF NOT `get_is_elective`(NEW.`course_code`, NEW.`section_id`)
+					OR EXISTS (
 						SELECT 1
 						FROM `faculty_section_course`
 						WHERE `section_id`=NEW.`section_id`
@@ -444,7 +471,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `section_id`=NEW.`section_id`
 						AND `code`=NEW.`course_code`
 						AND NOT `P`
-						AND NOT `is_elective`
+						AND NOT `get_is_elective`(`code`, `section_id`)
 						LIMIT 1
 					)
 						THEN SIGNAL SQLSTATE '45000'
@@ -482,7 +509,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `section_id`=NEW.`section_id`
 						AND `code`=NEW.`course_code`
 						AND NOT `P`
-						AND NOT `is_elective`
+						AND NOT `get_is_elective`(`code`, `section_id`)
 						LIMIT 1
 					)
 						THEN SIGNAL SQLSTATE '45000'
@@ -535,7 +562,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   BEGIN
 					DECLARE `new_is_lab`, `new_is_elective` BOOLEAN;
 					DECLARE `class_count` TINYINT UNSIGNED;
-					DECLARE `new_faculty_id`, `new_section_id`, `no_of_students` MEDIUMINT UNSIGNED;
+					DECLARE `new_faculty_id`, `new_section_id` MEDIUMINT UNSIGNED;
 					DECLARE `new_course_code` VARCHAR(10);
 
 					IF EXISTS (
@@ -546,7 +573,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND NOT `is_lab`
 						JOIN `courses`
 						ON `code`=`new_course_code`
-						AND NOT `is_elective`
+						AND NOT `get_is_elective`(`code`, `new_section_id`)
 						AND `class_id`=NEW.`class_id`
 						AND `day`=NEW.`day`
 						AND `period_id`=NEW.`period_id`
@@ -556,15 +583,18 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						SET MESSAGE_TEXT='Non-lab classes can only be occupied by one section at a time';
 					END IF;
 
-					SELECT `faculty_id`, `section_id`, `course_code`, `is_lab`, `is_elective`
+					SELECT `faculty_id`, `section_id`, `course_code`, `is_lab`
 					INTO `new_faculty_id`, `new_section_id`, `new_course_code`,
-					`new_is_lab`, `new_is_elective`
+					`new_is_lab`
 					FROM `faculty_section_course` `FSC`
 					JOIN `classes`
 					ON `classes`.`id`=NEW.`class_id`
 					JOIN `courses`
 					ON `course_code`=`code`
 					AND `FSC`.`id`=NEW.`faculty_section_course_id`;
+
+					SELECT `get_is_elective`(`new_course_code`, `new_section_id`)
+					INTO `new_is_elective`;
 
 					IF ((NEW.`period_id`=3 AND NOT `new_is_lab`) OR (NEW.`period_id`=4)) AND EXISTS (
 						SELECT 1
@@ -611,7 +641,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `period_id`=NEW.`period_id`
 						JOIN `courses`
 						ON `code`=`course_code`
-						AND NOT (`is_elective` AND `new_is_elective`)
+						AND NOT (`get_is_elective`(`code`, `new_section_id`) AND `new_is_elective`)
 						LIMIT 1
 					)
 						THEN SIGNAL SQLSTATE '45000'
@@ -640,7 +670,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `section_id`=`new_section_id`
 						AND `day`=NEW.`day`
 						AND `period_id`=NEW.`period_id`
-						AND NOT `is_elective`
+						AND NOT `get_is_elective`(`code`, `section_id`)
 						AND NOT `is_lab`
 						LIMIT 1
 					)
@@ -657,7 +687,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `section_id`=`new_section_id`
 						AND `day`=NEW.`day`
 						AND `period_id`=NEW.`period_id`
-						AND NOT `is_elective`
+						AND NOT `get_is_elective`(`code`, `section_id`)
 					))
 					OR NOT `new_is_elective` AND EXISTS (
 						SELECT 1
@@ -669,7 +699,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `section_id`=`new_section_id`
 						AND `day`=NEW.`day`
 						AND `period_id`=NEW.`period_id`
-						AND `is_elective`
+						AND `get_is_elective`(`code`, `section_id`)
 					)
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT='Invalid Schedule: Elective & non-elective courses can''t be taught at same time';
@@ -712,7 +742,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   FOR EACH ROW
 				   BEGIN
 					DECLARE `new_is_lab`, `new_is_elective` BOOLEAN;
-					DECLARE `new_faculty_id`, `new_section_id`, `no_of_students` MEDIUMINT UNSIGNED;
+					DECLARE `new_faculty_id`, `new_section_id` MEDIUMINT UNSIGNED;
 					DECLARE `new_course_code` VARCHAR(10);
 
 					IF EXISTS (
@@ -723,7 +753,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND NOT `is_lab`
 						JOIN `courses`
 						ON `code`=`new_course_code`
-						AND NOT `is_elective`
+						AND NOT `get_is_elective`(`code`, `new_section_id`)
 						AND `class_id`=NEW.`class_id`
 						AND `day`=NEW.`day`
 						AND `period_id`=NEW.`period_id`
@@ -733,15 +763,18 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						SET MESSAGE_TEXT='Non-lab classes can only be occupied by one section at a time';
 					END IF;
 
-					SELECT `faculty_id`, `section_id`, `course_code`, `is_lab`, `is_elective`
+					SELECT `faculty_id`, `section_id`, `course_code`, `is_lab`
 					INTO `new_faculty_id`, `new_section_id`, `new_course_code`,
-					`new_is_lab`, `new_is_elective`
+					`new_is_lab`
 					FROM `faculty_section_course` `FSC`
 					JOIN `classes`
 					ON `classes`.`id`=NEW.`class_id`
 					JOIN `courses`
 					ON `course_code`=`code`
 					AND `FSC`.`id`=NEW.`faculty_section_course_id`;
+
+					SELECT `get_is_elective`(`new_course_code`, `new_section_id`)
+					INTO `new_is_elective`;
 
 					IF ((NEW.`period_id`=3 AND NOT `new_is_lab`) OR (NEW.`period_id`=4)) AND EXISTS (
 						SELECT 1
@@ -775,7 +808,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `period_id`=NEW.`period_id`
 						JOIN `courses`
 						ON `code`=`course_code`
-						AND NOT (`is_elective` AND `new_is_elective`)
+						AND NOT (`get_is_elective`(`code`, `new_section_id`) AND `new_is_elective`)
 						LIMIT 1
 					)
 						THEN SIGNAL SQLSTATE '45000'
@@ -804,7 +837,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `section_id`=`new_section_id`
 						AND `day`=NEW.`day`
 						AND `period_id`=NEW.`period_id`
-						AND NOT `is_elective`
+						AND NOT `get_is_elective`(`code`, `section_id`)
 						AND NOT `is_lab`
 						LIMIT 1
 					)
@@ -821,7 +854,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `section_id`=`new_section_id`
 						AND `day`=NEW.`day`
 						AND `period_id`=NEW.`period_id`
-						AND NOT `is_elective`
+						AND NOT `get_is_elective`(`code`, `section_id`)
 					))
 					OR NOT `new_is_elective` AND EXISTS (
 						SELECT 1
@@ -833,10 +866,41 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `section_id`=`new_section_id`
 						AND `day`=NEW.`day`
 						AND `period_id`=NEW.`period_id`
-						AND `is_elective`
+						AND `get_is_elective`(`code`, `section_id`)
 					)
 						THEN SIGNAL SQLSTATE '45000'
 						SET MESSAGE_TEXT='Invalid Schedule: Elective & non-elective courses can''t be taught at same time';
+
+					ELSEIF `new_is_lab` AND NOT `new_is_elective` AND (
+						SELECT COUNT(*) > 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						JOIN `courses`
+						ON `course_code`=`code`
+						AND `section_id`=`new_section_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=NEW.`period_id`
+						LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='Invalid Schedule: Can''t have more than 2 labs at same time';
+					END IF;
+
+					IF `new_is_lab` AND (
+						SELECT COUNT(*)
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`faculty_section_course_id`
+						JOIN `courses`
+						ON `course_code`=`code`
+						AND `P`
+						AND `day`=NEW.`day`
+						AND `section_id`=`new_section_id`
+						AND `course_code`=`new_course_code`
+					) >= 2
+						THEN SIGNAL SQLSTATE '45000'
+						SET MESSAGE_TEXT='A section cannot have more than 2 labs on the same day';
 					END IF;
 				   END;
 	""")
