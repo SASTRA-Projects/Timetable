@@ -757,7 +757,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 								day, period_id = class_day_period[_cls_idx][1]
 								classes = class_day_period[_cls_idx][0][:no_of_sections]
 								for idx, section_id in enumerate(_section_ids):
-									fsc = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course[0])
+									fsc = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course[0])[:no_of_sections]
 									for _fsc, class_id in zip(sorted(fsc, key=lambda x: x["id"]), classes):
 										insert_data.add_timetable(db_connector,
 																  cursor,
