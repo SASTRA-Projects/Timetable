@@ -162,9 +162,7 @@ def show_years(degree: str, stream: str, campus: str) -> str:
 def show_sections(degree, stream, year, campus):
     try:
         
-        campus_id = show_data.get_campus_id(sql.cursor, campus=campus)
-
-        
+        campus_id = show_data.get_campus_id(sql.cursor, campus=campus)        
         sections = fetch_data.get_sections(
             sql.cursor,
             degree=degree,
@@ -172,7 +170,6 @@ def show_sections(degree, stream, year, campus):
             campus_id=campus_id,
             year=year
         )
-
         return render_template(
             "section.html",
             sections=sections,
@@ -181,7 +178,6 @@ def show_sections(degree, stream, year, campus):
             year=year,
             campus=campus
         )
-
     except Exception as e:
         return f"An error occurred: {e}", 500
 
