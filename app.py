@@ -138,7 +138,7 @@ def show_degree_programmes(degree: str) -> str:
 def show_programme_campuses(degree: str, stream: str) -> str:
 	if sql.cursor:
 		campuses = show_data.get_campuses(sql.cursor)  # only cursor passed
-		return render_template("programme.html", campuses=campuses, degree=degree, stream=stream)
+		return render_template("campus.html", campuses=campuses, degree=degree, stream=stream)
 	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/programme/<string:degree>/<string:stream>/course")
@@ -161,7 +161,7 @@ def show_years(degree: str, stream: str, campus: str) -> str:
 @app.route("/programme/<string:degree>/<string:stream>/<int:year>/<string:campus>")
 def show_sections(degree: str, stream: str, year: int, campus: str) -> str:
 	if sql.cursor:
-		sections = fetch_data.get_sections(sql.cursor, degree=degree, stream=stream, year=year, campus=campus)
+		sections = fetch_data.get_sections(sql.cursor, campus_id=campus, degree=degree, stream=stream, year=year)
 		return render_template("section.html", sections=sections, degree=degree, stream=stream, year=year, campus=campus)
 	return render_template("failed.html", reason="Unknown error occurred")
 
@@ -184,4 +184,4 @@ if __name__ == "__main__":
 		SESSION_COOKIE_HTTPONLY=True,
 		SESSION_COOKIE_SECURE=True
 	)
-	app.run(host="0.0.0.0", port=5000, debug=False)
+	app.run(host="0.0.0.0", port=5002, debug=False)

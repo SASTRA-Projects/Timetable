@@ -88,13 +88,7 @@
 {% endblock %}
 
 {% block content %}
-{% if degree and stream and year %}
-<p class="section-title">{{ degree }} - {{ stream }} ({{ year }})</p>
-{% elif degree and stream %}
-<p class="section-title">{{ degree }} - {{ stream }}</p>
-{% else %}
-<p class="section-title">Select a Campus</p>
-{% endif %}
+<p class="section-title">Available Campuses</p>
 
 {% if campuses|length == 1 %}
 <div class="center-single">
