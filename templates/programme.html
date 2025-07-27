@@ -55,11 +55,16 @@
         }
 
         .btn-container {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 20px;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 20px;
+        padding-left: 0;         /* ✅ Add this */
+        margin-left: auto;       /* ✅ Add this */
+        margin-right: auto;      /* ✅ Add this */
+        max-width: 1000px;       /* ✅ Optional: controls layout spread */
         }
+
     </style>
 {% endblock %}
 

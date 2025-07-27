@@ -134,13 +134,11 @@ def show_degree_programmes(degree: str) -> str:
 		return render_template("programme.html", programmes=programmes, degree=degree)
 	return render_template("failed.html", reason="Unknown error occurred")
 
-@app.route("/programme/<string:programme>")
-def show_programme_campuses(programme: str) -> str:
+@app.route("/programme/<string:degree>/<string:stream>")
+def show_programme_campuses(degree: str, stream: str) -> str:
 	if sql.cursor:
-		sections = fetch_data.get_sections_by_programme(sql.cursor, programme=programme)
-		campus_ids = {section["campus_id"] for section in sections if "campus_id" in section}
-		campuses = [ {"name": show_data.get_campus_name(sql.cursor, id=cid)} for cid in campus_ids ]
-		return render_template("programme.html", campuses=campuses, programme=programme)
+		campuses = show_data.get_campuses(sql.cursor)  # only cursor passed
+		return render_template("programme.html", campuses=campuses, degree=degree, stream=stream)
 	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/programme/<string:degree>/<string:stream>/course")

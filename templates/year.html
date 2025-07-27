@@ -71,7 +71,7 @@
 
     <div class="btn-container">
         {% for y in years %}
-            <a href="{{ url_for('view_sections', degree=degree, stream=stream, year=y, campus=campus) }}" class="year-button">Year-{{ y }}</a>
+            <a href="{{ url_for('show_sections', degree=degree, stream=stream, year=y, campus=campus) }}" class="year-button">Year-{{ y }}</a>
         {% endfor %}
     </div>
 {% endblock %}
