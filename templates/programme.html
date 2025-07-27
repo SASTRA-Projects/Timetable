@@ -1,3 +1,5 @@
+programme.html
+
 {% extends "layout.html" %}
 
 {% block head %}
@@ -55,16 +57,11 @@
         }
 
         .btn-container {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 20px;
-        padding-left: 0;         /* ✅ Add this */
-        margin-left: auto;       /* ✅ Add this */
-        margin-right: auto;      /* ✅ Add this */
-        max-width: 1000px;       /* ✅ Optional: controls layout spread */
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
         }
-
     </style>
 {% endblock %}
 
@@ -95,13 +92,5 @@
         </div>
     {% endif %}
 
-    <!--{% if campuses %}
-        <hr>
-        <p style="text-align: center; font-size: 2em;">Available Campuses</p>
-        <div class="btn-container">
-            {% for campus in campuses %}
-                <a href="/programme/{{ degree }}/{{ stream }}/{{ campus.name }}" class="button-link">{{ campus.name }}</a>
-            {% endfor %}
-        </div>
-    {% endif %}-->
+    
 {% endblock %}

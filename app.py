@@ -161,7 +161,7 @@ def show_years(degree: str, stream: str, campus: str) -> str:
 @app.route("/programme/<string:degree>/<string:stream>/<int:year>/<string:campus>")
 def show_sections(degree: str, stream: str, year: int, campus: str) -> str:
 	if sql.cursor:
-		sections = fetch_data.get_sections(sql.cursor, campus_id=campus, degree=degree, stream=stream, year=year)
+		sections = fetch_data.get_sections(sql.cursor, campus=campus, degree=degree, stream=stream, year=year)
 		return render_template("section.html", sections=sections, degree=degree, stream=stream, year=year, campus=campus)
 	return render_template("failed.html", reason="Unknown error occurred")
 
@@ -184,4 +184,4 @@ if __name__ == "__main__":
 		SESSION_COOKIE_HTTPONLY=True,
 		SESSION_COOKIE_SECURE=True
 	)
-	app.run(host="0.0.0.0", port=5002, debug=False)
+	app.run(host="0.0.0.0", port=5000, debug=False)

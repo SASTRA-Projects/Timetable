@@ -35,6 +35,14 @@
         color: white;
     }
 
+    .btn-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        padding: 1rem;
+    }
+
     .grid-list {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(18.75rem, 1fr)); /* 300px */
@@ -88,37 +96,15 @@
 {% endblock %}
 
 {% block content %}
-<p class="section-title">Available Campuses</p>
 
-{% if campuses|length == 1 %}
-<div class="center-single">
-    {% if degree and stream and year %}
-        <a href="{{ url_for('show_sections', degree=degree, stream=stream, year=year, campus=campuses[0].name) }}" class="button-link">
-            {{ campuses[0].name }}
-        </a>
-    {% elif degree and stream %}
-        <a href="{{ url_for('show_sections', degree=degree, stream=stream, year=1, campus=campuses[0].name) }}" class="button-link">
-            {{ campuses[0].name }}
-        </a>
-    {% else %}
-        <a href="/campus/{{ campuses[0].name }}" class="button-link">{{ campuses[0].name }}</a>
+    {% if campuses %}
+        <hr>
+        <p style="text-align: center; font-size: 2em;">Available Campuses</p>
+        <div class="btn-container">
+            {% for campus in campuses %}
+                <a href="/programme/{{ degree }}/{{ stream }}/{{ campus.name }}" class="button-link">{{ campus.name }}</a>
+            {% endfor %}
+        </div>
     {% endif %}
-</div>
-{% else %}
-<div class="grid-list">
-    {% for campus in campuses %}
-        {% if degree and stream and year %}
-            <a href="{{ url_for('show_sections', degree=degree, stream=stream, year=year, campus=campus.name) }}" class="button-link">
-                {{ campus.name }}
-            </a>
-        {% elif degree and stream %}
-            <a href="{{ url_for('show_sections', degree=degree, stream=stream, year=1, campus=campus.name) }}" class="button-link">
-                {{ campus.name }}
-            </a>
-        {% else %}
-            <a href="/campus/{{ campus.name }}" class="button-link">{{ campus.name }}</a>
-        {% endif %}
-    {% endfor %}
-</div>
-{% endif %}
+
 {% endblock %}
