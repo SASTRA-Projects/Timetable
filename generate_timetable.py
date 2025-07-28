@@ -802,7 +802,6 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 	for section_id in section_ids:
 		periods = {(day, period_id) for day, period_id in get_free_periods(section_id) if period_id % 2}
 		no_of_students = len(fetch_data.get_section_students(cursor, section_id=section_id))
-		cls = fetch_data.get_classes(cursor, section_id=section_id)[0]
 		faculty_courses = fetch_data.get_faculty_section_courses(cursor, section_id=section_id)
 		twice = []
 		ctwice = False
@@ -822,15 +821,14 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 			assert no_of_labs == 1 or 2 * no_of_labs == hrs, "Number of lab-departments did not match with practical hours"
 
 			labs = []
-			_cls, capacity = cls["id"], cls["capacity"]
+			cls = 0
 			for ld in lab_departments:
 				class_day_period = []
 				if ld == "":
 					for period in periods:
-						if cls["id"] not in (_cls := get_free_classes(no_of_students, *period)):
+						if not (cls := get_free_classes(no_of_students, *period) & get_free_classes(no_of_students, period[0], period[1]+1)):
 							pass
-						class_day_period.append((([_cls, capacity],), period))
-						_cls = cls["id"]
+						class_day_period.append((([_cls, no_of_students] for _cls in cls), period))
 				else:
 					for period in periods:
 						class_day_period.append((max_lab_capacity(ld, *period, no_of_students=-(-no_of_students // 2)), period))
@@ -951,7 +949,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 	# 3. Allocate non-elective, non-lab hrs
 	for section in sections[::-1]:
 		period_ids = (1, 2, 3, 4, 6, 7, 8)
-		period_ids_weights = (6, 8, 11, 11, 11, 6, 4)
+		period_ids_weights = (6, 7, 11, 12, 11, 6, 4)
 		days_weights = 5 * (1,)
 		periods = [(day, period_id) for period_id in period_ids for day in days]
 		periods_weights = [day_w * period_w for period_w in period_ids_weights for day_w in days_weights]
@@ -961,8 +959,11 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 			periods_weights.pop(idx)
 			periods.pop(idx)
 
+		no_of_students = len(fetch_data.get_section_students(cursor, section_id=section["id"]))
 		faculty_courses = fetch_data.get_faculty_section_courses(cursor, section_id=section["id"])
-		class_id = fetch_data.get_section_classes(cursor, section_id=section["id"])[0]["class_id"]
+		if class_id := fetch_data.get_section_classes(cursor, section_id=section["id"]):
+			class_id = class_id[0]["class_id"]
+
 		print(section)
 		for fc in faculty_courses:
 			course = fetch_data.get_course(cursor, code=fc["course_code"])
@@ -977,11 +978,13 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 			while hrs:
 				try:
 					day, period_id = random.choices(periods, weights=periods_weights)[0]
+					if not class_id:
+						roaming_id = list(get_free_classes(no_of_students, day, period_id))[0]
 					insert_data.add_timetable(db_connector, cursor,
 											  day=day,
 											  period_id=period_id,
 											  faculty_section_course_id=fc["id"],
-											  class_id=class_id)
+											  class_id=(class_id or roaming_id))
 					hrs -= 1
 					idx = periods.index((day, period_id))
 					periods_weights.pop(idx)
@@ -989,14 +992,14 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 				except Exception as exception:
 					exception = exception.args
 					delete_data.delete_timetable(db_connector, cursor,
-												day=day, period_id=period_id, faculty_section_course_id=fc["id"], class_id=class_id)
+												day=day, period_id=period_id,
+												faculty_section_course_id=fc["id"], class_id=(class_id or roaming_id))
 					if exception[0] == 1644 and exception[1].find("Same faculty") == -1:
 						idx = periods.index((day, period_id))
 						periods_weights.pop(idx)
 						periods.pop(idx)
-						print(periods_weights, len(periods))
 					elif len(exception) < 2:
-						print(exception)
+						print(exception, period_ids_weights, len(periods), day, period, class_id, roaming_id)
 						return None
 					print(f"Error {section["id"]},{day}{period_id} {fc["faculty_id"]}, {fc["id"]} {fc["course_code"]}: {exception}")
 					continue
