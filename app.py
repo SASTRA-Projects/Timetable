@@ -10,6 +10,9 @@ app.jinja_env.filters.pop("attr", None)
 app.jinja_env.autoescape = True
 app.secret_key = secrets.token_hex(16)
 
+DAYS: list[str] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+
+
 @app.before_request
 def check_login() -> Optional[Response]:
 	if not session.get("logged_in") and request.endpoint != "login" and request.endpoint != "authenticate":
@@ -50,8 +53,7 @@ def login() -> Union[Response, str]:
 						user="User",
 						auth="/authenticate",
 						error_message="Invalid username or password",
-						role="User"
-				)
+						role="User")
 		except Exception:
 			return render_template("failed.html", reason="Unknown error occurred")
 	else:
@@ -72,10 +74,9 @@ def auth_faculty() -> Union[Response, str]:
 				session["faculty_details"] = fetch_data.get_faculty_details(
 												sql.cursor,
 												id=int(request.form["user"]),
-												password=request.form["password"]
-											)
+												password=request.form["password"])
 				session["faculty"] = True
-				return redirect(url_for("faculty_details"))
+				return redirect(url_for("show_faculty_details"))
 			return render_template("failed.html", reason="Unauthorized Login!")
 		except AssertionError:
 			return render_template("login.html", user="ID", userType="number", auth="/auth_faculty", role="faculty", error_message="Invalid ID or Password")
@@ -139,19 +140,109 @@ def show_degree_programmes(degree: str) -> str:
 	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/programme/<string:degree>/<string:stream>")
-def show_courses(degree, stream) -> str:
+def show_courses(degree: str, stream: str) -> str:
 	if sql.cursor:
 		courses = fetch_data.get_courses(sql.cursor, programme_id=show_data.get_programme_id(sql.cursor, degree=degree, stream=stream))
 		return render_template("course.html", courses=courses, degree=degree, stream=stream)
 	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/faculty/details")
-def faculty_details() -> str:
+def show_faculty_details() -> str:
 	if sql.cursor:
 		if not session.get("faculty") or not session.get("faculty_details"):
-			raise ValueError("Illegal access or value is missing.")
+			return render_template("failed.html", reason="Illegal access or value is missing.")
 		faculty = session["faculty_details"]
 		return render_template("faculty.html", faculty=faculty, campus=show_data.get_campus_name(sql.cursor, id=faculty["campus_id"]))
+	return render_template("failed.html", reason="Unknown error occurred")
+
+@app.route("/faculty/timetable")
+def show_faculty_timetable() -> str:
+	if sql.cursor:
+		if not session.get("faculty") or not session.get("faculty_details"):
+			return render_template("failed.html", reason="Illegal access or value is missing.")
+		id = session["faculty_details"]["id"]
+		name = fetch_data.get_faculty(sql.cursor, id=id)["name"]
+
+		periods = fetch_data.get_periods(sql.cursor)
+		for period in periods:
+			period["time_range"] = f"{period["start_time"]}-{period["end_time"]}"
+
+		grid = {day: {period["id"]: "" for period in periods} for day in DAYS}
+		timetables = fetch_data.get_timetables(sql.cursor, faculty_id=id)
+		for row in timetables:
+			day = row["day"]
+			period_id = row["period_id"]
+			content = f"{row["course_code"]}-{row["faculty_id"]}({row["room_no"]})"
+			if row["is_lab"]:
+				content += "(Lab)"
+			if content:
+				if grid[day][period_id]:
+					grid[day][period_id] += "/"
+				grid[day][period_id] += content
+
+		course_data = {}
+		for fc in timetables:
+			faculty = name
+			course_code = fc["course_code"]
+			course = fetch_data.get_course(sql.cursor, code=course_code)
+			if course_code not in course_data:
+				course_data[course_code] = {
+					"name": course["name"],
+					"faculties": set(),
+					"credits": course["credits"],
+					"L": course["L"],
+					"P": course["P"],
+					"T": course["T"],
+				}
+			course_data[course_code]["faculties"].add(f"{faculty}({fc["faculty_id"]})")
+
+		for course in course_data.values():
+			course["faculties"] = ", ".join(course["faculties"])
+
+		title = "Timetable"
+		return render_template("timetable.html", title=title, days=DAYS, periods=periods, grid=grid, course_data=course_data)
+
+@app.route("/timetable/<int:section_id>")
+def show_timetables(section_id: int) -> str:
+	if sql.cursor:
+		periods= fetch_data.get_periods(sql.cursor)
+		section = fetch_data.get_section(sql.cursor, section_id=section_id)
+		campus = show_data.get_campus_name(sql.cursor, id=section["campus_id"])
+		title = f"{campus}-{section["degree"]} {section["stream"] or ""} {section["section"]} (Year {section["year"]})"
+		for period in periods:
+			period["time_range"] = f"{period["start_time"]}-{period["end_time"]}"
+		grid = {day: {period["id"]: "" for period in periods} for day in DAYS}
+		timetables = fetch_data.get_timetables(sql.cursor, section_id=section_id)
+		for row in timetables:
+			day = row["day"]
+			period_id = row["period_id"]
+			content = f"{row["course_code"]}-{row["faculty_id"]}({row["room_no"]})"
+			if row["is_lab"]:
+				content += "(Lab)"
+			if content:
+				if grid[day][period_id]:
+					grid[day][period_id] += "/"
+				grid[day][period_id] += content
+
+		course_data = {}
+		for fc in timetables:
+			faculty = fetch_data.get_faculty(sql.cursor, id=fc["faculty_id"])["name"]
+			course_code = fc["course_code"]
+			course = fetch_data.get_course(sql.cursor, code=course_code)
+			if course_code not in course_data:
+				course_data[course_code] = {
+					"name": course["name"],
+					"faculties": set(),
+					"credits": course["credits"],
+					"L": course["L"],
+					"P": course["P"],
+					"T": course["T"],
+				}
+			course_data[course_code]["faculties"].add(f"{faculty}({fc["faculty_id"]})")
+
+		for course in course_data.values():
+			course["faculties"] = ", ".join(course["faculties"])
+		return render_template("timetable.html", days=DAYS, periods=periods, grid=grid, course_data=course_data, title=title)
 	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.errorhandler(404)

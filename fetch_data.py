@@ -1,5 +1,6 @@
+from app import nocache
 from argon2 import PasswordHasher, exceptions
-from typehints import Cursor, Dict, Optional, Tuple, Union
+from typehints import Connection, Cursor, Dict, Optional, Tuple, Union
 
 """
 Shows the data for tables,
@@ -670,14 +671,13 @@ def get_faculty_details(cursor: Cursor, /, *,
             if faculty:
                 pwd: Union[float, int, str] = faculty["password"]
 
-            PasswordHasher().verify(pwd, password)
+            ph = PasswordHasher()
+            ph.verify(pwd, password)
         else:
             raise ValueError("Password must be a non-empty string")
 
     except exceptions.VerifyMismatchError:
         if faculty and pwd:
-            cursor.execute("""UPDATE `faculty_info`
-                           SET `password`=%s""", ph.hash(pwd))
             raise AssertionError("Incorrect Password")
     return faculty
 
@@ -792,3 +792,64 @@ def get_student_electives(cursor: Cursor, /, *,
     else:
         cursor.execute("""SELECT * FROM `student_electives`""")
     return cursor.fetchall()
+
+def get_periods(cursor: Cursor, /, *,
+                period_id: Optional[int] = None) -> Tuple[Dict[str, Union[bool, int, str]]]:
+    def format(tdelta):
+        total_minutes = tdelta.total_seconds() // 60
+        hours = int(total_minutes // 60)
+        minutes = int(total_minutes % 60)
+        return f"{hours:2d}:{minutes:02d}"
+
+    if period_id:
+        cursor.execute("""SELECT `start_time`, `end_time`, `is_break`
+                       FROM `periods`
+                       WHERE `id`=%s""", (period_id,))
+    else:
+        cursor.execute("""SELECT * FROM `periods`""")
+
+    periods = cursor.fetchall()
+    for period in periods:
+        period["start_time"] = format(period["start_time"])
+        period["end_time"] = format(period["end_time"])
+
+    return periods
+
+def get_timetables(cursor: Cursor, /, *,
+                   faculty_id: Optional[int] = None,
+                   section_id: Optional[int] = None,
+                   course_code: Optional[str] = None,
+                   class_id: Optional[int] = None) -> Tuple[Dict[str, Union[int, str]]]:
+    if class_id:
+        cursor.execute("""SELECT `day`, `period_id`,
+                       `faculty_section_course_id`,
+                       `building_id`, `room_no`, `capacity`,
+                       `is_lab`, `department`
+                       FROM `timetables`
+                       JOIN `classes`
+                       ON `class_id`=`classes`.`id`
+                       AND `class_id`=%s""", (class_id,))
+    else:
+        cursor.execute("""SELECT `day`, `period_id`,
+                       `faculty_section_course_id`, `class_id`,
+                       `building_id`, `room_no`, `capacity`,
+                       `is_lab`, `department`
+                       FROM `timetables`
+                       JOIN `classes`
+                       ON `class_id`=`classes`.`id`""")
+
+    timetables = cursor.fetchall()
+    if faculty_id or section_id or class_id:
+        faculty_section_course_ids = {fsc["id"]: {
+                "faculty_id": fsc.get("faculty_id", faculty_id),
+                "section_id": fsc.get("section_id", section_id),
+                "course_code": fsc.get("course_code", course_code)
+            }
+            for fsc in get_faculty_section_courses(cursor,
+                                                   faculty_id=faculty_id,
+                                                   section_id=section_id,
+                                                   course_code=course_code)}
+        timetables = [(timetable | faculty_section_course_ids[id])
+                      for timetable in timetables if (id := timetable["faculty_section_course_id"]) in faculty_section_course_ids]
+    return timetables
+

@@ -469,10 +469,11 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 									  if (crs := fetch_data.get_course(cursor, code=course))),
 									  key=lambda x: (sum(x[1:4]), x[2]),
 									  reverse=True))]
-			lab_periods = {period for period in periods if period[1] % 2 == 1}
 			for _courses in allowed:
 				_elective_hrs = set()
 				for course in _courses:
+					_crs_hrs = set()
+					lab_periods = [period for period in periods if period[1] % 2 == 1]
 					if not (_section_ids := get_section_course(programme["degree"], programme["stream"], course[0])):
 						continue
 
@@ -674,11 +675,11 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 																	  faculty_section_course_id=fsc["id"],
 																	  class_id=class_id)
 											class_day_period.pop(_next_idx)
-										_elective_hrs.add((second_day, second_period_id))
-										_elective_hrs.add((second_day, second_period_id+1))
+										_crs_hrs.add((second_day, second_period_id))
+										_crs_hrs.add((second_day, second_period_id+1))
 
-								_elective_hrs.add((day, period_id))
-								_elective_hrs.add((day, period_id+1))
+								_crs_hrs.add((day, period_id))
+								_crs_hrs.add((day, period_id+1))
 								print(day, period_id, course, "lab")
 								hrs -= 2
 								labs.pop()
@@ -737,6 +738,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 								continue
 
 					if course[1] + course[3]:
+						periods -= _crs_hrs
 						hrs = course[1] + course[3]
 						class_day_period = []
 						for period in periods:
@@ -791,11 +793,9 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 											class_day_period.remove(cdp)
 											break
 								continue
+						periods |= _crs_hrs
 
-				for period in _elective_hrs:
-					periods.remove(period)
-					if period[1] % 2 == 1:
-						lab_periods.remove(period)
+				periods -= _elective_hrs
 				db_connector.commit()
 
 	# 2. Allocate lab courses
@@ -846,6 +846,8 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 						class_day_period.pop(0)
 					class_id, capacity = class_day_period[0][0][0]
 					day, period_id = class_day_period[0][1]
+					if (day, period_id) in twice:
+						no_of_times = 2
 					if capacity < no_of_students:
 						if ctwice:
 							for cdp in class_day_period:
@@ -865,6 +867,8 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 						return None
 
 					_faculties = faculties
+					if no_of_times == 2:
+						_faculties = faculties[:-(-len(faculties) // 2)]
 					for fsc in _faculties:
 						insert_data.add_timetable(db_connector, cursor,
 												  day=day,
@@ -878,6 +882,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 												  class_id=class_id)
 					class_day_period[0][0][0][1] -= no_of_students // no_of_times
 					if no_of_times-1:
+						_faculties = faculties[-(-len(faculties) // 2):]
 						if not ctwice:
 							ctwice = True
 							twice.append((day, period_id))
@@ -923,7 +928,10 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 													 day=day, period_id=period_id, faculty_section_course_id=fsc["id"], class_id=class_id)
 						delete_data.delete_timetable(db_connector, cursor,
 													 day=day, period_id=period_id+1, faculty_section_course_id=fsc["id"], class_id=class_id)
-					if "more than 3 class" in exception[1] or "more than 2 labs" in exception[1]:
+					if len(exception) < 2:
+						print(exception)
+						return None
+					elif "more than 3 class" in exception[1] or "more than 2 labs" in exception[1]:
 						for cdp in class_day_period:
 							if cdp[1][0] == day:
 								labs[-1][0].remove(cdp)
@@ -939,9 +947,6 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 								labs[-1][0].remove(cdp)
 								break
 						periods.remove((day, period_id))
-					elif len(exception) < 2:
-						print(exception)
-						return None
 					print(f"Error {section_id} {day}{period_id} {fc["faculty_id"]}, {fc["id"]} {fc["course_code"]}: {exception}{no_of_students}")
 					continue
 			db_connector.commit()
@@ -994,13 +999,13 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 					delete_data.delete_timetable(db_connector, cursor,
 												day=day, period_id=period_id,
 												faculty_section_course_id=fc["id"], class_id=(class_id or roaming_id))
-					if exception[0] == 1644 and exception[1].find("Same faculty") == -1:
+					if len(exception) < 2:
+						print(exception, period_ids_weights, len(periods), day, period, class_id, roaming_id)
+						return None
+					elif exception[0] == 1644 and exception[1].find("more than") == -1:
 						idx = periods.index((day, period_id))
 						periods_weights.pop(idx)
 						periods.pop(idx)
-					elif len(exception) < 2:
-						print(exception, period_ids_weights, len(periods), day, period, class_id, roaming_id)
-						return None
 					print(f"Error {section["id"]},{day}{period_id} {fc["faculty_id"]}, {fc["id"]} {fc["course_code"]}: {exception}")
 					continue
 			print("Success")

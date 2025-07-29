@@ -55,7 +55,8 @@ def create_views(db_connector: Connection, cursor: Cursor) -> None:
 	timetable.create_timetable(db_connector, cursor)
 
 	cursor.execute("""CREATE OR REPLACE VIEW `faculty_view` AS
-				   SELECT * FROM `faculties`
+				   SELECT *
+				   FROM `faculties`
 				   JOIN `faculty_info`
 				   ON `faculties`.`id`=`faculty_info`.`faculty_id`
 	""")
