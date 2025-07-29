@@ -1,4 +1,3 @@
-from app import nocache
 from argon2 import PasswordHasher, exceptions
 from typehints import Connection, Cursor, Dict, Optional, Tuple, Union
 
