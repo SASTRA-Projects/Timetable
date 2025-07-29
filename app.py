@@ -165,14 +165,14 @@ def show_faculty_timetable() -> str:
 
 		periods = fetch_data.get_periods(sql.cursor)
 		for period in periods:
-			period["time_range"] = f"{period["start_time"]}-{period["end_time"]}"
+			period["time_range"] = f"{period['start_time']}-{period['end_time']}"
 
 		grid = {day: {period["id"]: "" for period in periods} for day in DAYS}
 		timetables = fetch_data.get_timetables(sql.cursor, faculty_id=id)
 		for row in timetables:
 			day = row["day"]
 			period_id = row["period_id"]
-			content = f"{row["course_code"]}-{row["faculty_id"]}({row["room_no"]})"
+			content = f"{row['course_code']}-{row['faculty_id']}({row['room_no']})"
 			if row["is_lab"]:
 				content += "(Lab)"
 			if content:
@@ -194,7 +194,7 @@ def show_faculty_timetable() -> str:
 					"P": course["P"],
 					"T": course["T"],
 				}
-			course_data[course_code]["faculties"].add(f"{faculty}({fc["faculty_id"]})")
+			course_data[course_code]["faculties"].add(f"{faculty}({fc['faculty_id']})")
 
 		for course in course_data.values():
 			course["faculties"] = ", ".join(course["faculties"])
@@ -208,15 +208,15 @@ def show_timetables(section_id: int) -> str:
 		periods= fetch_data.get_periods(sql.cursor)
 		section = fetch_data.get_section(sql.cursor, section_id=section_id)
 		campus = show_data.get_campus_name(sql.cursor, id=section["campus_id"])
-		title = f"{campus}-{section["degree"]} {section["stream"] or ""} {section["section"]} (Year {section["year"]})"
+		title = f"{campus}-{section['degree']} {section['stream'] or ''} {section['section']} (Year {section['year']})"
 		for period in periods:
-			period["time_range"] = f"{period["start_time"]}-{period["end_time"]}"
+			period["time_range"] = f"{period['start_time']}-{period['end_time']}"
 		grid = {day: {period["id"]: "" for period in periods} for day in DAYS}
 		timetables = fetch_data.get_timetables(sql.cursor, section_id=section_id)
 		for row in timetables:
 			day = row["day"]
 			period_id = row["period_id"]
-			content = f"{row["course_code"]}-{row["faculty_id"]}({row["room_no"]})"
+			content = f"{row['course_code']}-{row['faculty_id']}({row['room_no']})"
 			if row["is_lab"]:
 				content += "(Lab)"
 			if content:
@@ -238,7 +238,7 @@ def show_timetables(section_id: int) -> str:
 					"P": course["P"],
 					"T": course["T"],
 				}
-			course_data[course_code]["faculties"].add(f"{faculty}({fc["faculty_id"]})")
+			course_data[course_code]["faculties"].add(f"{faculty}({fc['faculty_id']})")
 
 		for course in course_data.values():
 			course["faculties"] = ", ".join(course["faculties"])
