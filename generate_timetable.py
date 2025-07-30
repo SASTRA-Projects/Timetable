@@ -504,7 +504,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 									class_day_period.append((max_lab_capacity(ld, *period, no_of_students=-(-num // 2)), period))
 							assert class_day_period, "No lab is available..."
 							assert ld != "" or len(class_day_period) >= no_of_sections, "Not enough classes"
-							labs.append((class_day_period, ld))
+							labs.append([class_day_period, ld])
 
 						if no_of_labs == 1:
 							labs *= (hrs // 2)
