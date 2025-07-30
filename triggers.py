@@ -627,8 +627,19 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					AND `day`=NEW.`day`;
 
 					IF `class_count` >= 3
+						OR EXISTS (
+							SELECT 1
+							FROM `timetables`
+							JOIN `classes`
+							ON `classes`.`id`=`class_id`
+							AND NOT `is_lab`
+							AND `day`=NEW.`day`
+							AND `period_id`=NEW.`period_id`
+							AND `faculty_section_course_id`=NEW.`faculty_section_course_id`
+							LIMIT 1
+					)
 						THEN SIGNAL SQLSTATE '45000'
-				   		SET MESSAGE_TEXT='Same faculty cannot take more than 3 class for the same section on the same day';
+				   		SET MESSAGE_TEXT='Same faculty cannot take more than 3 class or 1 theory class for the same section on the same day';
 					END IF;
 
 					IF EXISTS (
@@ -742,6 +753,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 				   FOR EACH ROW
 				   BEGIN
 					DECLARE `new_is_lab`, `new_is_elective` BOOLEAN;
+					DECLARE `class_count` TINYINT UNSIGNED;
 					DECLARE `new_faculty_id`, `new_section_id` MEDIUMINT UNSIGNED;
 					DECLARE `new_course_code` VARCHAR(10);
 
@@ -796,6 +808,30 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					)
 						THEN SIGNAL SQLSTATE '45000'
 				   		SET MESSAGE_TEXT='Invalid Schedule: This hour is supposed for lunch';
+					END IF;
+
+					SELECT COUNT(*) INTO `class_count`
+					FROM `timetables`
+					JOIN `faculty_section_course` `FSC`
+					ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+					AND `FSC`.`faculty_id`=`new_faculty_id`
+					AND `FSC`.`section_id`=`new_section_id`
+					AND `day`=NEW.`day`;
+
+					IF `class_count` >= 3
+						OR EXISTS (
+							SELECT 1
+							FROM `timetables`
+							JOIN `classes`
+							ON `classes`.`id`=`class_id`
+							AND NOT `is_lab`
+							AND `day`=NEW.`day`
+							AND `period_id`=NEW.`period_id`
+							AND `faculty_section_course_id`=NEW.`faculty_section_course_id`
+							LIMIT 1
+					)
+						THEN SIGNAL SQLSTATE '45000'
+				   		SET MESSAGE_TEXT='Same faculty cannot take more than 3 class or 1 theory class for the same section on the same day';
 					END IF;
 
 					IF EXISTS (
