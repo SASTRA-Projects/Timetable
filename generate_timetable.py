@@ -952,9 +952,9 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 			db_connector.commit()
 
 	# 3. Allocate non-elective, non-lab hrs
-	for section in sections[::-1]:
+	for section in sections:
 		period_ids = (1, 2, 3, 4, 6, 7, 8)
-		period_ids_weights = (6, 7, 11, 12, 11, 6, 4)
+		period_ids_weights = (4, 10, 15, 15, 14, 7, 3)
 		days_weights = 5 * (1,)
 		periods = [(day, period_id) for period_id in period_ids for day in days]
 		periods_weights = [day_w * period_w for period_w in period_ids_weights for day_w in days_weights]
