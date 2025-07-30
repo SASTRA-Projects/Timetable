@@ -126,7 +126,9 @@
     <script>
         function downloadTable() {
             const table = document.getElementById("timetable").innerHTML;
-            const title = document.querySelector("h2").textContent.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
+            const title = document.querySelector('h1').textContent
+                                  .replace(/[()]/g, "")
+                                  .replace(/[ -]/g, "_").toLocaleLowerCase();
             const htmlContent = `
                 <!DOCTYPE html>
                 <html>
@@ -160,7 +162,7 @@
                     </style>
                 </head>
                 <body>
-                    <h2>${document.querySelector("h2").textContent}</h2>
+                    <h2>${document.querySelector("h1").textContent}</h2>
                     ${table}
                 </body>
                 </html>`;
