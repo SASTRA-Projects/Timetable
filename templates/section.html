@@ -50,7 +50,9 @@
     <p style="text-align: center; font-size: 3em">{{ degree }} - {{ stream }} ({{ year }}) - {{ campus }}</p>
     <div class="btn-container">
         {% for section in sections %}
-            <a href="/programme/{{ degree }}/{{ stream }}/{{ year }}/{{ campus }}/{{ section }}" class="section-button">Section {{ section }}</a>
+        <a href="/programme/{{ degree }}/{{ stream }}/{{ year }}/{{ campus }}/{{ section['section'] }}" class="section-button">
+            Section {{ section['section'] }}
+        </a>
         {% endfor %}
     </div>
 {% endblock %}

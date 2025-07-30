@@ -137,7 +137,7 @@ def show_degree_programmes(degree: str) -> str:
 @app.route("/programme/<string:degree>/<string:stream>")
 def show_programme_campuses(degree: str, stream: str) -> str:
 	if sql.cursor:
-		campuses = show_data.get_campuses(sql.cursor)  # only cursor passed
+		campuses = show_data.get_campuses(sql.cursor,) 
 		return render_template("campus.html", campuses=campuses, degree=degree, stream=stream)
 	return render_template("failed.html", reason="Unknown error occurred")
 
