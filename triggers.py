@@ -533,7 +533,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					WHERE `student_id`=NEW.`student_id`
 					LIMIT 1;
 
-					IF NOT `section_has_course`(`new_section_id`, NEW.`course_code`)
+					IF NOT `get_is_elective`(NEW.`course_code`, `new_section_id`)
 						THEN SIGNAL SQLSTATE '45000'
 				   		SET MESSAGE_TEXT='Invalid Course: Course is not valid elective for the Student''s programme';
 				   	END IF;
@@ -550,7 +550,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					WHERE `student_id`=NEW.`student_id`
 					LIMIT 1;
 
-					IF NOT `section_has_course`(`new_section_id`, NEW.`course_code`)
+					IF NOT `get_is_elective`(NEW.`course_code`, `new_section_id`)
 						THEN SIGNAL SQLSTATE '45000'
 				   		SET MESSAGE_TEXT='Invalid Course: Course is not valid elective for the Student''s programme';
 				   	END IF;
