@@ -436,7 +436,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 					if course not in allowed:
 						allowed.insert(0, course)
 
-				allowed = sorted(tuple(allowed), key=lambda x: len(x), reverse=True)
+				allowed = sorted(tuple(tuple(course) for course in allowed), key=lambda x: len(x), reverse=True)
 				over = set()
 				not_allowed = set()
 				for course in allowed:
