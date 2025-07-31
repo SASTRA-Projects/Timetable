@@ -96,15 +96,16 @@
 {% endblock %}
 
 {% block content %}
-
-    {% if campuses %}
-        <hr>
-        <p style="text-align: center; font-size: 2em;">Available Campuses</p>
-        <div class="btn-container">
-            {% for campus in campuses %}
-                <a href="/programme/{{ degree }}/{{ stream }}/{{ campus.name }}" class="button-link">{{ campus.name }}</a>
-            {% endfor %}
+{% if not campuses %}
+    <h1 class="section-title">No Campus Found!</h1>
+{% else %}
+    <h1 class="section-title">Select a Campus</h1>
+    <div class="grid-list">
+        {% for campus in campuses %}
+        <div class="center-single">
+            <a class="button-link" href="/campus/{{ campus.name }}">{{ campus.name }}</a>
         </div>
-    {% endif %}
-
+        {% endfor %}
+    </div>
+{% endif %}
 {% endblock %}

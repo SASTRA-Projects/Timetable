@@ -139,12 +139,36 @@ def show_degree_programmes(degree: str) -> str:
 		return render_template("programme.html", programmes=programmes, degree=degree)
 	return render_template("failed.html", reason="Unknown error occurred")
 
-@app.route("/programme/<string:degree>/<string:stream>")
-def show_courses(degree: str, stream: str) -> str:
-	if sql.cursor:
-		courses = fetch_data.get_courses(sql.cursor, programme_id=show_data.get_programme_id(sql.cursor, degree=degree, stream=stream))
-		return render_template("course.html", courses=courses, degree=degree, stream=stream)
-	return render_template("failed.html", reason="Unknown error occurred")
+@app.route('/programme/<degree>/<programme>/course')
+def show_courses(degree, programme):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Step 1: Get programme_id using degree and programme name
+    cursor.execute("""
+        SELECT p.id FROM programmes p
+        JOIN streams s ON p.stream_id = s.id
+        JOIN degrees d ON s.degree_id = d.id
+        WHERE d.name = %s AND p.name = %s
+    """, (degree, programme))
+    row = cursor.fetchone()
+
+    if not row:
+        return f"No programme found for {degree} {programme}", 404
+
+    programme_id = row['id']
+
+    # Step 2: Get courses using your existing get_courses()
+    courses = get_courses(cursor, programme_id=programme_id)
+
+    # Step 3: Render HTML table (replace with your template if needed)
+    table = "<table border='1'><tr><th>Code</th><th>Name</th><th>Dept</th><th>L</th><th>T</th><th>P</th><th>Credit</th><th>Elective</th></tr>"
+    for course in courses:
+        table += f"<tr><td>{course['code']}</td><td>{course['name']}</td><td>{course['department']}</td><td>{course['L']}</td><td>{course['T']}</td><td>{course['P']}</td><td>{course['credits']}</td><td>{course['is_elective']}</td></tr>"
+    table += "</table>"
+
+    return table
+
 
 @app.route("/faculty/details")
 def show_faculty_details() -> str:
