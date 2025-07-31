@@ -596,7 +596,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					SELECT `get_is_elective`(`new_course_code`, `new_section_id`)
 					INTO `new_is_elective`;
 
-					IF ((NEW.`period_id`=3 AND NOT `new_is_lab`) OR (NEW.`period_id`=4)) AND EXISTS (
+					IF ((NEW.`period_id`=3 AND `new_is_lab`) OR (NEW.`period_id`=4)) AND EXISTS (
 						SELECT 1
 						FROM `timetables`
 						JOIN `faculty_section_course` `FSC`
@@ -604,6 +604,14 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `FSC`.`section_id`=`new_section_id`
 						AND `period_id`=5
 						AND `day`=NEW.`day`
+						UNION
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						AND `faculty_id`=`new_faculty_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=5
 					)
 					OR NEW.`period_id`=5 AND EXISTS (
 						SELECT 1
@@ -613,6 +621,14 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `FSC`.`section_id`=`new_section_id`
 						AND `period_id`=4
 						AND `day`=NEW.`day`
+						UNION
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						AND `faculty_id`=`new_faculty_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=4
 					)
 						THEN SIGNAL SQLSTATE '45000'
 				   		SET MESSAGE_TEXT='Invalid Schedule: This hour is supposed for lunch';
@@ -788,7 +804,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 					SELECT `get_is_elective`(`new_course_code`, `new_section_id`)
 					INTO `new_is_elective`;
 
-					IF ((NEW.`period_id`=3 AND NOT `new_is_lab`) OR (NEW.`period_id`=4)) AND EXISTS (
+					IF ((NEW.`period_id`=3 AND `new_is_lab`) OR (NEW.`period_id`=4)) AND EXISTS (
 						SELECT 1
 						FROM `timetables`
 						JOIN `faculty_section_course` `FSC`
@@ -796,6 +812,14 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `FSC`.`section_id`=`new_section_id`
 						AND `period_id`=5
 						AND `day`=NEW.`day`
+						UNION
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						AND `faculty_id`=`new_faculty_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=5
 					)
 					OR NEW.`period_id`=5 AND EXISTS (
 						SELECT 1
@@ -805,6 +829,14 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
 						AND `FSC`.`section_id`=`new_section_id`
 						AND `period_id`=4
 						AND `day`=NEW.`day`
+						UNION
+						SELECT 1
+						FROM `timetables`
+						JOIN `faculty_section_course` `FSC`
+						ON `FSC`.`id`=`timetables`.`faculty_section_course_id`
+						AND `faculty_id`=`new_faculty_id`
+						AND `day`=NEW.`day`
+						AND `period_id`=4
 					)
 						THEN SIGNAL SQLSTATE '45000'
 				   		SET MESSAGE_TEXT='Invalid Schedule: This hour is supposed for lunch';
