@@ -1,4 +1,3 @@
-it is my app.py(""from abishek"")-new
 from flask import Flask, make_response, redirect, render_template, request, session, url_for
 from typehints import NotFound, Optional, Response, Union
 import fetch_data
