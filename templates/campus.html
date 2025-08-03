@@ -104,7 +104,7 @@
         {% for campus in campuses %}
         <div class="center-single">
             {% if degree and stream %}
-            <a class="button-link" href="/programme/{{ degree }}/{{ stream }}/{{ programme_id }}/{{ campus.name }}">{{ campus.name }}</a>
+            <a class="button-link" href="/programme/{{ degree }}/{{ stream }}/{{ programme_id }}">{{ campus.name }}</a>
             {% else %}
             <a class="button-link" href="/campus/{{ campus.name }}">{{ campus.name }}</a>
             {% endif %}
