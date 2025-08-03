@@ -103,10 +103,10 @@
     <div class="grid-list">
         {% for campus in campuses %}
         <div class="center-single">
-            {% if degree and stream %}
-            <a class="button-link" href="/programme/{{ degree }}/{{ stream }}/{{ programme_id }}">{{ campus.name }}</a>
+            {% if degree and stream and programme_id is not none %}
+                <a class="button-link" href="/programme/{{ degree }}/{{ stream }}/{{campus.name}}">{{ campus.name }}</a>
             {% else %}
-            <a class="button-link" href="/campus/{{ campus.name }}">{{ campus.name }}</a>
+                <a class="button-link" href="/campus/{{ campus.name }}">{{ campus.name }}</a>
             {% endif %}
         </div>
         {% endfor %}

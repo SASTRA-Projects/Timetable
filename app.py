@@ -135,10 +135,13 @@ def show_degree_programmes(degree: str) -> str:
 	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/programme/<string:degree>/<string:stream>")
-def show_programme_campuses(degree: str, stream: str) -> str:
+def show_programme_stream(degree: str, stream: str) -> str:
 	if sql.cursor:
-		campuses = show_data.get_campuses(sql.cursor,) 
-		return render_template("campus.html", campuses=campuses, degree=degree, stream=stream)
+		programme_id = show_data.get_programme_id(sql.cursor, degree=degree, stream=stream)
+		if programme_id is None:
+			return render_template("failed.html", reason="Programme not found")
+		campuses = show_data.get_campuses(sql.cursor, programme_id=programme_id)
+		return render_template("campus.html", campuses=campuses, degree=degree, stream=stream, programme_id=programme_id)
 	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/programme/<string:degree>/<string:stream>/course")
@@ -180,6 +183,48 @@ def show_sections(degree, stream, year, campus):
         )
     except Exception as e:
         return f"An error occurred: {e}", 500
+	
+def show_timetables(section_id: int) -> str:
+	if sql.cursor:
+		periods= fetch_data.get_periods(sql.cursor)
+		section = fetch_data.get_section(sql.cursor, section_id=section_id)
+		campus = show_data.get_campus_name(sql.cursor, id=section["campus_id"])
+		title = f"{campus}-{section['degree']} {section['stream'] or ''} {section['section']} (Year {section['year']})"
+		for period in periods:
+			period["time_range"] = f"{period['start_time']}-{period['end_time']}"
+		grid = {day: {period["id"]: "" for period in periods} for day in DAYS}
+		timetables = fetch_data.get_timetables(sql.cursor, section_id=section_id)
+		for row in timetables:
+			day = row["day"]
+			period_id = row["period_id"]
+			content = f"{row['course_code']}-{row['faculty_id']}({row['room_no']})"
+			if row["is_lab"]:
+				content += "(Lab)"
+			if content:
+				if grid[day][period_id]:
+					grid[day][period_id] += "/"
+				grid[day][period_id] += content
+
+		course_data = {}
+		for fc in timetables:
+			faculty = fetch_data.get_faculty(sql.cursor, id=fc["faculty_id"])["name"]
+			course_code = fc["course_code"]
+			course = fetch_data.get_course(sql.cursor, code=course_code)
+			if course_code not in course_data:
+				course_data[course_code] = {
+					"name": course["name"],
+					"faculties": set(),
+					"credits": course["credits"],
+					"L": course["L"],
+					"P": course["P"],
+					"T": course["T"],
+				}
+			course_data[course_code]["faculties"].add(f"{faculty}({fc['faculty_id']})")
+
+		for course in course_data.values():
+			course["faculties"] = ", ".join(course["faculties"])
+		return render_template("timetable.html", days=DAYS, periods=periods, grid=grid, course_data=course_data, title=title)
+	return render_template("failed.html", reason="Unknown error occurred")	
 
 @app.route("/faculty/details")
 def faculty_details() -> str:
