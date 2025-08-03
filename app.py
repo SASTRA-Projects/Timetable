@@ -177,7 +177,7 @@ def show_degree_programmes(degree: str) -> str:
 		return render_template("programme.html", programmes=programmes, degree=degree)
 	return render_template("failed.html", reason="Unknown error occurred")
 
-@app.route("/programme/<string:degree>/<string:stream>/<int:programme_id>")
+@app.route("/programme/<string:degree>/<string:stream>/<int:programme_id>/<string:campus_name>")
 def show_programme_campuses(degree: str, stream: str, programme_id: int) -> str:
     if sql.cursor:
         campuses = show_data.get_campuses(sql.cursor, programme_id=programme_id)
@@ -243,4 +243,4 @@ if __name__ == "__main__":
 		SESSION_COOKIE_HTTPONLY=True,
 		SESSION_COOKIE_SECURE=True
 	)
-	app.run(host="0.0.0.0", port=5000, debug=False)
+	app.run(host="0.0.0.0", port=5002, debug=False)
