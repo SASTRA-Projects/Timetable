@@ -50,7 +50,6 @@ def close() -> None:
 	if db_connector:
 		db_connector.commit()
 		db_connector.close()
-	exit()
 
 
 if __name__ == "__main__":

@@ -41,10 +41,8 @@ def login() -> Union[Response, str]:
 	elif request.form.get("user") and request.form.get("password"):
 		try:
 			sql.connect(user=request.form["user"], password=request.form["password"])
-			import views
 			import triggers
 			if sql.db_connector and sql.cursor:
-				views.create_views(sql.db_connector, sql.cursor)
 				triggers.create_triggers(sql.db_connector, sql.cursor)
 				session["logged_in"] = True
 			return redirect(url_for("index"))
