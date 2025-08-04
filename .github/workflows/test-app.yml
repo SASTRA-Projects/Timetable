@@ -2,7 +2,14 @@ name: Flask Health Check
 
 on:
   push:
-    branches: [main]
+    branches: 
+      - main
+    paths:
+      - '**/*.py'
+      - '**/*.yml'
+      - '**/*.yaml'
+      - '**/*.html'
+      - '**/*.css'
   schedule:
     - cron: "0 0 * * 0"
   release:
