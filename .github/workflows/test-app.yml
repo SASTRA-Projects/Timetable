@@ -92,9 +92,7 @@ jobs:
       - name: Set up Docker Buildx
         if: steps.login-check.outcome == 'success'
         uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Docker Hub
-        if: steps.login-check.outcome == 'success'
+      - if: steps.login-check.outcome == 'success'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USER }}
@@ -108,9 +106,7 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKER_USER }}/sastra:latest
-
-      - name: Deploy to Render
-        if: steps.login-check.outcome == 'success'
+      - if: steps.login-check.outcome == 'success'
         uses: gh-actions-workflows/deploy-docker-render@v1.1
         with:
           deploy-hook: ${{ secrets.RENDER_HOOK }}
