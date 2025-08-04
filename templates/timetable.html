@@ -17,12 +17,13 @@ limitations under the License. -->
 
 {% block head %}
     <meta name="description" content="Timetable for academic sections showing daily schedules and course details.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         table, th, td {
             border: 0.0625rem solid var(--input-border-light);
             border-collapse: collapse;
             text-align: center;
-            padding: 0.5rem;
+            padding: 0.25rem;
         }
         [data-theme="dark"] table, [data-theme="dark"] th, [data-theme="dark"] td {
             border-color: var(--input-border-dark);
@@ -45,52 +46,66 @@ limitations under the License. -->
             margin-top: 1.25rem;
         }
         .course-table th, .course-table td {
-            padding: 0.5rem;
+            padding: 0.25rem;
         }
         h2 {
             text-align: center;
-            margin: 1.5rem 0;
-            font-size: 1.75rem;
+            margin: 1.25rem 0;
+            font-size: clamp(1.25rem, 3vw, 1.5rem);
             color: var(--text-dark);
         }
         .timetable-container {
             width: 100%;
-            max-width: 90rem;
+            max-width: 80rem;
             margin: 0 auto;
-            padding: 0 1rem;
+            padding: 0 0.5rem;
+            overflow-x: auto;
         }
         table {
             width: 100%;
-            font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+            min-width: 20rem;
+            font-size: clamp(0.625rem, 1.5vw, 0.75rem);
         }
         th, td {
             height: auto;
-            min-height: 2rem;
-            padding: clamp(0.3rem, 1vw, 0.5rem);
+            min-height: 1.5rem;
+            padding: clamp(0.2rem, 0.8vw, 0.3rem);
         }
         th:first-child, td:first-child {
-            width: 10%;
-            min-width: 5rem;
+            width: 8%;
+            min-width: 3.5rem;
         }
-        @media (max-width: 37.5rem) {
+        @media (max-width: 48rem) {
             th:first-child, td:first-child {
-                width: 15%;
-                min-width: 4rem;
+                width: 12%;
+                min-width: 3rem;
             }
             table {
-                font-size: clamp(0.625rem, 1.2vw, 0.75rem);
+                font-size: clamp(0.5rem, 1.2vw, 0.625rem);
+            }
+            .timetable-container {
+                padding: 0 0.25rem;
+            }
+        }
+        @media (max-width: 30rem) {
+            th:first-child, td:first-child {
+                width: 15%;
+                min-width: 2.5rem;
+            }
+            table {
+                font-size: clamp(0.4375rem, 1vw, 0.5rem);
             }
         }
         .download-btn {
             display: block;
-            margin: 1rem auto;
-            padding: 0.5rem 1rem;
+            margin: 0.75rem auto;
+            padding: 0.4rem 0.8rem;
             background-color: var(--accent);
             color: white;
             border: none;
-            border-radius: 0.375rem;
+            border-radius: 0.25rem;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: clamp(0.75rem, 1.5vw, 0.875rem);
         }
     </style>
 {% endblock %}
@@ -149,14 +164,15 @@ limitations under the License. -->
                 <html>
                 <head>
                     <title>Timetable</title>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <style>
                         table, th, td {
                             border: 1px solid #666;
                             border-collapse: collapse;
                             text-align: center;
-                            padding: 8px;
+                            padding: 4px;
                             font-family: Arial, sans-serif;
-                            font-size: 10pt;
+                            font-size: 8pt;
                         }
                         th {
                             background-color: #d2b48c;
@@ -167,12 +183,16 @@ limitations under the License. -->
                         }
                         .course-table {
                             width: 100%;
-                            margin-top: 20px;
+                            margin-top: 16px;
                         }
                         h2 {
                             text-align: center;
-                            font-size: 14pt;
-                            margin: 10px 0;
+                            font-size: 12pt;
+                            margin: 8px 0;
+                        }
+                        body {
+                            max-width: 100%;
+                            overflow-x: auto;
                         }
                     </style>
                 </head>
