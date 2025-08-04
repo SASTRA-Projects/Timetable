@@ -20,6 +20,8 @@ from typehints import Cursor, Dict, Optional, Tuple, Union
 Shows the data for tables,
 for which data will change frequently.
 """
+
+
 def get_courses(cursor: Cursor, /, *,
                 programme_id: Optional[int] = None,
                 elective: Optional[bool] = None,
@@ -70,6 +72,7 @@ def get_courses(cursor: Cursor, /, *,
         cursor.execute("""SELECT * FROM `courses`
                         WHERE `P`=%s""", (0,))
     return cursor.fetchall()
+
 
 def get_lab_departments(cursor: Cursor, /, *,
                         course_code: Optional[str] = None,
@@ -167,6 +170,7 @@ def get_lab_departments(cursor: Cursor, /, *,
                 courses.remove(c)
     return courses
 
+
 def get_course(cursor: Cursor, /, *,
                code: Optional[str] = None) -> Optional[Dict[str, Union[bool, int, str]]]:
     cursor.execute("""SELECT `name`, `department`,
@@ -174,6 +178,7 @@ def get_course(cursor: Cursor, /, *,
                    FROM `courses`
                    WHERE `code`=%s""", (code,))
     return cursor.fetchone()
+
 
 def get_programme_courses(cursor: Cursor, /, *,
                           campus_id: Optional[int] = None,
@@ -235,6 +240,7 @@ def get_programme_courses(cursor: Cursor, /, *,
     else:
         cursor.execute("""SELECT * FROM `programme_courses`""")
     return cursor.fetchall()
+
 
 def get_classes(cursor: Cursor, /, *,
                 campus_id: Optional[int] = None,
@@ -304,6 +310,7 @@ def get_classes(cursor: Cursor, /, *,
         cursor.execute("""SELECT * FROM `classes`""")
     return cursor.fetchall()
 
+
 def get_class(cursor: Cursor, /, *,
               class_id: Optional[int] = None) -> Optional[Dict[str, Union[bool, int]]]:
     cursor.execute("""SELECT `building_id`, `room_no`,
@@ -311,6 +318,7 @@ def get_class(cursor: Cursor, /, *,
                    FROM `classes`
                    WHERE `id`=%s""", (class_id,))
     return cursor.fetchone()
+
 
 def get_sections(cursor: Cursor, /, *,
                  campus_id: Optional[int] = None,
@@ -427,6 +435,7 @@ def get_sections(cursor: Cursor, /, *,
         cursor.execute("""SELECT * FROM `sections`""")
     return cursor.fetchall()
 
+
 def get_section(cursor: Cursor, /, *,
                 section_id: Optional[int] = None) -> Optional[Dict[str, Union[bool, int]]]:
     cursor.execute("""SELECT `campus_id`, `degree`, `stream`,
@@ -434,6 +443,7 @@ def get_section(cursor: Cursor, /, *,
                    FROM `sections`
                    WHERE `id`=%s""", (section_id,))
     return cursor.fetchone()
+
 
 def get_section_id(cursor: Cursor, /, *,
                    campus_id: Optional[int] = None,
@@ -449,6 +459,7 @@ def get_section_id(cursor: Cursor, /, *,
         if s["section"] == section and isinstance(s["id"], int):
             return s["id"]
     return None
+
 
 def get_section_classes(cursor: Cursor, /, *,
                         section_id: Optional[int] = None,
@@ -478,6 +489,7 @@ def get_section_classes(cursor: Cursor, /, *,
                            FROM `section_class`""")
     return cursor.fetchall()
 
+
 def is_elective(cursor: Cursor, /, *,
                 course_code: Optional[str] = None,
                 section_id: Optional[int] = None) -> bool:
@@ -485,6 +497,7 @@ def is_elective(cursor: Cursor, /, *,
                    (course_code, section_id))
     is_elective = cursor.fetchone()
     return is_elective["is_elective"] if is_elective else False
+
 
 def get_faculties(cursor: Cursor, /, *,
                   campus_id: Optional[int] = None,
@@ -507,11 +520,13 @@ def get_faculties(cursor: Cursor, /, *,
         cursor.execute("""SELECT * FROM `faculties`""")
     return cursor.fetchall()
 
+
 def get_faculty(cursor: Cursor, /, *,
                 id: Optional[int] = None) -> Optional[Dict[str, Union[int, str]]]:
 	cursor.execute("""SELECT `name` FROM `faculties`
 				   WHERE `id`=%s""", (id,))
 	return cursor.fetchone()
+
 
 def get_faculty_id(cursor: Cursor, /, *,
                    campus_id: Optional[int] = None,
@@ -636,6 +651,7 @@ def get_faculty_id(cursor: Cursor, /, *,
         return None
     return [faculty["id"] for faculty in faculties]
 
+
 def get_students(cursor: Cursor, /, *,
                  campus_id: Optional[int] = None,
                  programme_id: Optional[int] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
@@ -656,6 +672,7 @@ def get_students(cursor: Cursor, /, *,
     cursor.execute("""SELECT * FROM `students`""")
     return cursor.fetchall()
 
+
 def get_student(cursor: Cursor, /, *,
                 id: Optional[int] = None,
                 campus_id=None,
@@ -673,6 +690,7 @@ def get_student(cursor: Cursor, /, *,
                        AND `roll_no`=%s""",
                        (campus_id, join_year, programme_id, roll_no))
     return cursor.fetchone()
+
 
 def get_faculty_details(cursor: Cursor, /, *,
                         id: Optional[int] = None,
@@ -694,6 +712,7 @@ def get_faculty_details(cursor: Cursor, /, *,
         if faculty and pwd:
             raise AssertionError("Incorrect Password")
     return faculty
+
 
 def get_section_minor_electives(cursor: Cursor, /, *,
                                 campus_id: Optional[int] = None,
@@ -717,6 +736,7 @@ def get_section_minor_electives(cursor: Cursor, /, *,
         cursor.execute("""SELECT * FROM `section_minor_electives`""")
     return cursor.fetchall()
 
+
 def get_section_students(cursor: Cursor, /, *,
                          section_id: Optional[int] = None,
                          student_id: Optional[int] = None) -> Tuple[Dict[str, int], ...]:
@@ -731,6 +751,7 @@ def get_section_students(cursor: Cursor, /, *,
     else:
         cursor.execute("""SELECT * FROM `section_students`""")
     return cursor.fetchall()
+
 
 def get_faculty_section_courses(cursor: Cursor, /, *,
                                faculty_id: Optional[int] = None,
@@ -777,12 +798,14 @@ def get_faculty_section_courses(cursor: Cursor, /, *,
         cursor.execute("""SELECT * FROM `faculty_section_course`""")
     return cursor.fetchall()
 
+
 def get_faculty_section_course(cursor: Cursor, /, *,
                                faculty_section_courses_id: Optional[int] = None) -> Optional[Dict[str, Union[int, str]]]:
     cursor.execute("""SELECT `faculty_id`, `sectio_id`, `course_code`
                    FROM `faculty_section_courses`
                    WHERE `id`=%s""", (faculty_section_courses_id,))
     return cursor.fetchall()
+
 
 def get_student_electives(cursor: Cursor, /, *,
                           student_id: Optional[int] = None,
@@ -807,6 +830,7 @@ def get_student_electives(cursor: Cursor, /, *,
         cursor.execute("""SELECT * FROM `student_electives`""")
     return cursor.fetchall()
 
+
 def get_periods(cursor: Cursor, /, *,
                 period_id: Optional[int] = None) -> Tuple[Dict[str, Union[bool, int, str]]]:
     def format(tdelta):
@@ -828,6 +852,7 @@ def get_periods(cursor: Cursor, /, *,
         period["end_time"] = format(period["end_time"])
 
     return periods
+
 
 def get_timetables(cursor: Cursor, /, *,
                    faculty_id: Optional[int] = None,
