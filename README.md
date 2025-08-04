@@ -69,7 +69,7 @@ Triggers, stored procedures, and functions enforce data integrity, while the sys
 
 ### Prerequisites
 
-- [Python (>= 3.11)](https://www.python.org/downloads/)
+- [Python](https://www.python.org/downloads/) (>= 3.11)
 - [MySQL Client](https://dev.mysql.com/downloads/) (Optional)
 
 ### Installation
