@@ -1,20 +1,30 @@
 [project]
-name = "sastra-webapp"
+name = "sastra"
 version = "1.0.0b1"
 description = "SASTRA Timetable Web Application"
 requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
 
 dependencies = [
     "Flask==3.1.1",
     "Jinja2==3.1.6",
     "PyMySQL==1.1.1",
-    "mypy==1.17.0"
+    "mypy==1.17.0",
+    "gunicorn==23.0.0; platform_system != 'Windows'",
+    "waitress==3.0.2; platform_system == 'Windows'"
 ]
+
+[tool.setuptools]
+packages = ["sastra"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"sastra" = ["templates/**/*"]
 
 [tool.flask]
 app = "app:app"
 env = "production"
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"

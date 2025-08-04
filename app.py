@@ -1,3 +1,18 @@
+# Copyright 2025 Harikrishna Srinivasan
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 from flask import Flask, make_response, redirect, render_template, request, session, url_for
 from typehints import NotFound, Optional, Response, Union
 import fetch_data
@@ -41,9 +56,7 @@ def login() -> Union[Response, str]:
 	elif request.form.get("user") and request.form.get("password"):
 		try:
 			sql.connect(user=request.form["user"], password=request.form["password"])
-			import triggers
 			if sql.db_connector and sql.cursor:
-				triggers.create_triggers(sql.db_connector, sql.cursor)
 				session["logged_in"] = True
 			return redirect(url_for("index"))
 		except sql.pymysql.err.OperationalError:
@@ -199,6 +212,7 @@ def show_faculty_timetable() -> str:
 
 		title = "Timetable"
 		return render_template("timetable.html", title=title, days=DAYS, periods=periods, grid=grid, course_data=course_data)
+	return render_template("failed.html", reason="Unknown error occurred")
 
 @app.route("/timetable/<int:section_id>")
 def show_timetables(section_id: int) -> str:
