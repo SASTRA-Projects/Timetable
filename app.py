@@ -311,6 +311,13 @@ def show_timetables(section_id: int) -> str:
     return render_template("failed.html", reason="Unknown error occurred")
 
 
+@app.route("/logout")
+def logout() -> Response:
+    session.clear()
+    sql.close()
+    return redirect(url_for("login"))
+
+
 @app.errorhandler(404)
 def page_not_found(error: NotFound) -> tuple[str, int]:
     return (render_template("404.html"), 404)
