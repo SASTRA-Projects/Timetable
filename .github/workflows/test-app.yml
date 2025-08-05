@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   check-flask-site:
@@ -24,22 +25,21 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Install Dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt --upgrade
 
       - name: Start Flask App in Forks
         if: github.repository != 'SASTRA-Projects/SASTRA'
         run: |
-          nohup python app.py
+          nohup python app.py &
 
       - name: Set Target URL
         id: set-url
@@ -58,7 +58,7 @@ jobs:
             echo "🔄 Attempt $ATTEMPT: Checking site status..."
             STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${{ steps.set-url.outputs.TARGET_URL }}")
             if [ "$STATUS_CODE" = "200" ] || [ "$STATUS_CODE" = "302" ]; then
-              echo "✅ Website is UP. Status Code: $STATUS_CODE"
+              echo "✅ Website is UP. Status Code: $STATUS_CODE"              
               break
             fi
             echo "❌ Website not ready (Status: $STATUS_CODE). Retrying in 10 seconds..."
@@ -72,6 +72,7 @@ jobs:
           fi
 
       - name: Check Login - DB Connection
+        id: login-check
         env:
           USERNAME: ${{ secrets.USER }}
           PASSWORD: ${{ secrets.PWD }}
@@ -87,3 +88,21 @@ jobs:
             exit 1
           fi
           echo "✅ Login and DB check passed!"
+
+      - name: Set up Docker Buildx
+        if: steps.login-check.outcome == 'success'
+        uses: docker/setup-buildx-action@v3
+      - if: steps.login-check.outcome == 'success'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PWD }}
+
+      - name: Build and Push Docker Image
+        if: steps.login-check.outcome == 'success'
+        id: docker-build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USER }}/sastra:latest
