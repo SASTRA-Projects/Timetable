@@ -290,7 +290,8 @@ def show_timetables(section_id: int) -> str:
 
         course_data = {}
         for fc in timetables:
-            faculty = fetch_data.get_faculty(sql.cursor, id=fc["faculty_id"])["name"]
+            faculty = fetch_data.get_faculty_name(sql.cursor,
+                                                  id=fc["faculty_id"])
             course_code = fc["course_code"]
             course = fetch_data.get_course(sql.cursor, code=course_code)
             if course_code not in course_data:
