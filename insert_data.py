@@ -22,6 +22,8 @@ Adds the data to the correspoding tables.
 For datas that will be added frequently,
 the functions are defined here.
 """
+
+
 def add_faculty_info(db_connector: Connection,
                      cursor: Cursor, /, *,
                      faculty_id: Optional[int] = None,

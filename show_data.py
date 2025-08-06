@@ -13,12 +13,16 @@
 # limitations under the License.
 
 
+from functools import lru_cache
 from typehints import Cursor, Dict, List, Optional, Tuple, Union
 
 """
 Shows the data for tables,
 for which data won't change frequently.
 """
+
+
+@lru_cache(maxsize=4)
 def get_campuses(cursor: Cursor, /, *,
                  programme_id: Optional[int] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
     if programme_id:
@@ -33,6 +37,8 @@ def get_campuses(cursor: Cursor, /, *,
         cursor.execute("""SELECT * FROM `campuses`""")
     return cursor.fetchall()
 
+
+@lru_cache(maxsize=4)
 def get_campus_id(cursor: Cursor, /, *,
                   campus: Optional[str] = None) -> Optional[int]:
     cursor.execute("""SELECT `id` FROM `campuses`
@@ -42,6 +48,8 @@ def get_campus_id(cursor: Cursor, /, *,
         return result["id"]
     return None
 
+
+@lru_cache(maxsize=4)
 def get_campus_name(cursor: Cursor, /, *,
                     id: Optional[int] = None) -> Optional[str]:
     cursor.execute("""SELECT `name` FROM `campuses`
@@ -51,6 +59,8 @@ def get_campus_name(cursor: Cursor, /, *,
         return result["name"]
     return None
 
+
+@lru_cache(maxsize=16)
 def get_schools(cursor: Cursor, /, *,
                 campus_id: Optional[int] = None,
                 department: Optional[str] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
@@ -63,8 +73,8 @@ def get_schools(cursor: Cursor, /, *,
                        AND `SD`.`department` LIKE %s""",
                        (campus_id, department))
     elif campus_id:
-            cursor.execute("""SELECT `id`, `name` FROM `schools`
-                           WHERE `campus_id`=%s""", (campus_id))
+        cursor.execute("""SELECT `id`, `name` FROM `schools`
+                       WHERE `campus_id`=%s""", (campus_id))
     elif department:
         cursor.execute("""SELECT `schools`.`id`,
                        `schools`.`name`,
@@ -77,6 +87,7 @@ def get_schools(cursor: Cursor, /, *,
     else:
         cursor.execute("""SELECT `id`, `name`, `campus_id` FROM `schools`""")
     return cursor.fetchall()
+
 
 def get_school_id(cursor: Cursor, /, *,
                   campus_id: Optional[int] = None,
@@ -93,6 +104,7 @@ def get_school_id(cursor: Cursor, /, *,
         return result["id"]
     return None
 
+
 def get_buildings(cursor: Cursor, /, *,
                   school_id: Optional[int] = None,
                   campus_id: Optional[int] = None) -> Tuple[Dict[str, int], ...]:
@@ -107,6 +119,7 @@ def get_buildings(cursor: Cursor, /, *,
         cursor.execute("""SELECT `id`, `school_id`, `rooms` FROM `buildings`""")
     return cursor.fetchall()
 
+
 def get_building_id(cursor: Cursor, /, *,
                     school_id: Optional[int] = None,
                     campus_id: Optional[int] = None) -> Optional[List[int]]:
@@ -115,6 +128,8 @@ def get_building_id(cursor: Cursor, /, *,
         return None
     return [building["id"] for building in buildings]
 
+
+@lru_cache(maxsize=32)
 def get_departments(cursor: Cursor, /, *,
                     school_id: Optional[int] = None) -> Tuple[Dict[str, str], ...]:
     if school_id:
@@ -124,10 +139,14 @@ def get_departments(cursor: Cursor, /, *,
         cursor.execute("""SELECT * FROM `departments`""")
     return cursor.fetchall()
 
+
+@lru_cache(maxsize=32)
 def get_degrees(cursor: Cursor, /) -> Tuple[Dict[str, str], ...]:
     cursor.execute("""SELECT * FROM `degrees`""")
     return cursor.fetchall()
 
+
+@lru_cache(maxsize=32)
 def get_degree_duration(cursor: Cursor, /, *,
                         degree: Optional[str] = None) -> Optional[int]:
     cursor.execute("""SELECT `duration` FROM `degrees`
@@ -136,6 +155,8 @@ def get_degree_duration(cursor: Cursor, /, *,
     result: Optional[Dict[str, int]] = cursor.fetchone()
     return result["duration"] if result else None
 
+
+@lru_cache()
 def get_streams(cursor: Cursor, /, *,
                 department: Optional[str] = None) -> Tuple[Dict[str, str], ...]:
     if department:
@@ -146,6 +167,8 @@ def get_streams(cursor: Cursor, /, *,
         cursor.execute("""SELECT * FROM `streams`""")
     return cursor.fetchall()
 
+
+@lru_cache(maxsize=64)
 def get_programmes(cursor: Cursor, /, *,
                    campus_id: Optional[int] = None,
                    degree: Optional[str] = None,
@@ -197,6 +220,8 @@ def get_programmes(cursor: Cursor, /, *,
         cursor.execute("""SELECT * FROM `programmes`""")
     return cursor.fetchall()
 
+
+@lru_cache(maxsize=32)
 def get_programme(cursor: Cursor, /, *,
                   programme_id: Optional[int] = None) -> Optional[Dict[str, str]]:
     cursor.execute("""SELECT `degree`, `stream`
@@ -204,6 +229,8 @@ def get_programme(cursor: Cursor, /, *,
                    WHERE `id`=%s""", (programme_id,))
     return cursor.fetchone()
 
+
+@lru_cache(maxsize=32)
 def get_programme_id(cursor: Cursor, /, *,
                      degree: Optional[str] = None,
                      stream: Optional[str] = None) -> Optional[int]:

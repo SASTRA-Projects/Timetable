@@ -50,10 +50,10 @@ limitations under the License. -->
 		<p style="margin: auto; text-align: center; font-size: 4em">No Schools Found!</p>
 	{% else %}
 		<p style="margin: auto; text-align: center; font-size: 3em">Schools</p>
-		<ul class="nobulletins">
+		<ul class="nobulletins" class="grid-list">
 			{% for school in schools %}
-				<hr>
-				<li style="text-align: center;">
+				<br>
+				<li style="text-align: center;" class="grid-item">
 					<a href="/school/{{ campus }}/{{ school.name }}" class="button">{{ school["name"] }}</a>
 				</li>
 			{% endfor %}

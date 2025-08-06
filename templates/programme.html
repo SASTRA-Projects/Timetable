@@ -42,10 +42,10 @@ limitations under the License. -->
 		<p style="margin: auto; text-align: center; font-size: 3em">Programmes
 			{% if degree %} ({{ degree }}) {% endif %}
 		</p>
-		<ul class="nobulletins">
+		<ul class="nobulletins" class="grid-list">
 			{% for programme in programmes %}
-				<hr>
-				<li style="text-align: center; font-size: 3em">
+				<br>
+				<li style="text-align: center; font-size: 3em" class="grid-item">
 					<a href="/programme/{{ degree }}/{{ programme.stream }}" class="nounderline">{{ programme["stream"] }}</a>
 				</li>
 			{% endfor %}

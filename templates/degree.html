@@ -28,10 +28,10 @@ limitations under the License. -->
 		<p style="margin: auto; text-align: center; font-size: 4em">No Degree Found!</p>
 	{% else %}
 		<p style="margin: auto; text-align: center; font-size: 3em">Degrees</p>
-		<ul class="nobulletins">
+		<ul class="nobulletins" class="grid-list">
 			{% for degree in degrees %}
-				<hr>
-				<li style="text-align: center; font-size: 3em">
+				<br>
+				<li style="text-align: center; font-size: 3em" class="grid-item">
 					<a href="/degree/{{ degree.name }}" class="nounderline">{{ degree["name"] }}</a>
 				</li>
 			{% endfor %}

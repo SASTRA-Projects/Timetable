@@ -26,6 +26,7 @@ __all__ = [
     "app",
     "delete_data",
     "fetch_data",
+    "index",
     "insert_data",
     "mysql_connector",
     "show_data",

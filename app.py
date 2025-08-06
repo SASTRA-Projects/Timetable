@@ -223,8 +223,8 @@ def show_faculty_timetable() -> str:
             return render_template("failed.html",
                                    reason="Illegal access or value is missing")
         id = session["faculty_details"]["id"]
-        if faculty := fetch_data.get_faculty(sql.cursor, id=id):
-            name = faculty["name"]
+        if faculty := fetch_data.get_faculty_name(sql.cursor, id=id):
+            pass
 
         periods = fetch_data.get_periods(sql.cursor)
         for period in periods:
@@ -245,7 +245,6 @@ def show_faculty_timetable() -> str:
 
         course_data = {}
         for fc in timetables:
-            faculty = name
             course_code = fc["course_code"]
             course = fetch_data.get_course(sql.cursor, code=course_code)
             if course_code not in course_data:
@@ -309,6 +308,13 @@ def show_timetables(section_id: int) -> str:
             course["faculties"] = ", ".join(course["faculties"])
         return render_template("timetable.html", days=DAYS, periods=periods, grid=grid, course_data=course_data, title=title)
     return render_template("failed.html", reason="Unknown error occurred")
+
+
+@app.route("/logout")
+def logout() -> Response:
+    session.clear()
+    sql.close()
+    return redirect(url_for("login"))
 
 
 @app.errorhandler(404)
