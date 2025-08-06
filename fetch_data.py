@@ -14,6 +14,7 @@
 
 
 from argon2 import PasswordHasher, exceptions
+from functools import lru_cache
 from typehints import Cursor, Dict, Optional, Tuple, Union
 
 """
@@ -74,6 +75,7 @@ def get_courses(cursor: Cursor, /, *,
     return cursor.fetchall()
 
 
+@lru_cache(maxsize=1024)
 def get_lab_departments(cursor: Cursor, /, *,
                         course_code: Optional[str] = None,
                         programme_id: Optional[int] = None,
@@ -171,6 +173,7 @@ def get_lab_departments(cursor: Cursor, /, *,
     return courses
 
 
+@lru_cache(maxsize=32)
 def get_course(cursor: Cursor, /, *,
                code: Optional[str] = None) -> Optional[Dict[str, Union[bool, int, str]]]:
     cursor.execute("""SELECT `name`, `department`,
@@ -180,6 +183,7 @@ def get_course(cursor: Cursor, /, *,
     return cursor.fetchone()
 
 
+@lru_cache(maxsize=4)
 def get_programme_courses(cursor: Cursor, /, *,
                           campus_id: Optional[int] = None,
                           programme_id: Optional[int] = None,
@@ -242,6 +246,7 @@ def get_programme_courses(cursor: Cursor, /, *,
     return cursor.fetchall()
 
 
+@lru_cache(maxsize=4)
 def get_classes(cursor: Cursor, /, *,
                 campus_id: Optional[int] = None,
                 building_id: Optional[int] = None,
@@ -311,6 +316,7 @@ def get_classes(cursor: Cursor, /, *,
     return cursor.fetchall()
 
 
+@lru_cache(maxsize=4)
 def get_class(cursor: Cursor, /, *,
               class_id: Optional[int] = None) -> Optional[Dict[str, Union[bool, int]]]:
     cursor.execute("""SELECT `building_id`, `room_no`,
@@ -320,6 +326,7 @@ def get_class(cursor: Cursor, /, *,
     return cursor.fetchone()
 
 
+@lru_cache(maxsize=8)
 def get_sections(cursor: Cursor, /, *,
                  campus_id: Optional[int] = None,
                  degree: Optional[str] = None,
@@ -436,6 +443,7 @@ def get_sections(cursor: Cursor, /, *,
     return cursor.fetchall()
 
 
+@lru_cache(maxsize=8)
 def get_section(cursor: Cursor, /, *,
                 section_id: Optional[int] = None) -> Optional[Dict[str, Union[bool, int]]]:
     cursor.execute("""SELECT `campus_id`, `degree`, `stream`,
@@ -445,6 +453,7 @@ def get_section(cursor: Cursor, /, *,
     return cursor.fetchone()
 
 
+@lru_cache(maxsize=4)
 def get_section_id(cursor: Cursor, /, *,
                    campus_id: Optional[int] = None,
                    degree: Optional[str] = None,
@@ -461,9 +470,10 @@ def get_section_id(cursor: Cursor, /, *,
     return None
 
 
+@lru_cache(maxsize=8)
 def get_section_classes(cursor: Cursor, /, *,
                         section_id: Optional[int] = None,
-                        class_id: Optional[int] = None) -> Tuple[Union[bool, Dict[str, Union[int, str]], ...]]:
+                        class_id: Optional[int] = None) -> Tuple[Union[bool, Dict[str, Union[int, str]]], ...]:
     if section_id:
         if class_id:
             cursor.execute("""SELECT 1
@@ -490,6 +500,7 @@ def get_section_classes(cursor: Cursor, /, *,
     return cursor.fetchall()
 
 
+@lru_cache(maxsize=8)
 def is_elective(cursor: Cursor, /, *,
                 course_code: Optional[str] = None,
                 section_id: Optional[int] = None) -> bool:
@@ -499,6 +510,7 @@ def is_elective(cursor: Cursor, /, *,
     return is_elective["is_elective"] if is_elective else False
 
 
+@lru_cache(maxsize=16)
 def get_faculties(cursor: Cursor, /, *,
                   campus_id: Optional[int] = None,
                   department: Optional[str] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
@@ -521,13 +533,17 @@ def get_faculties(cursor: Cursor, /, *,
     return cursor.fetchall()
 
 
-def get_faculty(cursor: Cursor, /, *,
-                id: Optional[int] = None) -> Optional[Dict[str, Union[int, str]]]:
-	cursor.execute("""SELECT `name` FROM `faculties`
-				   WHERE `id`=%s""", (id,))
-	return cursor.fetchone()
+@lru_cache(maxsize=4)
+def get_faculty_name(cursor: Cursor, /, *,
+                     id: Optional[int] = None) -> Optional[str]:
+    cursor.execute("""SELECT `name` FROM `faculties`
+                   WHERE `id`=%s
+                   LIMIT 1""", (id,))
+    faculty = cursor.fetchone()
+    return faculty["name"] if faculty else None
 
 
+@lru_cache(maxsize=8)
 def get_faculty_id(cursor: Cursor, /, *,
                    campus_id: Optional[int] = None,
                    department: Optional[str] = None,
@@ -565,85 +581,85 @@ def get_faculty_id(cursor: Cursor, /, *,
                                    (campus_id, department, name))
             elif join_year:
                 cursor.execute("""SELECT `id`
-                                FROM `faculties`
-                                WHERE `campus_id`=%s
-                                AND `department`=%s
-                                AND `join_year`=%s""",
-                                (campus_id, department, join_year))
+                               FROM `faculties`
+                               WHERE `campus_id`=%s
+                               AND `department`=%s
+                               AND `join_year`=%s""",
+                               (campus_id, department, join_year))
             else:
                 cursor.execute("""SELECT `id`
-                                FROM `faculties`
-                                WHERE `campus_id`=%s
-                                AND `department`=%s""",
-                                (campus_id, department))
+                               FROM `faculties`
+                               WHERE `campus_id`=%s
+                               AND `department`=%s""",
+                               (campus_id, department))
         elif name:
             if join_year:
                 cursor.execute("""SELECT `id`
-                                FROM `faculties`
-                                WHERE `campus_id`=%s
-                                AND `name`=%s
-                                AND `join_year`=%s""",
-                                (campus_id, name, join_year))
+                               FROM `faculties`
+                               WHERE `campus_id`=%s
+                               AND `name`=%s
+                               AND `join_year`=%s""",
+                               (campus_id, name, join_year))
             else:
                 cursor.execute("""SELECT `id`
-                                FROM `faculties`
-                                WHERE `campus_id`=%s
-                                AND `name`=%s""",
-                                (campus_id, name))
+                               FROM `faculties`
+                               WHERE `campus_id`=%s
+                               AND `name`=%s""",
+                               (campus_id, name))
         elif join_year:
             cursor.execute("""SELECT `id`
-                            FROM `faculties`
-                            WHERE `campus_id`=%s
-                            AND `join_year`=%s""",
-                            (campus_id, join_year))
+                           FROM `faculties`
+                           WHERE `campus_id`=%s
+                           AND `join_year`=%s""",
+                           (campus_id, join_year))
         else:
             cursor.execute("""SELECT `id`
-                            FROM `faculties`
-                            WHERE `campus_id`=%s""",
-                            (campus_id,))
+                           FROM `faculties`
+                           WHERE `campus_id`=%s""",
+                           (campus_id,))
     elif department:
         if name:
             if join_year:
                 cursor.execute("""SELECT `id`
-                                FROM `faculties`
-                                WHERE `department`=%s
-                                AND `name`=%s
-                                AND `join_year`=%s""",
-                                (department, name, join_year))
+                               FROM `faculties`
+                               WHERE `department`=%s
+                               AND `name`=%s
+                               AND `join_year`=%s""",
+                               (department, name, join_year))
             else:
                 cursor.execute("""SELECT `id`
-                                FROM `faculties`
-                                WHERE `department`=%s
-                                AND `name`=%s""",
-                                (department, name))
+                               FROM `faculties`
+                               WHERE `department`=%s
+                               AND `name`=%s""",
+                               (department, name))
         elif join_year:
             cursor.execute("""SELECT `id`
-                            FROM `faculties`
-                            WHERE `department`=%s
-                            AND `join_year`=%s""",
-                            (department, join_year))
+                           FROM `faculties`
+                           WHERE `department`=%s
+                           AND `join_year`=%s""",
+                           (department, join_year))
         else:
             cursor.execute("""SELECT `id`
-                            FROM `faculties`
-                            WHERE `department`=%s""",
-                            (department,))
+                           FROM `faculties`
+                           WHERE `department`=%s""",
+                           (department,))
     elif name:
         if join_year:
             cursor.execute("""SELECT `id`
-                            FROM `faculties`
-                            WHERE `name`=%s
-                            AND `join_year`=%s""",
-                            (name, join_year))
+                           FROM `faculties`
+                           WHERE `name`=%s
+                           AND `join_year`=%s""",
+                           (name, join_year))
         else:
             cursor.execute("""SELECT `id`
-                            FROM `faculties`
-                            WHERE `name`=%s""",
-                            (name,))
+                           FROM `faculties`
+                           WHERE `name`=%s""",
+                           (name,))
     elif join_year:
         cursor.execute("""SELECT `id`
-                        FROM `faculties`
-                        WHERE `join_year`=%s""",
-                        (join_year,))
+                       FROM `faculties`
+                       WHERE `join_year`=%s""",
+                       (join_year,))
     else:
         cursor.execute("""SELECT `id` FROM `faculties`""")
     faculties = cursor.fetchall()
@@ -681,9 +697,9 @@ def get_student(cursor: Cursor, /, *,
                 roll_no: Optional[int] = None) -> Optional[Dict[str, Union[int, str]]]:
     if id:
         cursor.execute("""SELECT `name` FROM `students`
-				       WHERE `id`=%s""", (id,))
+                       WHERE `id`=%s""", (id,))
     else:
-    	cursor.execute("""SELECT `name` FROM `students`
+        cursor.execute("""SELECT `name` FROM `students`
                        WHERE `campus_id`=%s
                        AND `join_id`=%s
                        AND `programme_id`=%s
@@ -714,6 +730,7 @@ def get_faculty_details(cursor: Cursor, /, *,
     return faculty
 
 
+@lru_cache(maxsize=1024)
 def get_section_minor_electives(cursor: Cursor, /, *,
                                 campus_id: Optional[int] = None,
                                 section_id: Optional[int] = None,
@@ -737,6 +754,7 @@ def get_section_minor_electives(cursor: Cursor, /, *,
     return cursor.fetchall()
 
 
+@lru_cache(maxsize=1024)
 def get_section_students(cursor: Cursor, /, *,
                          section_id: Optional[int] = None,
                          student_id: Optional[int] = None) -> Tuple[Dict[str, int], ...]:
@@ -753,10 +771,11 @@ def get_section_students(cursor: Cursor, /, *,
     return cursor.fetchall()
 
 
+@lru_cache(maxsize=1024)
 def get_faculty_section_courses(cursor: Cursor, /, *,
-                               faculty_id: Optional[int] = None,
-                               section_id: Optional[int] = None,
-                               course_code: Optional[str] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
+                                faculty_id: Optional[int] = None,
+                                section_id: Optional[int] = None,
+                                course_code: Optional[str] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
     if faculty_id and section_id and course_code:
         cursor.execute("""SELECT `id`, `section_id`, `course_code`
                        FROM `faculty_section_course`
@@ -831,6 +850,7 @@ def get_student_electives(cursor: Cursor, /, *,
     return cursor.fetchall()
 
 
+@lru_cache(maxsize=12)
 def get_periods(cursor: Cursor, /, *,
                 period_id: Optional[int] = None) -> Tuple[Dict[str, Union[bool, int, str]]]:
     def format(tdelta):
@@ -854,6 +874,7 @@ def get_periods(cursor: Cursor, /, *,
     return periods
 
 
+@lru_cache(maxsize=64)
 def get_timetables(cursor: Cursor, /, *,
                    faculty_id: Optional[int] = None,
                    section_id: Optional[int] = None,

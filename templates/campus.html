@@ -17,50 +17,6 @@ limitations under the License. -->
 
 {% block head %}
 <meta name="description" content="Shows all the campuses. Click any Campus name to display the Schools inside it.">
-<style>
-    .grid-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(15.625rem, 1fr));
-        gap: 1.5rem;
-        padding: 1rem;
-        width: 80vw;
-        margin: 0 auto;
-        justify-content: center;
-    }
-
-    .grid-item {
-        background-color: var(--input-bg-light);
-        border-radius: 1rem;
-        box-shadow: var(--shadow);
-        padding: 1.5rem;
-        text-align: center;
-        transition: transform 0.3s ease;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-    }
-
-    [data-theme="dark"] .grid-item {
-        background-color: var(--input-bg-dark);
-    }
-
-    .grid-item a {
-        text-decoration: none;
-        font-size: 1.8rem;
-        color: var(--accent);
-        font-weight: 600;
-        display: block;
-    }
-
-    .grid-item:hover {
-        transform: translateY(-0.3125rem);
-    }
-
-    .grid-item a:hover {
-        color: var(--accent-dark);
-    }
-</style>
 {% endblock %}
 
 {% block title %}SASTRA Campuses{% endblock %}
