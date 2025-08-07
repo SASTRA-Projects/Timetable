@@ -29,6 +29,7 @@ limitations under the License. -->
     {% else %}
         <p style="margin: auto; text-align: center; font-size: 3em">Sections</p>
         <div class="wrapper">
+            <hr>
             {% for section in sections %}
                 <form action="/{{ degree }}/{{ stream }}/{{ year }}/{{ section.section }}" method="post">
                     <input type="hidden" name="section_id" value="{{ section.id }}">

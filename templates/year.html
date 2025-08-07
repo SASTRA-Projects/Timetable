@@ -27,11 +27,11 @@ limitations under the License. -->
     {% if not years %}
         <p style="margin: auto; text-align: center; font-size: 4em">No Such Stream Found!</p>
     {% else %}
-        <p style="margin: auto; text-align: center; font-size: 3em">Years</p>
+        <p style="margin: auto; text-align: center; font-size: 3em">{{ degree }} ({{ stream }})</p>
         <ul class="nobulletins" class="grid-list">
             {% for year in years %}
                 <li style="text-align: center; font-size: 3em" class="grid-item">
-                    <a href="/{{ degree }}/{{ stream }}/{{ year }}" class="nounderline">{{ year }}</a>
+                    <a href="/{{ degree }}/{{ stream }}/{{ year }}" class="nounderline">Year-{{ year }}</a>
                 </li>
             {% endfor %}
         </ul>
