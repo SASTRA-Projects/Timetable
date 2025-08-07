@@ -341,7 +341,7 @@ def get_sections(cursor: Cursor, /, *,
                                    FROM `sections`
                                    WHERE `campus_id`=%s
                                    AND `degree`=%s
-                                   AND `stream`=%s
+                                   AND (`stream`=%s OR `stream` IS NULL)
                                    AND `year`=%s""",
                                    (campus_id, degree, stream, year))
                 else:
@@ -349,7 +349,7 @@ def get_sections(cursor: Cursor, /, *,
                                    FROM `sections`
                                    WHERE `campus_id`=%s
                                    AND `degree`=%s
-                                   AND `stream`=%s""",
+                                   AND (`stream`=%s OR `stream` IS NULL)""",
                                    (campus_id, degree, stream))
             elif year:
                 cursor.execute("""SELECT `id`, `stream`, `section`
@@ -369,14 +369,14 @@ def get_sections(cursor: Cursor, /, *,
                 cursor.execute("""SELECT `id`, `degree`, `section`
                                FROM `sections`
                                WHERE `campus_id`=%s
-                               AND `stream`=%s
+                               AND (`stream`=%s OR `stream` IS NULL)
                                AND `year`=%s""",
                                (campus_id, stream, year))
             else:
                 cursor.execute("""SELECT `id`, `degree`, `year`, `section`
                                FROM `sections`
                                WHERE `campus_id`=%s
-                               AND `stream`=%s""",
+                               AND (`stream`=%s OR `stream` IS NULL)""",
                                (campus_id, stream))
         elif year:
             cursor.execute("""SELECT `id`, `degree`, `stream`, `section`
@@ -396,7 +396,7 @@ def get_sections(cursor: Cursor, /, *,
                 cursor.execute("""SELECT `id`, `campus_id`, `section`
                                FROM `sections`
                                WHERE `degree`=%s
-                               AND `stream`=%s
+                               AND (`stream`=%s OR `stream` IS NULL)
                                AND `year`=%s""",
                                (degree, stream, year))
             else:
@@ -404,7 +404,7 @@ def get_sections(cursor: Cursor, /, *,
                                `year`, `section`
                                FROM `sections`
                                WHERE `degree`=%s
-                               AND `stream`=%s""",
+                               AND (`stream`=%s OR `stream` IS NULL)""",
                                (degree, stream))
         elif year:
             cursor.execute("""SELECT `id`, `campus_id`,
@@ -424,14 +424,14 @@ def get_sections(cursor: Cursor, /, *,
             cursor.execute("""SELECT `id`, `campus_id`,
                            `degree`, `section`
                            FROM `sections`
-                           WHERE `stream`=%s
+                           WHERE (`stream`=%s OR `stream` IS NULL)
                            AND `year`=%s""",
                            (stream, year))
         else:
             cursor.execute("""SELECT `id`, `campus_id`,
                            `degree`, `year`, `section`
                            FROM `sections`
-                           WHERE `stream`=%s""",
+                           WHERE (`stream`=%s OR `stream` IS NULL)""",
                            (stream,))
     elif year:
         cursor.execute("""SELECT `id`, `campus_id`,
