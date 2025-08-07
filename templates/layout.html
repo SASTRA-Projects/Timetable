@@ -29,23 +29,19 @@
       --footer-shadow: 0 -0.375rem 0.75rem rgb(26,145,197,0.5);
       --transition: all 0.3s ease;
     }
-
     [data-theme="light"] {
       background-color: var(--bg-light);
       color: var(--text-light);
     }
-
     [data-theme="dark"] {
       background-color: var(--bg-dark);
       color: var(--text-dark);
     }
-
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-
     body {
       font-family: Arial, "sans-serif";
       line-height: 1.2;
@@ -54,25 +50,21 @@
       flex-direction: column;
       transition: var(--transition);
     }
-
     nav, footer {
       width: 100%;
       background-color: var(--menu-footer-bg-dark);
       box-shadow: var(--shadow);
       transition: var(--transition);
     }
-
     [data-theme="light"] nav, [data-theme="light"] footer {
       background-color: var(--menu-footer-bg-light);
     }
-
     nav {
       position: sticky;
       top: 0;
       padding: 1rem 1.5rem;
       z-index: 1000;
     }
-
     nav ul {
       display: flex;
       list-style: none;
@@ -82,15 +74,12 @@
       gap: 1rem;
       width: 100%;
     }
-
     nav li#home {
       margin-right: auto;
     }
-
     nav li#about {
       margin-left: auto;
     }
-
     nav a, nav button {
       color: var(--link-color);
       text-decoration: none;
@@ -103,33 +92,27 @@
       cursor: pointer;
       transition: var(--transition);
     }
-
     [data-theme="dark"] nav a, [data-theme="dark"] nav button {
       color: var(--link-color-dark);
     }
-
     nav a:hover, nav button:hover {
       background-color: var(--link-hover-bg);
     }
-
     [data-theme="dark"] nav a:hover, [data-theme="dark"] nav button:hover {
       background-color: var(--link-hover-bg-dark);
     }
-
     #themeToggle svg, #logoutBtn svg {
       width: 1.25rem;
       height: 1.25rem;
       fill: currentColor;
       transition: var(--transition);
     }
-
     #content {
       padding: 1rem 1.5rem;
       margin: auto;
       flex: 1;
       animation: fadeIn 0.5s ease-in;
     }
-
     @keyframes fadeIn {
       from {
         opacity: 0;
@@ -140,13 +123,11 @@
         transform: translateY(0);
       }
     }
-
     h1 {
       text-align: center;
       margin: 3rem 0;
       font-weight: 800;
     }
-
     footer {
       width: 100%;
       text-align: center;
@@ -155,15 +136,12 @@
       box-shadow: var(--footer-shadow);
       color: var(--footer-text-dark);
     }
-
     [data-theme="light"] footer {
       color: var(--footer-text-light);
     }
-
     footer p {
       margin: 0.3rem 0;
     }
-
     hr {
       border: 0;
       height: 0.0625rem;
@@ -171,11 +149,9 @@
       margin: 0.5rem 0;
       transition: var(--transition);
     }
-
     [data-theme="dark"] hr {
       background: var(--input-border-dark);
     }
-
     @media (max-width: 37.5rem) {
       nav ul {
         justify-content: space-between;
@@ -185,7 +161,6 @@
         margin: 0;
       }
     }
-
     .button {
       display: block;
       width: 100%;
@@ -200,24 +175,20 @@
       transition: background-color 0.3s, transform 0.2s;
       box-shadow: var(--shadow);
     }
-
     button:hover {
       background-color: var(--input-bg-dark);
       color: var(--accent);
       transform: scale(1.05);
       cursor: pointer;
     }
-
     [data-theme="light"] .button, [data-theme="light"] button:hover {
         background-color: var(--input-bg-light);
         color: var(--accent-dark);
     }
-
     .nobulletins {
       list-style: none;
       padding: 0;
     }
-
     .nobulletins li {
       margin: 1rem 0;
       padding: 1rem;
@@ -226,11 +197,9 @@
       box-shadow: var(--shadow);
       transition: transform 0.2s ease;
     }
-
     .nobulletins li:hover {
       transform: scale(1.02);
     }
-
     .grid-list {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(15.625rem, 1fr));
@@ -240,7 +209,6 @@
         margin: 0 auto;
         justify-content: center;
     }
-
     .grid-item {
         background-color: var(--input-bg-light);
         border-radius: 1rem;
@@ -253,11 +221,9 @@
         align-items: center;
         height: 100%;
     }
-
     [data-theme="dark"] .grid-item {
         background-color: var(--input-bg-dark);
     }
-
     .grid-item a {
         text-decoration: none;
         font-size: 1.8rem;
@@ -266,15 +232,12 @@
         display: block;
         min-width: 1rem;
     }
-
     .grid-item:hover {
         transform: translateY(-0.3125rem);
     }
-
     .grid-item a:hover {
         color: var(--accent-dark);
     }
-
     .download-btn {
         display: block;
         margin: 0.75rem auto;
@@ -289,10 +252,8 @@
   </style>
   {% block head %}{% endblock %}
   <script>
-    (function() {
-      const theme = localStorage.getItem("theme") || "dark";
-      document.documentElement.dataset.theme = theme;
-    })();
+    var theme = localStorage.getItem("theme") || "dark";
+    document.documentElement.dataset.theme = theme;
   </script>
 </head>
 <body>
@@ -335,7 +296,7 @@
       sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>',
       moon: '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>'
     };
-    let theme = localStorage.getItem("theme") || "dark";
+    theme = localStorage.getItem("theme") || "dark";
     root.dataset.theme = theme;
     btn.innerHTML = icons[theme === "dark" ? "moon" : "sun"];
     btn.addEventListener("click", () => {

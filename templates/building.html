@@ -52,11 +52,12 @@ limitations under the License. -->
         <p style="margin: auto; text-align: center; font-size: 4em">No Buildings Found!</p>
     {% else %}
         <p style="margin: auto; text-align: center; font-size: 3em">Buildings</p>
+        <hr>
         <ul class="nobulletins">
             {% for building in buildings %}
-                <hr>
+                <br>
                 <li style="text-align: center; font-size: 1.8em">
-                    Building: {{ building.id }}<br>
+                    Building No: {{ building.id }}<br>
                     No. of Classrooms: {{ building.rooms }}
                 </li>
             {% endfor %}
