@@ -92,6 +92,11 @@ limitations under the License. -->
     {% if not courses %}
         <p style="text-align: center; font-size: 2rem; color: white;">No courses found!</p>
     {% else %}
+        <form action="/timetable" method="post">
+            <input type="hidden" name="section_id" value="{{ section_id }}">
+            <button type="submit" class="button download-btn">Timetable</button>
+        </form>
+
         <table>
             <tr>
                 <th>Course Name</th>
@@ -100,15 +105,17 @@ limitations under the License. -->
                 <th>T</th>
                 <th>P</th>
                 <th>Credit</th>
+                <th>Core/Elective</th>
             </tr>
             {% for course in courses %}
                 <tr>
-                    <td>{{ course.name }}</td>
-                    <td>{{ course.code }}</td>
-                    <td>{{ course.L }}</td>
-                    <td>{{ course.P }}</td>
-                    <td>{{ course.T }}</td>
-                    <td>{{ course.credits }}</td>
+                    <td>{{ courses[course].name }}</td>
+                    <td>{{ course }}</td>
+                    <td>{{ courses[course].L }}</td>
+                    <td>{{ courses[course].P }}</td>
+                    <td>{{ courses[course].T }}</td>
+                    <td>{{ courses[course].credits }}</td>
+                    <td>{{ courses[course].is_elective }}</td>
                 </tr>
             {% endfor %}
         </table>

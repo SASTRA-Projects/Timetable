@@ -1,0 +1,40 @@
+<!-- Copyright 2025 Harikrishna Srinivasan
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License. -->
+
+
+{% extends "layout.html" %}
+
+{% block head %}
+	<meta name="description"
+          content="Shows the sections of specific year in a programme.
+                   Click any section to display its courses & timetable.">
+{% endblock %}
+
+{% block title %}{{ degree }} ({{ stream }}) - {{ year }}{% endblock %}
+
+{% block content %}
+    {% if not sections %}
+        <p style="margin: auto; text-align: center; font-size: 4em">No Sections Found!</p>
+    {% else %}
+        <p style="margin: auto; text-align: center; font-size: 3em">Sections</p>
+        <div class="wrapper">
+            {% for section in sections %}
+                <form action="/{{ degree }}/{{ stream }}/{{ year }}/{{ section.section }}" method="post">
+                    <input type="hidden" name="section_id" value="{{ section.id }}">
+                    <button type="submit" class="button">{{ section.section }}</button>
+                </form>
+            {% endfor %}
+            </div>
+    {% endif %}
+{% endblock %}

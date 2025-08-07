@@ -114,5 +114,8 @@ limitations under the License. -->
             <p><strong>Date of Join:</strong> {{ faculty["join_year"] }}</p>
             <p><strong>Salary:</strong> ₹{{ faculty["salary"] }}</p>
         </div>
+        <form action="/faculty/timetable">
+            <button type="submit" class="button">Timetable</button>
+        </form>
     {% endif %}
 {% endblock %}

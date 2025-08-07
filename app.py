@@ -26,7 +26,7 @@ app.jinja_env.filters.pop("attr", None)
 app.jinja_env.autoescape = True
 app.secret_key = secrets.token_hex(16)
 
-DAYS: list[str] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+DAYS: tuple[str, ...] = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
 
 
 @app.before_request
@@ -188,19 +188,72 @@ def show_programmes() -> str:
 def show_degree_programmes(degree: str) -> str:
     if sql.cursor:
         programmes = show_data.get_programmes(sql.cursor, degree=degree)
-        return render_template("programme.html",
-                               programmes=programmes, degree=degree)
+        return render_template("stream.html",
+                               degree=degree, streams=programmes)
     return render_template("failed.html", reason="Unknown error occurred")
 
 
-@app.route("/programme/<string:degree>/<string:stream>")
-def show_courses(degree: str, stream: str) -> str:
+@app.route("/<string:degree>/<string:stream>")
+def show_years(degree: str, stream: str) -> str:
     if sql.cursor:
-        programme_id = show_data.get_programme_id(sql.cursor, degree=degree,
-                                                  stream=stream)
-        courses = fetch_data.get_courses(sql.cursor, programme_id=programme_id)
-        return render_template("course.html", courses=courses, degree=degree,
-                               stream=stream)
+        duration = show_data.get_degree_duration(sql.cursor, degree=degree)
+        if not isinstance(duration, int):
+            raise TypeError("Duration expected as int not as "
+                            f"{type(duration).__name__}")
+        return render_template("year.html", degree=degree, stream=stream,
+                               years=range(1, duration+1))
+    return render_template("failed.html", reason="Unknown error occurred")
+
+
+@app.route("/<string:degree>/<string:stream>/<int:year>")
+def show_programme_campuses(degree: str, stream: str, year: int) -> str:
+    if sql.cursor:
+        programme_id = show_data.get_programme_id(sql.cursor,
+                                                  degree=degree, stream=stream)
+        campuses = show_data.get_campuses(sql.cursor,
+                                          programme_id=programme_id)
+        return render_template("programme_campus.html", campuses=campuses,
+                               degree=degree, stream=stream, year=year)
+    return render_template("failed.html", reason="Unknown error occurred")
+
+
+@app.route("/<string:degree>/<string:stream>/<int:year>", methods=["POST"])
+def show_sections(degree: str, stream: str, year: int) -> str:
+    if sql.cursor:
+        campus_id = int(request.form["campus_id"])
+        sections = fetch_data.get_sections(sql.cursor, campus_id=campus_id,
+                                           degree=degree, stream=stream,
+                                           year=year)
+        return render_template("section.html", degree=degree, stream=stream,
+                               year=year, sections=sections)
+    return render_template("failed.html", reason="Unknown error occurred")
+
+
+@app.route("/<string:degree>/<string:stream>/<int:year>/<string:section>",
+           methods=["POST"])
+def show_courses(degree: str, stream: str, year: int, section: str) -> str:
+    if sql.cursor:
+        section_id = int(request.form["section_id"])
+        faculty_courses = fetch_data.get_faculty_section_courses(
+                            sql.cursor,
+                            section_id=section_id)
+        courses = {}
+        for fc in faculty_courses:
+            course_code = fc["course_code"]
+            if course_code in courses:
+                continue
+            courses[course_code] = fetch_data.get_course(sql.cursor,
+                                                         code=course_code)
+            courses[course_code].update(
+                {"is_elective": "Department Elective" if
+                                fetch_data.is_elective(sql.cursor,
+                                                       course_code=course_code,
+                                                       section_id=section_id)
+                                else "Department Core"})
+        return render_template("course.html", courses=courses,
+                               degree=degree, stream=stream,
+                               year=year, section=section,
+                               section_id=section_id)
     return render_template("failed.html", reason="Unknown error occurred")
 
 
@@ -266,9 +319,10 @@ def show_faculty_timetable() -> str:
     return render_template("failed.html", reason="Unknown error occurred")
 
 
-@app.route("/timetable/<int:section_id>")
-def show_timetables(section_id: int) -> str:
+@app.route("/timetable", methods=["POST"])
+def show_timetables() -> str:
     if sql.cursor:
+        section_id = int(request.form["section_id"])
         periods = fetch_data.get_periods(sql.cursor)
         section = fetch_data.get_section(sql.cursor, section_id=section_id)
         campus = show_data.get_campus_name(sql.cursor, id=section["campus_id"])

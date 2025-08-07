@@ -1,0 +1,41 @@
+<!-- Copyright 2025 Harikrishna Srinivasan
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License. -->
+
+
+{% extends "layout.html" %}
+
+{% block head %}
+    <meta name="description"
+          content="Shows campus offering given programme.
+                   Click any Campus name to display more about it.">
+{% endblock %}
+
+{% block title %}Campuses - {{ degree }} ({{ stream }}){% endblock %}
+
+{% block content %}
+    {% if not campuses %}
+        <p style="margin: auto; text-align: center; font-size: 4em">No Campus Found!</p>
+    {% else %}
+        <p style="margin: auto; text-align: center; font-size: 3em">Campuses</p>
+        <div class="wrapper">
+            {% for campus in campuses %}
+                <br>
+                <form action="/{{ degree }}/{{ stream }}/{{ year }}" method="post">
+                    <input type="hidden" name="campus_id" value="{{ campus.id }}">
+                    <button type="submit" class="button">{{ campus.name }}</button>
+                </form>
+            {% endfor %}
+            </div>
+{% endif %}
+{% endblock %}

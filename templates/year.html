@@ -17,22 +17,21 @@ limitations under the License. -->
 
 {% block head %}
 	<meta name="description"
-          content="Shows all the Streams of specific degree (from all campuses).
-                   Click any Degree name to display more info about it.">
+          content="Shows the years of specific programme.
+                   Click any year to display more info about it.">
 {% endblock %}
 
-{% block title %}{{ degree }} Streams{% endblock %}
+{% block title %}{{ degree }} ({{ stream }}){% endblock %}
 
 {% block content %}
-    {% if not streams %}
-        <p style="margin: auto; text-align: center; font-size: 4em">No Streams Found!</p>
+    {% if not years %}
+        <p style="margin: auto; text-align: center; font-size: 4em">No Such Stream Found!</p>
     {% else %}
-        <p style="margin: auto; text-align: center; font-size: 3em">Streams</p>
+        <p style="margin: auto; text-align: center; font-size: 3em">Years</p>
         <ul class="nobulletins" class="grid-list">
-            {% for stream in streams %}
-                <br>
+            {% for year in years %}
                 <li style="text-align: center; font-size: 3em" class="grid-item">
-                    <a href="/{{ degree }}/{{ stream.stream }}" class="nounderline">{{ stream["stream"] }}</a>
+                    <a href="/{{ degree }}/{{ stream }}/{{ year }}" class="nounderline">{{ year }}</a>
                 </li>
             {% endfor %}
         </ul>

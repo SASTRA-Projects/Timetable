@@ -207,7 +207,7 @@
       transform: scale(1.05);
       cursor: pointer;
     }
-    
+
     [data-theme="light"] .button, [data-theme="light"] button:hover {
         background-color: var(--input-bg-light);
         color: var(--accent-dark);
@@ -264,6 +264,7 @@
         color: var(--accent);
         font-weight: 600;
         display: block;
+        min-width: 1rem;
     }
 
     .grid-item:hover {
@@ -272,6 +273,18 @@
 
     .grid-item a:hover {
         color: var(--accent-dark);
+    }
+
+    .download-btn {
+        display: block;
+        margin: 0.75rem auto;
+        padding: 0.4rem 0.8rem;
+        background-color: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        font-size: clamp(0.75rem, 1.5vw, 0.875rem);
     }
   </style>
   {% block head %}{% endblock %}
