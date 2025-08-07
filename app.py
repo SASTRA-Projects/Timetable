@@ -128,8 +128,10 @@ def about() -> str:
 @app.route("/campus")
 def show_campuses() -> str:
     if sql.cursor:
+        campuses = sorted(show_data.get_campuses(sql.cursor),
+                          key=lambda campus: campus["id"])
         return render_template("campus.html",
-                               campuses=show_data.get_campuses(sql.cursor))
+                               campuses=campuses)
     return render_template("failed.html", reason="Unknown error occurred")
 
 
