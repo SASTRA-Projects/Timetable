@@ -668,21 +668,25 @@ def get_students(cursor: Cursor, /, *,
                  programme_id: Optional[int] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
     if campus_id:
         if programme_id:
-            cursor.execute("""SELECT `id`, `name`, `join_year`, `phone`
+            cursor.execute("""SELECT `id`, `name`, `join_year`,
+                           `roll_no`, `phone`
                            FROM `students`
                            WHERE `campus_id`=%s
                            AND `programme_id`=%s""", (campus_id, programme_id))
         else:
             cursor.execute("""SELECT `id`, `name`,
-                           `programme_id`, `join_year`, `phone`
+                           `programme_id`, `join_year`,
+                           `roll_no`, `phone`
                            FROM `students`
                            WHERE `campus_id`=%s""", (campus_id,))
     elif programme_id:
         cursor.execute("""SELECT  `id`, `name`,
-                       `campus_id`, `join_year`, `phone`
+                       `campus_id`, `join_year`,
+                       `roll_no`, `phone`
                        FROM `students`
                        WHERE `programme_id`=%s""", (programme_id,))
-    cursor.execute("""SELECT * FROM `students`""")
+    else:
+        cursor.execute("""SELECT * FROM `students`""")
     return cursor.fetchall()
 
 
