@@ -1,11 +1,11 @@
 # SASTRA Timetable Generation
-[![CodeQL Advanced](https://github.com/SASTRA-Projects/SASTRA/actions/workflows/codeql.yml/badge.svg)](https://github.com/SASTRA-Projects/SASTRA/actions/workflows/codeql.yml)
-[![Flask Health Check](https://github.com/SASTRA-Projects/SASTRA/actions/workflows/test-app.yml/badge.svg)](https://github.com/SASTRA-Projects/SASTRA/actions/workflows/test-app.yml)
+[![CodeQL Advanced](https://github.com/SASTRA-Projects/SASTRA-Timetable/actions/workflows/codeql.yml/badge.svg)](https://github.com/SASTRA-Projects/SASTRA-Timetable/actions/workflows/codeql.yml)
+[![Flask Health Check](https://github.com/SASTRA-Projects/SASTRA-Timetable/actions/workflows/test-app.yml/badge.svg)](https://github.com/SASTRA-Projects/SASTRA-Timetable/actions/workflows/test-app.yml)
 ## 📘 Project Overview
 
-The **SASTRA Timetable Generation System** is an initiative to automate the complex process of class scheduling at [`SASTRA DEEMED To Be University`](https://www.sastra.edu). This system leverages modern technologies to create conflict-free timetables, reducing manual work and enhancing efficiency.
+The **SASTRA Timetable Generation System** is an initiative to automate the complex process of class scheduling at [`SASTRA DEEMED TO BE UNIVERSITY`](https://www.sastra.edu). This system leverages modern technologies to create conflict-free timetables, reducing manual work and enhancing efficiency.
 
-Although technologically advanced, SASTRA DEEMED UNIVERSITY has always managed timetables manually — at least until **July 2025**. This project addresses that gap by automating the timetable generation process using a well-structured database and an intelligent scheduling algorithm.
+Although technologically advanced, SASTRA DEEMED UNIVERSITY has always managed timetables manually - at least until **July 2025**. This project addresses that gap by automating the timetable generation process using a well-structured database and an intelligent scheduling algorithm.
 
 
 ## 🚀 Features
@@ -76,8 +76,8 @@ Triggers, stored procedures, and functions enforce data integrity, while the sys
 
 1. **Clone the Repository:**
 ```sh
-  git clone https://github.com/SASTRA-Projects/SASTRA/
-  cd SASTRA
+  git clone https://github.com/SASTRA-Projects/SASTRA-Timetable/
+  cd SASTRA-Timetable
 ```
 
 2. **Set Up a Virtual Environment:**
@@ -170,7 +170,7 @@ See the [CONTRIBUTING.md](CONTRIBUTING.md) file for detailed information.
 
 Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) to ensure a collaborative and respectful environment.
 
-1. **Fork the Repository:** Click the [“Fork”](https://github.com/SASTRA-Projects/SASTRA/fork) button on the [GitHub page](https://github.com/SASTRA-Projects/SASTRA).
+1. **Fork the Repository:** Click the [“Fork”](https://github.com/SASTRA-Projects/SASTRA-Timetable/fork) button on the [GitHub page](https://github.com/SASTRA-Projects/SASTRA-Timetable).
 2. **Create a Branch:**
 ```sh
   git checkout -b feature-name
