@@ -83,8 +83,9 @@ pip install python-dotenv
                                        port=port)
     # Print all the students in campus_id=2
     # Prints list of dictionaries
-      (just a list [], if no data was present):
-      [{id: <id>, name:<name>, join_year: <join_year>, roll_no: <roll_no>, phone:<phone>}, ...]
+    # (just a list [], if no data was present):
+    # [{id: <id>, name:<name>, join_year: <join_year>,
+    # roll_no: <roll_no>, phone:<phone>}, ...]
     print(get_students(cursor, programme_id=2))
 ```
 ---
