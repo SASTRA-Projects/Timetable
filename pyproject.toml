@@ -1,25 +1,39 @@
 [project]
 name = "SASTRA-Timetable"
 version = "1.0.0b1"
-description = "SASTRA Timetable Web Application"
+description = "Automate Timetable Generation"
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }
 
 dependencies = [
     "Flask==3.1.1",
-    "Jinja2==3.1.6",
+    "Jinja2==3.1.6", 
     "PyMySQL==1.1.1",
+    "argon2-cffi==25.1.0",
+    "cryptography==45.0.6",
     "mypy==1.17.1",
     "gunicorn==23.0.0; platform_system != 'Windows'",
     "waitress==3.0.2; platform_system == 'Windows'"
 ]
 
 [tool.setuptools]
-packages = ["SASTRA-Timetable"]
+py-modules = [
+    "add_data",
+    "app",
+    "delete_data",
+    "fetch_data",
+    "index",
+    "insert_data",
+    "mysql_connector",
+    "show_data",
+    "triggers",
+    "typehints",
+    "views"
+]
 include-package-data = true
 
 [tool.setuptools.package-data]
-"sastra" = ["templates/**/*"]
+"" = ["templates/**/*"]
 
 [tool.flask]
 app = "app:app"
