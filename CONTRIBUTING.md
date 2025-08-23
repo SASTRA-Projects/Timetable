@@ -132,10 +132,11 @@ def add_campus(db_connector: Connection,
 				password=password,
 				host=host
 			)
-        >>> connector, cursor = connect(user="root", password="secret")
+        >>> connector, cursor = connect(user=db_user, password=db_password)
         >>> add_campus(connector, cursor, id=2, campus="SRC")
     """
-    cursor.execute("""INSERT INTO `campuses` (`id`, `name`) VALUES (%s, %s)""", (id, campus))
+    cursor.execute("""INSERT INTO `campuses` (`id`, `name`)
+                   VALUES (%s, %s)""", (id, campus))
     db_connector.commit()
 ```
 
@@ -156,13 +157,15 @@ def add_campus(db_connector: Connection,
 > for consistent styling.
 
 ```python
-cursor.execute("""SELECT * FROM `users` WHERE id=%s""", (user_id,))
+cursor.execute("""SELECT * FROM `users`
+               WHERE id=%s""", (user_id,))
 ```
 
 ### HTML/CSS/JS
 
 * HTML uses plain HTML5 with Jinja2 templating.
-* CSS should preferably be using id or class or tag name, inline is also acceptable but not recommended. Do not use external **.css** file.
+* CSS should preferably be using id or class or tag name, inline is also acceptable but not recommended.
+Do not use external **.css** file.
 * JavaScript must be scoped per page (within a HTML page).
 
 ---
