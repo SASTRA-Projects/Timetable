@@ -1,5 +1,5 @@
 [project]
-name = "sastra"
+name = "SASTRA-Timetable"
 version = "1.0.0b1"
 description = "SASTRA Timetable Web Application"
 requires-python = ">=3.11"
@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["sastra"]
+packages = ["SASTRA-Timetable"]
 include-package-data = true
 
 [tool.setuptools.package-data]
