@@ -32,9 +32,6 @@ py-modules = [
 ]
 include-package-data = true
 
-[tool.setuptools.package-data]
-"" = ["templates/**/*"]
-
 [tool.flask]
 app = "app:app"
 env = "production"
