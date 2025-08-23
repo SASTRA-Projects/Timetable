@@ -77,10 +77,14 @@ pip install python-dotenv
 
     # Connect to mysql connector
     # Creates database `SASTRA`, if did not exist.
-    db_connector, cursor = sql.connect(db_user, db_password, host=db_host, port=port)
-
+    db_connector, cursor = sql.connect(db_user,
+                                       db_password,
+                                       host=db_host,
+                                       port=port)
     # Print all the students in campus_id=2
-    # Prints list of dictionaries (just a list, if no data was present): [{id: <id>, name:<name>, join_year: <join_year>, roll_no: <roll_no>, phone:<phone>}, ...]
+    # Prints list of dictionaries
+      (just a list [], if no data was present):
+      [{id: <id>, name:<name>, join_year: <join_year>, roll_no: <roll_no>, phone:<phone>}, ...]
     print(get_students(cursor, programme_id=2))
 ```
 ---
