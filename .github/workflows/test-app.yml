@@ -37,14 +37,14 @@ jobs:
           pip install -r requirements.txt --upgrade
 
       - name: Start Flask App in Forks
-        if: github.repository != 'SASTRA-Projects/SASTRA'
+        if: github.repository != 'SASTRA-Projects/SASTRA-Timetable'
         run: |
           nohup python app.py &
 
       - name: Set Target URL
         id: set-url
         run: |
-          if [ "${{ github.repository }}" = "SASTRA-Projects/SASTRA" ]; then
+          if [ "${{ github.repository }}" = "SASTRA-Projects/SASTRA-Timetable" ]; then
             echo "TARGET_URL=https://sastra-3yx3.onrender.com/" >> $GITHUB_OUTPUT
           else
             echo "TARGET_URL=http://localhost:5000/" >> $GITHUB_OUTPUT
