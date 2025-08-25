@@ -14,6 +14,7 @@
 
 
 from argon2 import PasswordHasher, exceptions
+from show_data import get_degree_duration, get_programme
 from typehints import Cursor, Dict, Optional, Tuple, Union
 
 """
@@ -696,18 +697,44 @@ def get_student(cursor: Cursor, /, *,
                 campus_id=None,
                 join_year=None,
                 programme_id=None,
-                roll_no: Optional[int] = None) -> Optional[Dict[str, Union[int, str]]]:
+                roll_no: Optional[int] = None,
+                reg_no: Optional[Union[int, str]] = None) -> Optional[Dict[str, Union[int, str]]]:
+    if reg_no:
+        reg_no = str(reg_no)
+        campus_id = int(reg_no[0])
+        programme_id = int(reg_no[3:6])
+        degree = get_programme(cursor, programme_id=programme_id)["degree"]
+        duration = get_degree_duration(cursor, degree=degree)
+        join_year = 2000 + int(reg_no[1:3]) - duration % 100
+        roll_no = int(reg_no[6:9])
     if id:
         cursor.execute("""SELECT `name` FROM `students`
                        WHERE `id`=%s""", (id,))
-    else:
+    elif campus_id and join_year and programme_id and roll_no:
         cursor.execute("""SELECT `name` FROM `students`
                        WHERE `campus_id`=%s
                        AND `join_id`=%s
                        AND `programme_id`=%s
                        AND `roll_no`=%s""",
                        (campus_id, join_year, programme_id, roll_no))
+    else:
+        return None
     return cursor.fetchone()
+
+
+def get_reg_no(cursor: Cursor, /, *,
+               id: Optional[int] = None,
+               campus_id=None,
+               join_year=None,
+               programme_id=None,
+               roll_no: Optional[int] = None) -> Optional[str]:
+    if student := get_student(cursor, id=id, campus_id=campus_id,
+                              join_year=join_year, programme_id=programme_id,
+                              roll_no=roll_no):
+        degree = get_programme(cursor, programme_id=programme_id)["degree"]
+        duration = get_degree_duration(cursor, degree=degree)
+        final_year = (join_year + duration) % 100
+        return f"{campus_id}{final_year}{programme_id:03}{roll_no:03}"
 
 
 def get_faculty_details(cursor: Cursor, /, *,
@@ -725,7 +752,6 @@ def get_faculty_details(cursor: Cursor, /, *,
             ph.verify(pwd, password)
         else:
             raise ValueError("Password must be a non-empty string")
-
     except exceptions.VerifyMismatchError:
         if faculty and pwd:
             raise AssertionError("Incorrect Password")
