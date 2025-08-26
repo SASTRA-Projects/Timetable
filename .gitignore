@@ -3,6 +3,7 @@
 a.py
 .*
 !.github/
+*.egg*
 !.dockerignore
 __pycache__/
 *.py[cod]
