@@ -18,6 +18,6 @@ pycparser==2.22
 PyMySQL==1.1.1
 setuptools==80.9.0
 types-PyMySQL==1.1.0.20250822
-typing_extensions==4.14.1
+typing_extensions==4.15.0
 waitress==3.0.2; platform_system == "Windows"
 Werkzeug==3.1.3
