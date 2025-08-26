@@ -6,7 +6,7 @@ requires-python = ">=3.11"
 license = { text = "Apache-2.0" }
 
 dependencies = [
-    "Flask==3.1.1",
+    "Flask==3.1.2",
     "Jinja2==3.1.6", 
     "PyMySQL==1.1.2",
     "argon2-cffi==25.1.0",
