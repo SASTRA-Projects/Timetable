@@ -23,3 +23,4 @@ Cursor: TypeAlias = pymysql.cursors.DictCursor
 Response: TypeAlias = werkzeug.wrappers.Response
 NotFound: TypeAlias = werkzeug.exceptions.NotFound
 IntegrityError: TypeAlias = pymysql.err.IntegrityError
+FileStorage: TypeAlias = werkzeug.datastructures.file_storage.FileStorage

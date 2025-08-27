@@ -3,10 +3,12 @@
 a.py
 .*
 !.github/
+!.gitignore
 *.egg*
 !.dockerignore
 __pycache__/
 *.py[cod]
 sastra/
+timetable/
 venv/
 .vscode/

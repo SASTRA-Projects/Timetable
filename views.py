@@ -34,6 +34,8 @@ def create_views(db_connector: Connection, cursor: Cursor) -> None:
     3. **``campus_buildings``**: Lists buildings available at each campus.
        - **Columns**: `campus_id`, `building_id`
 
+    4. **``programme_duration``**: Lists duration (in years) for each programme.
+
     Parameters
     ==========
     - **db_connector** : Connection
@@ -94,5 +96,11 @@ def create_views(db_connector: Connection, cursor: Cursor) -> None:
                    ON `schools`.`id`=`buildings`.`school_id`
                    INNER JOIN `campuses`
                    ON `campuses`.`id`=`schools`.`campus_id`
+    """)
+    cursor.execute("""CREATE OR REPLACE VIEW `programme_duration` AS
+                   SELECT `programmes`.`id` AS `programme_id`, `duration`
+                   FROM `degrees`
+                   INNER JOIN `programmes`
+                   ON `degrees`.`name`=`programmes`.`degree`
     """)
     db_connector.commit()

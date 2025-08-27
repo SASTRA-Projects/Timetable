@@ -2,7 +2,7 @@
 
 Welcome, Contributors! 🎉
 
-Thank you for your interest in improving the **SASTRA-Timetable**, a comprehensive scheduling system for SASTRA Deemed University.
+Thank you for your interest in improving the **Timetable**, a comprehensive scheduling system for SASTRA Deemed University.
 
 This guide outlines how to contribute effectively, ensuring consistency and code quality across all modules.
 
@@ -32,12 +32,12 @@ This guide outlines how to contribute effectively, ensuring consistency and code
 
 ### 1. Fork & Clone
 
-See [README.md](https://github.com/SASTRA-Projects/SASTRA-Timetable/blob/main/README.md) for other OS.
+See [README.md](https://github.com/SASTRA-Projects/Timetable/blob/main/README.md) for other OS.
 
 (For Linux)
 ```bash
-git clone https://github.com/SASTRA-Projects/SASTRA-Timetable.git
-cd SASTRA-Timetable
+git clone https://github.com/SASTRA-Projects/Timetable.git
+cd Timetable
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt

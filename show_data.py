@@ -172,7 +172,7 @@ def get_programmes(cursor: Cursor, /, *,
                            ON `programmes`.`id`=`CP`.`programme_id`
                            WHERE `CP`.`campus_id`=%s
                            AND `degree`=%s
-                           AND `stream`=%s""",
+                           AND (`stream`=%s OR `stream` IS NULL)""",
                            (campus_id, degree, stream))
         elif degree:
             cursor.execute("""SELECT `id`, `degree`, `stream`
@@ -188,7 +188,7 @@ def get_programmes(cursor: Cursor, /, *,
                            JOIN `campus_programmes` `CP`
                            ON `programmes`.`id`=`CP`.`programme_id`
                            WHERE `CP`.`campus_id`=%s
-                           AND `stream`=%s""",
+                           AND (`stream`=%s OR `stream` IS NULL)""",
                            (campus_id, stream))
         else:
             cursor.execute("""SELECT `id`, `degree`, `stream`
@@ -199,14 +199,15 @@ def get_programmes(cursor: Cursor, /, *,
     if degree and stream:
         cursor.execute("""SELECT `id` FROM `programmes`
                        WHERE `degree` LIKE %s
-                       AND `stream` LIKE %s""",
+                       AND (`stream` LIKE %s OR `stream` IS NULL)""",
                        (degree, stream))
     elif degree:
         cursor.execute("""SELECT `id`, `stream` FROM `programmes`
                        WHERE `degree` LIKE %s""", (degree,))
     elif stream:
         cursor.execute("""SELECT `id`, `degree` FROM `programmes`
-                       WHERE `stream` LIKE %s""", (stream,))
+                       WHERE `stream` LIKE %s OR `stream` IS NULL""",
+                       (stream,))
     else:
         cursor.execute("""SELECT * FROM `programmes`""")
     return cursor.fetchall()

@@ -1,5 +1,5 @@
 [project]
-name = "sastra_timetable"
+name = "timetable"
 version = "1.0.0b1"
 description = "Automate Timetable Generation"
 requires-python = ">=3.11"

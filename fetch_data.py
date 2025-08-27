@@ -321,11 +321,22 @@ def get_classes(cursor: Cursor, /, *,
 
 
 def get_class(cursor: Cursor, /, *,
-              class_id: Optional[int] = None) -> Optional[Dict[str, Union[bool, int]]]:
-    cursor.execute("""SELECT `building_id`, `room_no`,
-                   `capacity`, `is_lab`, `department`
-                   FROM `classes`
-                   WHERE `id`=%s""", (class_id,))
+              class_id: Optional[int] = None,
+              building_id: Optional[int] = None,
+              room_no: Optional[int] = None) -> Optional[Dict[str, Union[bool, int]]]:
+    if class_id:
+        cursor.execute("""SELECT `building_id`, `room_no`,
+                       `capacity`, `is_lab`, `department`
+                       FROM `classes`
+                       WHERE `id`=%s""", (class_id,))
+    elif building_id and room_no:
+        cursor.execute("""SELECT `id`, `capacity`,
+                       `is_lab`, `department`
+                       WHERE `building_id`=%s
+                       AND `room_no`=%s""",
+                       (building_id, room_no))
+    else:
+        return None
     return cursor.fetchone()
 
 
@@ -671,24 +682,61 @@ def get_students(cursor: Cursor, /, *,
     if campus_id:
         if programme_id:
             cursor.execute("""SELECT `id`, `name`, `join_year`,
-                           `roll_no`, `phone`
+                           `roll_no`, `phone`,
+                           CONCAT(
+                            `campus_id`,
+                            LPAD(MOD((`join_year` + `PD`.`duration`),
+                                 100), 2, '0'),
+                            LPAD(`PD`.`programme_id`, 3, '0'),
+                            LPAD(`roll_no`, 3, '0')
+                           ) AS `reg_no`
                            FROM `students`
-                           WHERE `campus_id`=%s
-                           AND `programme_id`=%s""", (campus_id, programme_id))
+                           JOIN `programme_duration` AS `PD`
+                           ON `PD`.`programme_id`=`students`.`programme_id`
+                           AND `campus_id`=%s
+                           AND `PD`.`programme_id`=%s""", (campus_id, programme_id))
         else:
             cursor.execute("""SELECT `id`, `name`,
-                           `programme_id`, `join_year`,
-                           `roll_no`, `phone`
+                           `PD`.`programme_id`, `join_year`,
+                           `roll_no`, `phone`,
+                           CONCAT(
+                            `campus_id`,
+                            LPAD(MOD((`join_year` + `PD`.`duration`),
+                                 100), 2, '0'),
+                            LPAD(`PD`.`programme_id`, 3, '0'),
+                            LPAD(`roll_no`, 3, '0')
+                           ) AS `reg_no`
                            FROM `students`
-                           WHERE `campus_id`=%s""", (campus_id,))
+                           JOIN `programme_duration` AS `PD`
+                           ON `PD`.`programme_id`=`students`.`programme_id`
+                           AND `campus_id`=%s""", (campus_id,))
     elif programme_id:
         cursor.execute("""SELECT  `id`, `name`,
                        `campus_id`, `join_year`,
-                       `roll_no`, `phone`
+                       `roll_no`, `phone`,
+                       CONCAT(
+                        `campus_id`,
+                        LPAD(MOD((`join_year` + `PD`.`duration`),
+                             100), 2, '0'),
+                        LPAD(`PD`.`programme_id`, 3, '0'),
+                        LPAD(`roll_no`, 3, '0')
+                       ) AS `reg_no`
                        FROM `students`
-                       WHERE `programme_id`=%s""", (programme_id,))
+                       JOIN `programme_duration` AS `PD`
+                       ON `PD`.`programme_id`=`students`.`programme_id`
+                       AND `PD`.`programme_id`=%s""", (programme_id,))
     else:
-        cursor.execute("""SELECT * FROM `students`""")
+        cursor.execute("""SELECT *,
+                       CONCAT(
+                        `campus_id`,
+                        LPAD(MOD((`join_year` + `PD`.`duration`),
+                             100), 2, '0'),
+                        LPAD(`PD`.`programme_id`, 3, '0'),
+                        LPAD(`roll_no`, 3, '0')
+                       ) AS `reg_no`
+                       FROM `students`
+                       JOIN `programme_duration` AS `PD`
+                       ON `PD`.`programme_id`=`students`.`programme_id`""")
     return cursor.fetchall()
 
 
@@ -708,13 +756,33 @@ def get_student(cursor: Cursor, /, *,
         join_year = 2000 + int(reg_no[1:3]) - duration % 100
         roll_no = int(reg_no[6:9])
     if id:
-        cursor.execute("""SELECT `name` FROM `students`
-                       WHERE `id`=%s""", (id,))
+        cursor.execute("""SELECT `name`,
+                       CONCAT(
+                        `campus_id`,
+                        LPAD(MOD((`join_year` + `PD`.`duration`),
+                             100), 2, '0'),
+                        LPAD(`PD`.`programme_id`, 3, '0'),
+                        LPAD(`roll_no`, 3, '0')
+                       ) AS `reg_no`
+                       FROM `students`
+                       JOIN `programme_duration` AS `PD`
+                       ON `PD`.`programme_id`=`students`.`programme_id`
+                       AND `id`=%s""", (id,))
     elif campus_id and join_year and programme_id and roll_no:
-        cursor.execute("""SELECT `name` FROM `students`
-                       WHERE `campus_id`=%s
+        cursor.execute("""SELECT `name`,
+                       CONCAT(
+                        `campus_id`,
+                        LPAD(MOD((`join_year` + `PD`.`duration`),
+                             100), 2, '0'),
+                        LPAD(`PD`.`programme_id`, 3, '0'),
+                        LPAD(`roll_no`, 3, '0')
+                       ) AS `reg_no`
+                       FROM `students`
+                       JOIN `programme_duration` AS `PD`
+                       ON `PD`.`programme_id`=`students`.`programme_id`
+                       AND `campus_id`=%s
                        AND `join_id`=%s
-                       AND `programme_id`=%s
+                       AND `PD`.`programme_id`=%s
                        AND `roll_no`=%s""",
                        (campus_id, join_year, programme_id, roll_no))
     else:
@@ -728,9 +796,9 @@ def get_reg_no(cursor: Cursor, /, *,
                join_year=None,
                programme_id=None,
                roll_no: Optional[int] = None) -> Optional[str]:
-    if student := get_student(cursor, id=id, campus_id=campus_id,
-                              join_year=join_year, programme_id=programme_id,
-                              roll_no=roll_no):
+    if get_student(cursor, id=id, campus_id=campus_id,
+                   join_year=join_year, programme_id=programme_id,
+                   roll_no=roll_no):
         degree = get_programme(cursor, programme_id=programme_id)["degree"]
         duration = get_degree_duration(cursor, degree=degree)
         final_year = (join_year + duration) % 100
