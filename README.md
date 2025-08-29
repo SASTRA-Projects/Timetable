@@ -181,7 +181,7 @@ Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) to ensure a collaborativ
 ```
 4. **Push to Your Branch:**
 ```sh
-  git push origin feature-name
+  git push origin branch-name
 ```
 5. **Submit a Pull Request:** Navigate to the **Pull Requests** tab on GitHub and submit your PR.
 
