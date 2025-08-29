@@ -3,7 +3,7 @@
 [![Flask Health Check](https://github.com/SASTRA-Projects/Timetable/actions/workflows/test-app.yml/badge.svg)](https://github.com/SASTRA-Projects/Timetable/actions/workflows/test-app.yml)
 ## 📘 Project Overview
 
-The **SASTRA Timetable Generation System** is an initiative to automate the complex process of class scheduling at [`SASTRA DEEMED TO BE UNIVERSITY`](https://www.sastra.edu). This system leverages modern technologies to create conflict-free timetables, reducing manual work and enhancing efficiency.
+The **SASTRA Timetable Generation System** is an initiative to automate the complex process of class scheduling at [SASTRA DEEMED TO BE UNIVERSITY](https://www.sastra.edu). This system leverages modern technologies to create conflict-free timetables, reducing manual work and enhancing efficiency.
 
 Although technologically advanced, SASTRA DEEMED UNIVERSITY has always managed timetables manually - at least until **July 2025**. This project addresses that gap by automating the timetable generation process using a well-structured database and an intelligent scheduling algorithm.
 
@@ -22,7 +22,7 @@ Although technologically advanced, SASTRA DEEMED UNIVERSITY has always managed t
 - **Backend:** [Flask](https://flask.palletsprojects.com/en/stable/) (Python)
 - **Frontend:** [HTML](https://html.com/), [CSS](https://css3.com/), [JavaScript](https://www.javascript.com/)
 - **Database:** [MySQL](https://www.mysql.com/)
-- **Visualization:** [Mermaid.js](https://mermaid-js.github.io/) for ER diagrams
+- **Visualization:** [Mermaid.js](https://mermaid-js.github.io/) for ER diagram
 
 
 ## 🎯 Project Vision & Mission
@@ -170,10 +170,10 @@ See the [CONTRIBUTING.md](CONTRIBUTING.md) file for detailed information.
 
 Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) to ensure a collaborative and respectful environment.
 
-1. **Fork the Repository:** Click the [“Fork”](https://github.com/SASTRA-Projects/Timetable/fork) button on the [GitHub page](https://github.com/SASTRA-Projects/Timetable).
+1. **Fork the Repository:** Click the [“Fork”](https://github.com/SASTRA-Projects/Timetable/fork) button on the [SASTRA-Projects/Timetable GitHub page](https://github.com/SASTRA-Projects/Timetable).
 2. **Create a Branch:**
 ```sh
-  git checkout -b feature-name
+  git checkout -b branch-name
 ```
 3. **Commit Your Changes:**
 ```sh
@@ -188,3 +188,5 @@ Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) to ensure a collaborativ
 ---
 
 Happy Coding 🚀! Let’s build something awesome together!
+
+If you have any questions or run into issues, please feel free to open an issue on GitHub!
