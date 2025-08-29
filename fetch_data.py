@@ -674,12 +674,13 @@ def get_faculty_id(cursor: Cursor, /, *,
     faculties = cursor.fetchall()
     if not faculties:
         return None
-    return [faculty["id"] for faculty in faculties]
+    return tuple(faculty["id"] for faculty in faculties)
 
 
 def get_students(cursor: Cursor, /, *,
                  campus_id: Optional[int] = None,
-                 programme_id: Optional[int] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
+                 programme_id: Optional[int] = None,
+                 section_id: Optional[int] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
     if campus_id:
         if programme_id:
             cursor.execute("""SELECT `id`, `name`, `join_year`,
@@ -695,7 +696,8 @@ def get_students(cursor: Cursor, /, *,
                            JOIN `programme_duration` AS `PD`
                            ON `PD`.`programme_id`=`students`.`programme_id`
                            AND `campus_id`=%s
-                           AND `PD`.`programme_id`=%s""", (campus_id, programme_id))
+                           AND `PD`.`programme_id`=%s""",
+                           (campus_id, programme_id))
         else:
             cursor.execute("""SELECT `id`, `name`,
                            `PD`.`programme_id`, `join_year`,
@@ -738,6 +740,13 @@ def get_students(cursor: Cursor, /, *,
                        FROM `students`
                        JOIN `programme_duration` AS `PD`
                        ON `PD`.`programme_id`=`students`.`programme_id`""")
+    if section_id:
+        students = cursor.fetchall()
+        section_students = {student["student_id"]
+                            for student in get_section_students(
+                                cursor, section_id=section_id)}
+        return tuple(student for student in students
+                     if student["id"] in section_students)
     return cursor.fetchall()
 
 
