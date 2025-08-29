@@ -332,6 +332,7 @@ def get_class(cursor: Cursor, /, *,
     elif building_id and room_no:
         cursor.execute("""SELECT `id`, `capacity`,
                        `is_lab`, `department`
+                       FROM `classes`
                        WHERE `building_id`=%s
                        AND `room_no`=%s""",
                        (building_id, room_no))
