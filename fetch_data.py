@@ -779,7 +779,7 @@ def get_student(cursor: Cursor, /, *,
                        ON `PD`.`programme_id`=`students`.`programme_id`
                        AND `id`=%s""", (id,))
     elif campus_id and join_year and programme_id and roll_no:
-        cursor.execute("""SELECT `name`,
+        cursor.execute("""SELECT `id`, `name`,
                        CONCAT(
                         `campus_id`,
                         LPAD(MOD((`join_year` + `PD`.`duration`),
@@ -791,7 +791,7 @@ def get_student(cursor: Cursor, /, *,
                        JOIN `programme_duration` AS `PD`
                        ON `PD`.`programme_id`=`students`.`programme_id`
                        AND `campus_id`=%s
-                       AND `join_id`=%s
+                       AND `join_year`=%s
                        AND `PD`.`programme_id`=%s
                        AND `roll_no`=%s""",
                        (campus_id, join_year, programme_id, roll_no))

@@ -16,7 +16,6 @@
 from argon2 import PasswordHasher
 from typehints import Connection, Cursor, IntegrityError, Optional, Union
 
-
 """
 Adds the data to the correspoding tables.
 For datas that will be added frequently,
@@ -50,6 +49,7 @@ def add_faculty_info(db_connector: Connection,
                 raise IntegrityError("Faculty ID does not exist in `faculties` table.")
         raise ValueError("Faculty ID does not exist in `faculties` table or Faculty information already exists")
 
+
 def add_section_minor_elective(db_connector: Connection,
                                cursor: Cursor, /, *,
                                section_id: Optional[int] = None,
@@ -58,6 +58,7 @@ def add_section_minor_elective(db_connector: Connection,
                    (`section_id`, `course_code`)
                    VALUES (%s, %s)""", (section_id, course_code))
     db_connector.commit()
+
 
 def add_section_class(db_connector: Connection,
                       cursor: Cursor, /, *,
@@ -68,6 +69,7 @@ def add_section_class(db_connector: Connection,
                    VALUES (%s, %s)""", (section_id, class_id))
     db_connector.commit()
 
+
 def add_section_student(db_connector: Connection,
                         cursor: Cursor, /, *,
                         section_id: Optional[int] = None,
@@ -76,6 +78,7 @@ def add_section_student(db_connector: Connection,
                    (`section_id`, `student_id`)
                    VALUES (%s, %s)""", (section_id, student_id))
     db_connector.commit()
+
 
 def add_faculty_section_course(db_connector: Connection,
                         cursor: Cursor, /, *,
@@ -89,6 +92,7 @@ def add_faculty_section_course(db_connector: Connection,
                    (id, faculty_id, section_id, course_code))
     db_connector.commit()
 
+
 def add_student_elective(db_connector: Connection,
                          cursor: Cursor, /, *,
                          student_id: Optional[int] = None,
@@ -98,24 +102,26 @@ def add_student_elective(db_connector: Connection,
                    VALUES (%s, %s)""", (student_id, course_code))
     db_connector.commit()
 
+
 def add_period(db_connector: Connection,
                cursor: Cursor, /, *,
                id: Optional[int] = None,
                start_time: Optional[str] = None,
                end_time: Optional[str] = None,
                is_break: bool = False) -> None:
-    def __add_one(start):
+    def __add_one_hr(start):
         hr, *min = start.split(":")
         hr = (int(hr) + 1) % 24
         return str(hr) + ":" + ":".join(min)
 
     if not end_time:
-        end_time = __add_one(start_time)
+        end_time = __add_one_hr(start_time)
     cursor.execute("""INSERT INTO `periods`
                    (`id`, `start_time`, `end_time`, `is_break`)
                    VALUES (%s, %s, %s, %s)""",
                    (id, start_time, end_time, is_break))
     db_connector.commit()
+
 
 def add_timetable(db_connector: Connection,
                   cursor: Cursor, /, *,

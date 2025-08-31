@@ -22,6 +22,8 @@ Adds the data to the correspoding tables.
 For datas that won't be added frequently,
 the functions are defined here.
 """
+
+
 def add_campus(db_connector: Connection,
                cursor: Cursor, /, *,
                id: Optional[int] = None,

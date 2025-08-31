@@ -38,17 +38,17 @@ def create_views(db_connector: Connection, cursor: Cursor) -> None:
 
     Parameters
     ==========
-    - **db_connector** : Connection
+    - **db_connector**: Connection
       The database connection object used to interact with the database.
 
-    - **cursor** : Cursor
+    - **cursor**: Cursor
       A cursor object for executing SQL commands.
 
     Examples
     =========
     .. code-block:: python
 
-        >>> from SASTRA import *
+        >>> from Timetable.mysql_connector import connect
 
         >>> # Create Connection object and Cursor object
         >>> connector, cursor = connect(

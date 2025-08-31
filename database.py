@@ -32,10 +32,10 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 
     Parameters
     ==========
-    - **db_connector** : Connection
+    - **db_connector**: Connection
       The database connection object used to interact with the database.
 
-    - **cursor** : Cursor
+    - **cursor**: Cursor
       A cursor object for executing SQL commands.
 
     Tables Created
@@ -63,7 +63,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
     ========
     .. code-block:: python
 
-        >>> from SASTRA import *
+        >>> from Timetable.mysql_connector import connect
 
         >>> # Create Connection object and Cursor object
         >>> connector, cursor = connect(
@@ -76,9 +76,9 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
 
     See Also
     ========
-    - :func:`connect` – To establish a connection with the database.
-    - :func:`create_relations` – Creates relational tables for the database.
-    - :func:`create_triggers` – To create triggers for the database.
+    - `connect()` – To establish a connection with the database.
+    - `create_relations()` – Creates relational tables for the database.
+    - `create_triggers()` – To create triggers for the database.
     """
     """
     Functional Dependencies
