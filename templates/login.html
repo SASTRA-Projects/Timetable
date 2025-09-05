@@ -14,167 +14,143 @@ limitations under the License. -->
 
 
 {% extends "layout.html" %}
-
 {% block head %}
-    <meta name="description"
-          content="Login to access your account.
-                   Enter your username or ID and password for authentication.">
-    <style>
-        #loginForm {
-            max-width: 600px;
-            margin: 0.5rem auto;
-            padding: 1rem;
-            background-color: var(--input-bg-dark);
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        [data-theme="light"] #loginForm {
-            background-color: var(--input-bg-light);
-        }
-
-        .field-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.75rem;
-            position: relative;
-            transition: var(--transition);
-        }
-
-        .field-group label {
-            width: 140px;
-            margin-right: 1rem;
-            font-size: 1.2rem;
-            font-weight: 500;
-            color: var(--text-dark);
-        }
-
-        [data-theme="light"] .field-group label {
-            color: var(--text-light);
-        }
-
-        .field-group input {
-            flex: 1;
-            padding: 0.75rem 1.5rem 0.75rem 1rem;
-            border: 1px solid var(--input-border-dark);
-            border-radius: 8px;
-            background-color: var(--input-bg-dark);
-            color: var(--text-dark);
-            font-size: 1.2rem;
-            transition: var(--transition);
-            box-sizing: border-box;
-        }
-
-        [data-theme="light"] .field-group input {
-            border-color: var(--input-border-light);
-            background-color: var(--input-bg-light);
-            color: var(--text-light);
-        }
-
-        .field-group input:focus {
-            outline: none;
-            border-color: var(--accent-dark);
-            box-shadow: 0 0 8px rgba(30, 58, 138, 0.2);
-        }
-
-        [data-theme="light"] .field-group input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
-        }
-
-        .field-group.password svg#togglePassword {
-            position: absolute;
-            right: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 20px;
-            height: 20px;
-            fill: var(--text-dark);
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-        }
-
-        [data-theme="light"] .field-group.password svg#togglePassword {
-            fill: var(--text-light);
-        }
-
-        .field-group.password svg#togglePassword:hover {
-            opacity: 1;
-            transform: translateY(-50%) scale(1.1);
-        }
-
-        #loginForm button {
-            width: 100%;
-            padding: 0.75rem;
-            background-color: var(--accent-dark);
-            color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        [data-theme="light"] #loginForm button {
-            background-color: var(--accent);
-        }
-
-        #loginForm button:hover {
-            background-color: #1e40af;
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.3);
-        }
-
-        [data-theme="light"] #loginForm button:hover {
-            background-color: #2563eb;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-        }
-
-        .error.message {
-            color: var(--error);
-            font-size: 0.9rem;
-            text-align: center;
-            margin-top: 0.5rem;
-        }
-
-        @media (max-width: 600px) {
-            #loginForm {
-                margin: 0.5rem;
-                padding: 1rem;
-            }
-
-            .field-group {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .field-group label {
-                width: auto;
-                margin-right: 0;
-                margin-bottom: 0.5rem;
-                text-align: center;
-            }
-
-            .field-group input {
-                width: 100%;
-                padding: 0.75rem;
-            }
-
-            .field-group.password svg#togglePassword {
-                right: 0.75rem;
-                top: calc(100% - 2.25rem);
-                transform: none;
-            }
-        }
-    </style>
+  <meta name="description"
+        content="Login to access your account.
+                  Enter your username or ID and password for authentication.">
+  <style>
+      #loginForm {
+          max-width: 600px;
+          margin: 0.5rem auto;
+          padding: 1rem;
+          background-color: var(--input-bg-dark);
+          border-radius: 12px;
+          box-shadow: var(--shadow);
+          transition: var(--transition);
+          animation: fadeIn 0.5s ease-in;
+      }
+      [data-theme="light"] #loginForm {
+          background-color: var(--input-bg-light);
+      }
+      .field-group {
+          display: flex;
+          align-items: center;
+          margin-bottom: 0.75rem;
+          position: relative;
+          transition: var(--transition);
+      }
+      .field-group label {
+          width: 140px;
+          margin-right: 1rem;
+          font-size: 1.2rem;
+          font-weight: 500;
+          color: var(--text-dark);
+      }
+      [data-theme="light"] .field-group label {
+          color: var(--text-light);
+      }
+      .field-group input {
+          flex: 1;
+          padding: 0.75rem 1.5rem 0.75rem 1rem;
+          border: 1px solid var(--input-border-dark);
+          border-radius: 8px;
+          background-color: var(--input-bg-dark);
+          color: var(--text-dark);
+          font-size: 1.2rem;
+          transition: var(--transition);
+          box-sizing: border-box;
+      }
+      [data-theme="light"] .field-group input {
+          border-color: var(--input-border-light);
+          background-color: var(--input-bg-light);
+          color: var(--text-light);
+      }
+      .field-group input:focus {
+          outline: none;
+          border-color: var(--accent-dark);
+          box-shadow: 0 0 8px rgba(30, 58, 138, 0.2);
+      }
+      [data-theme="light"] .field-group input:focus {
+          border-color: var(--accent);
+          box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+      }
+      .field-group.password svg#togglePassword {
+          position: absolute;
+          right: 0.75rem;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 20px;
+          height: 20px;
+          fill: var(--text-dark);
+          cursor: pointer;
+          opacity: 0.7;
+          transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      [data-theme="light"] .field-group.password svg#togglePassword {
+          fill: var(--text-light);
+      }
+      .field-group.password svg#togglePassword:hover {
+          opacity: 1;
+          transform: translateY(-50%) scale(1.1);
+      }
+      #loginForm button {
+          width: 100%;
+          padding: 0.75rem;
+          background-color: var(--accent-dark);
+          color: #ffffff;
+          border: none;
+          border-radius: 8px;
+          font-size: 1.2rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: var(--transition);
+      }
+      [data-theme="light"] #loginForm button {
+          background-color: var(--accent);
+      }
+      #loginForm button:hover {
+          background-color: #1e40af;
+          transform: translateY(-2px);
+          box-shadow: 0 2px 8px rgba(30, 58, 138, 0.3);
+      }
+      [data-theme="light"] #loginForm button:hover {
+          background-color: #2563eb;
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+      }
+      .error.message {
+          color: var(--error);
+          font-size: 0.9rem;
+          text-align: center;
+          margin-top: 0.5rem;
+      }
+      @media (max-width: 600px) {
+          #loginForm {
+              margin: 0.5rem;
+              padding: 1rem;
+          }
+          .field-group {
+              flex-direction: column;
+              align-items: stretch;
+          }
+          .field-group label {
+              width: auto;
+              margin-right: 0;
+              margin-bottom: 0.5rem;
+              text-align: center;
+          }
+          .field-group input {
+              width: 100%;
+              padding: 0.75rem;
+          }
+          .field-group.password svg#togglePassword {
+              right: 0.75rem;
+              top: calc(100% - 2.25rem);
+              transform: none;
+          }
+      }
+  </style>
 {% endblock %}
-
 {% block title %}{{ role.title() }} Login{% endblock %}
-
 {% block content %}
     <form id="loginForm" action="{{ auth }}" method="post">
         <h1>{{ role.title() }} Login</h1>

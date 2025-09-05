@@ -190,7 +190,7 @@
       padding: 0;
     }
     .nobulletins li {
-      margin: 1rem 0;
+      margin: 0;
       padding: 1rem;
       background-color: var(--input-bg-light);
       border-radius: 0.75rem;
@@ -201,36 +201,42 @@
       transform: scale(1.02);
     }
     .grid-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(15.625rem, 1fr));
-        gap: 1.5rem;
-        padding: 1rem;
-        width: 80vw;
-        margin: 0 auto;
+        display: flex;
+        flex-wrap: wrap;
         justify-content: center;
+        gap: 1.5rem;
+        padding: 2rem;
+        width: 100%;
+        max-width: 60rem;
+        margin: 0 auto;
     }
     .grid-item {
         background-color: var(--input-bg-light);
         border-radius: 1rem;
         box-shadow: var(--shadow);
-        padding: 1.5rem;
-        text-align: center;
-        transition: transform 0.3s ease;
+        padding: 1.5rem 2rem;
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100%;
+        min-height: 5rem;
+        min-width: 15rem;
+        flex-basis: max-content;
+        flex-grow: 0;
+        flex-shrink: 0;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+        cursor: pointer;
+        text-align: center;
+        white-space: nowrap;
     }
     [data-theme="dark"] .grid-item {
         background-color: var(--input-bg-dark);
     }
     .grid-item a {
         text-decoration: none;
-        font-size: 1.8rem;
+        font-size: clamp(1.2rem, 2vw, 1.8rem);
         color: var(--accent);
         font-weight: 600;
-        display: block;
-        min-width: 1rem;
+        line-height: 1.4;
     }
     .grid-item:hover {
         transform: translateY(-0.3125rem);
