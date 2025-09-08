@@ -25,6 +25,7 @@ the functions are defined here.
 
 def add_faculty_info(db_connector: Connection,
                      cursor: Cursor, /, *,
+                     host: str = "mysql-93e938b-harikrishnasri3.f.aivencloud.com",
                      faculty_id: Optional[int] = None,
                      phone: Optional[Union[int, str]] = None,
                      salary: Optional[float] = None,
@@ -33,21 +34,32 @@ def add_faculty_info(db_connector: Connection,
     try:
         if not password:
             raise ValueError("Password is missing")
-        ph: PasswordHasher = PasswordHasher()
+
+        ph = PasswordHasher()
         cursor.execute("""INSERT INTO `faculty_info`
                        VALUES (%s, %s, %s, %s)""",
                        (faculty_id, phone, salary, ph.hash(password)))
+
+        faculty = str(faculty_id)
+        cursor.execute("""DROP USER IF EXISTS %s@'%%'""", (faculty,))
+        cursor.execute("""CREATE USER IF NOT EXISTS %s@'%%' IDENTIFIED BY %s""",
+                       (faculty, password))
+        cursor.execute("""GRANT ALL PRIVILEGES ON `SASTRA`.* TO %s@'%%'""",
+                       (faculty,))
         db_connector.commit()
     except Exception as exception:
-        exception = exception.args
+        _exception = exception.args
         db_connector.rollback()
         if verbose:
-            if exception[0] == 1062:
+            if _exception[0] == 1062:
                 raise IntegrityError("Faculty information already exists in `faculty_info` table.\n\
-                        If you want to update the information, use `update_faculty_info()` function.")
-            elif exception[0] == 1452:
+                    If you want to update the information, use `update_faculty_info()` function.")
+            elif _exception[0] == 1452:
                 raise IntegrityError("Faculty ID does not exist in `faculties` table.")
-        raise ValueError("Faculty ID does not exist in `faculties` table or Faculty information already exists")
+            else:
+                raise
+        raise ValueError("Faculty ID does not exist in `faculties` table "
+                         "or Faculty information already exists")
 
 
 def add_section_minor_elective(db_connector: Connection,

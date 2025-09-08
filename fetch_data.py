@@ -14,7 +14,7 @@
 
 
 from argon2 import PasswordHasher, exceptions
-from show_data import get_degree_duration, get_programme
+from show_data import get_buildings, get_degree_duration, get_programme
 from typehints import Cursor, Dict, Optional, Tuple, Union
 
 """
@@ -823,8 +823,9 @@ def get_faculty_details(cursor: Cursor, /, *,
             cursor.execute("""SELECT * FROM `faculty_view`
                            WHERE `id`=%s""", (id,))
             faculty = cursor.fetchone()
+            pwd: Union[float, int, str] = 0
             if faculty:
-                pwd: Union[float, int, str] = faculty["password"]
+                pwd = faculty["password"]
 
             ph = PasswordHasher()
             ph.verify(pwd, password)
@@ -977,10 +978,13 @@ def get_periods(cursor: Cursor, /, *,
 
 
 def get_timetables(cursor: Cursor, /, *,
+                   campus_id: Optional[int] = None,
                    faculty_id: Optional[int] = None,
                    section_id: Optional[int] = None,
                    course_code: Optional[str] = None,
-                   class_id: Optional[int] = None) -> Tuple[Dict[str, Union[int, str]]]:
+                   class_id: Optional[int] = None,
+                   day: Optional[str] = None,
+                   period_id: Optional[int] = None) -> Tuple[Dict[str, Union[int, str]]]:
     if class_id:
         cursor.execute("""SELECT `day`, `period_id`,
                        `faculty_section_course_id`,
@@ -1000,6 +1004,16 @@ def get_timetables(cursor: Cursor, /, *,
                        ON `class_id`=`classes`.`id`""")
 
     timetables = cursor.fetchall()
+    if day:
+        timetables = [t for t in timetables if t["day"] == day]
+    if period_id:
+        timetables = [t for t in timetables if t["period_id"] == period_id]
+    if campus_id:
+        buildings = {b["id"]
+                     for b in get_buildings(cursor, campus_id=campus_id)}
+        timetables = [t for t in timetables
+                      if t["building_id"] in buildings]
+
     if faculty_id or section_id or class_id:
         faculty_section_course_ids = {fsc["id"]: {
                 "faculty_id": fsc.get("faculty_id", faculty_id),
@@ -1015,3 +1029,21 @@ def get_timetables(cursor: Cursor, /, *,
                       if (id := timetable["faculty_section_course_id"])
                       in faculty_section_course_ids]
     return timetables
+
+
+def get_free_faculties(cursor: Cursor, /, *,
+                       campus_id: int,
+                       period_ids: Tuple[int],
+                       day: Optional[str] = None) -> Tuple[int, ...]:
+    cursor.execute("""SELECT `id`, `faculty_id`
+                   FROM `faculty_section_course`""")
+    fsc = cursor.fetchall()
+    faculties: dict[int, list[int]] = {}
+    for f in fsc:
+        faculties.setdefault(f["faculty_id"], []).append(f["id"])
+
+    timetables = get_timetables(cursor, campus_id=campus_id, day=day)
+    timetables = [t for t in timetables if t["period_id"] in period_ids]
+    return tuple(f_id
+                 for f_id, fsc_ids in faculties.items()
+                 if not any(fid in timetables for fid in fsc_ids))

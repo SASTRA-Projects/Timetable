@@ -48,16 +48,10 @@ limitations under the License. -->
         .course-table th, .course-table td {
             padding: 0.25rem;
         }
-        h2 {
-            text-align: center;
-            margin: 1.25rem 0;
-            font-size: clamp(1.25rem, 3vw, 1.5rem);
-            color: var(--text-dark);
-        }
         .timetable-container {
             width: 100%;
             max-width: 80rem;
-            margin: 0 auto;
+            margin-bottom: 2rem;
             padding: 0 0.5rem;
             overflow-x: auto;
         }
@@ -150,7 +144,7 @@ limitations under the License. -->
                                   .replace(/[ -]/g, "_").toLocaleLowerCase();
             const htmlContent = `
                 <!DOCTYPE html>
-                <html>
+                <html lang="en-US">
                 <head>
                     <title>Timetable</title>
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
