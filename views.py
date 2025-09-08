@@ -18,23 +18,34 @@ from typehints import Connection, Cursor
 
 def create_views(db_connector: Connection, cursor: Cursor) -> None:
     r"""
-    Create database views to simplify queries and improve data retrieval efficiency.
+    Create database views to simplify queries
+    and improve data retrieval efficiency.
 
-    This function generates **SQL views**, which are stored queries that allow efficient
+    This function generates **SQL views**,
+    which are stored queries that allow efficient
     access to faculty information, campus departments, and campus buildings.
 
     Views Created
     =============
-    1. **``faculty_view``**: Combines faculty details with their additional info.
-       - **Columns**: All columns from `faculties` and `faculty_info`.
+    1. **``faculty_view``**: Combines faculty details
+                             with their additional info.
+        - **Columns**: All columns from `faculties` and `faculty_info`.
 
     2. **``campus_departments``**: Lists departments available at each campus.
-       - **Columns**: `campus_id`, `department`
+        - **Columns**: `campus_id`, `department`
 
     3. **``campus_buildings``**: Lists buildings available at each campus.
-       - **Columns**: `campus_id`, `building_id`
+        - **Columns**: `campus_id`, `building_id`
 
-    4. **``programme_duration``**: Lists duration (in years) for each programme.
+    4. **``programme_duration``**: Lists duration (in years)
+                                   for each programme.
+        - **Columns**: `programme_id`, `duration`
+
+    5. **``section_student_details``**: Lists details of section & students.
+        - **Columns**: `section_id`, `student_id`, `campus_id`,
+                       `degree`, `stream`, `section`, `year`,
+                       `name`, `join_year`, `programme_id`,
+                       `roll_no`, `phone_no`
 
     Parameters
     ==========
@@ -66,7 +77,8 @@ def create_views(db_connector: Connection, cursor: Cursor) -> None:
     ========
     - `create_database()`: Defines the base tables for the database.
     - `create_relations()`: Defines foreign keys and relational constraints.
-    - `create_timetable()`: Ensures timetable data is generated before views are created.
+    - `create_timetable()`: Ensures timetable data is generated,
+                            before views are created.
     """
     import timetable
     timetable.create_timetable(db_connector, cursor)
@@ -103,4 +115,15 @@ def create_views(db_connector: Connection, cursor: Cursor) -> None:
                    INNER JOIN `programmes`
                    ON `degrees`.`name`=`programmes`.`degree`
     """)
+    cursor.execute("""CREATE OR REPLACE VIEW `section_student_details` AS
+                   SELECT `section_id`, `student_id`,
+                   `sections`.`campus_id` AS `campus_id`,
+                   `degree`, `stream`, `section`, `year`,
+                   `name`, `join_year`, `programme_id`,
+                   `roll_no`, `phone`
+                   FROM `section_students`
+                   INNER JOIN `sections`
+                   ON `sections`.`id`=`section_id`
+                   INNER JOIN `students`
+                   ON `students`.`id`=`student_id`""")
     db_connector.commit()

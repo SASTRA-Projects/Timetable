@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from typing import Dict, List, Optional, TypeAlias, Union, Tuple, Set
+from typing import Dict, List, Literal, Optional, TypeAlias, Union, Tuple, Set
 import pymysql
 import werkzeug
 
