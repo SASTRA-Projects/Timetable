@@ -14,7 +14,7 @@ mypy==1.17.1
 mypy_extensions==1.1.0
 packaging==25.0
 pathspec==0.12.1
-pycparser==2.22
+pycparser==2.23
 PyMySQL==1.1.2
 setuptools==80.9.0
 types-PyMySQL==1.1.0.20250822
