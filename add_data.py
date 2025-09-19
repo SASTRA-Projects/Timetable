@@ -61,6 +61,7 @@ def add_campus(db_connector: Connection,
                    VALUES (%s, %s)""", (id, campus))
     db_connector.commit()
 
+
 def add_school(db_connector: Connection,
                cursor: Cursor, /, *,
                id: Optional[int] = None,
@@ -96,6 +97,7 @@ def add_school(db_connector: Connection,
     cursor.execute("""INSERT INTO `schools` (`id`, `name`, `campus_id`)
                    VALUES (%s, %s, %s)""", (id, school, campus_id))
     db_connector.commit()
+
 
 def add_building(db_connector: Connection,
                  cursor: Cursor, /, *,
@@ -136,6 +138,7 @@ def add_building(db_connector: Connection,
                    VALUES (%s, %s, %s)""", (id, school_id, rooms))
     db_connector.commit()
 
+
 def add_department(db_connector: Connection,
                    cursor: Cursor, /, *,
                    department: Optional[str] = None) -> None:
@@ -160,6 +163,7 @@ def add_department(db_connector: Connection,
     cursor.execute("""INSERT INTO `departments` (`name`)
                    VALUES (%s)""", (department,))
     db_connector.commit()
+
 
 def add_degree(db_connector: Connection,
                cursor: Cursor, /, *,
@@ -189,6 +193,7 @@ def add_degree(db_connector: Connection,
                    VALUES (%s, %s)""", (degree, duration))
     db_connector.commit()
 
+
 def add_stream(db_connector: Connection,
                cursor: Cursor, /, *,
                stream: Optional[str] = None,
@@ -216,6 +221,7 @@ def add_stream(db_connector: Connection,
     cursor.execute("""INSERT INTO `streams` (`name`, `department`)
                    VALUES (%s, %s)""", (stream, department))
     db_connector.commit()
+
 
 def add_programme(db_connector: Connection,
                   cursor: Cursor, /, *,
@@ -247,6 +253,7 @@ def add_programme(db_connector: Connection,
     cursor.execute("""INSERT INTO `programmes` (`id`, `degree`, `stream`)
                    VALUES (%s, %s, %s)""", (id, degree, stream))
     db_connector.commit()
+
 
 def add_course(db_connector: Connection,
                cursor: Cursor, /, *,
@@ -293,6 +300,7 @@ def add_course(db_connector: Connection,
                    (code, course, department, credits, L, P, T))
     db_connector.commit()
 
+
 def add_lab_department(db_connector: Connection,
                        cursor: Cursor, /, *,
                        course_code: Optional[str] = None,
@@ -322,6 +330,7 @@ def add_lab_department(db_connector: Connection,
     cursor.execute("""INSERT INTO `lab_departments` (`course_code`, `department`)
                    VALUES (%s, %s)""", (course_code, department))
     db_connector.commit()
+
 
 def add_campus_programme(db_connector: Connection,
                          cursor: Cursor, /, *,
@@ -357,6 +366,7 @@ def add_campus_programme(db_connector: Connection,
                    VALUES (%s, %s)""", (campus_id, programme_id))
     db_connector.commit()
 
+
 def add_school_department(db_connector: Connection,
                           cursor: Cursor, /, *,
                           school_id: Optional[int] = None,
@@ -389,6 +399,7 @@ def add_school_department(db_connector: Connection,
     cursor.execute("""INSERT INTO `school_departments` (`school_id`, `department`)
                    VALUES (%s, %s)""", (school_id, department))
     db_connector.commit()
+
 
 def add_programme_course(db_connector: Connection,
                          cursor: Cursor, /, *,
@@ -423,6 +434,7 @@ def add_programme_course(db_connector: Connection,
                    (`programme_id`, `course_code`, `is_elective`)
                    VALUES (%s, %s, %s)""", (programme_id, course_code, elective))
     db_connector.commit()
+
 
 def add_class(db_connector: Connection,
               cursor: Cursor, /, *,
@@ -472,6 +484,7 @@ def add_class(db_connector: Connection,
                    (id, building_id, room_no, capacity, is_lab, department))
     db_connector.commit()
 
+
 def add_section(db_connector: Connection,
                 cursor: Cursor, /, *,
                 id: Optional[int] = None,
@@ -517,6 +530,7 @@ def add_section(db_connector: Connection,
                    VALUES (%s, %s, %s, %s, %s, %s)""",
                    (id, campus_id, degree, stream, section, year))
     db_connector.commit()
+
 
 def add_faculty(db_connector: Connection,
                 cursor: Cursor, /, *,
@@ -564,6 +578,7 @@ def add_faculty(db_connector: Connection,
                    VALUES (%s, %s, %s, %s, %s)""",
                    (id, name, campus_id, department, join_year))
     db_connector.commit()
+
 
 def add_student(db_connector: Connection,
                 cursor: Cursor, /, *,

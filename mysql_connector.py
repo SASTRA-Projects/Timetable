@@ -19,6 +19,7 @@ import pymysql
 timeout = 180
 db_connector: Optional[Connection] = None
 cursor: Optional[Cursor] = None
+HOST: str = "mysql-93e938b-harikrishnasri3.f.aivencloud.com"
 
 
 def connect(user: str,
@@ -26,7 +27,8 @@ def connect(user: str,
             host: str = "mysql-93e938b-harikrishnasri3.f.aivencloud.com",
             charset: str = "utf8mb4",
             port: int = 17216) -> Tuple[Connection, Cursor]:
-    global db_connector, cursor
+    global db_connector, cursor, HOST
+    HOST = host
     db_connector = pymysql.connect(
         charset=charset,
         connect_timeout=timeout,
@@ -42,7 +44,6 @@ def connect(user: str,
     if db_connector:
         cursor = db_connector.cursor()
     if cursor:
-        cursor.execute("""CREATE DATABASE IF NOT EXISTS `SASTRA`""")
         cursor.execute("""USE `SASTRA`""")
     return (db_connector, cursor)
 
