@@ -93,30 +93,6 @@ limitations under the License. -->
           opacity: 1;
           transform: translateY(-50%) scale(1.1);
       }
-      #loginForm button {
-          width: 100%;
-          padding: 0.75rem;
-          background-color: var(--accent-dark);
-          color: #ffffff;
-          border: none;
-          border-radius: 8px;
-          font-size: 1.2rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: var(--transition);
-      }
-      [data-theme="light"] #loginForm button {
-          background-color: var(--accent);
-      }
-      #loginForm button:hover {
-          background-color: #1e40af;
-          transform: translateY(-2px);
-          box-shadow: 0 2px 8px rgba(30, 58, 138, 0.3);
-      }
-      [data-theme="light"] #loginForm button:hover {
-          background-color: #2563eb;
-          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-      }
       @media (max-width: 600px) {
           #loginForm {
               margin: 0.5rem;
@@ -152,14 +128,16 @@ limitations under the License. -->
             <label for="user">{{ user }}</label>
             <input type="{{ userType or 'text' }}" name="user" id="user" autofocus autocomplete="off" required>
         </div>
-        <div class="field-group password">
-            <label for="password">Password</label>
-            <input type="password" name="password" id="password" autocomplete="off" required>
-            <svg id="togglePassword" class="toggle-password" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-            </svg>
-        </div>
-        <button type="submit">Login</button>
+        {% if not pwd_less %}
+            <div class="field-group password">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" autocomplete="off" required value="{{ pwd }}">
+                <svg id="togglePassword" class="toggle-password" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                </svg>
+            </div>
+        {% endif %}
+        <button type="submit" class="active-button">Login</button>
         {% if error_message %}
             <div class="error message">{{ error_message }}</div>
         {% endif %}

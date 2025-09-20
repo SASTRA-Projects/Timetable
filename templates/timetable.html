@@ -15,115 +15,143 @@ limitations under the License. -->
 
 {% extends "layout.html" %}
 
-{% block head %}
-    <meta name="description" content="Timetable for academic sections showing daily schedules and course details.">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        table, th, td {
-            border: 0.0625rem solid var(--input-border-light);
-            border-collapse: collapse;
-            text-align: center;
-            padding: 0.25rem;
-        }
-        [data-theme="dark"] table, [data-theme="dark"] th, [data-theme="dark"] td {
-            border-color: var(--input-border-dark);
-        }
-        th {
-            font-weight: bold;
-            background-color: #d2b48c;
-        }
-        [data-theme="dark"] th {
-            background-color: #8b6f47;
-        }
-        td {
-            background-color: #f5e6cc;
-        }
-        [data-theme="dark"] td {
-            background-color: #3c2f1f;
-        }
-        .course-table {
-            width: 100%;
-            margin-top: 1.25rem;
-        }
-        .course-table th, .course-table td {
-            padding: 0.25rem;
-        }
-        .timetable-container {
-            width: 100%;
-            max-width: 80rem;
-            margin-bottom: 2rem;
-            padding: 0 0.5rem;
-            overflow-x: auto;
-        }
-        table {
-            width: 100%;
-            min-width: 20rem;
-            font-size: clamp(0.625rem, 1.5vw, 0.75rem);
-        }
-        th, td {
-            height: auto;
-            min-height: 1.5rem;
-            padding: clamp(0.2rem, 0.8vw, 0.3rem);
-        }
-        th:first-child, td:first-child {
-            width: 8%;
-            min-width: 3.5rem;
-        }
-        @media (max-width: 48rem) {
-            th:first-child, td:first-child {
-                width: 12%;
-                min-width: 3rem;
-            }
-            table {
-                font-size: clamp(0.5rem, 1.2vw, 0.625rem);
-            }
-            .timetable-container {
-                padding: 0 0.25rem;
-            }
-        }
-        @media (max-width: 30rem) {
-            th:first-child, td:first-child {
-                width: 15%;
-                min-width: 2.5rem;
-            }
-            table {
-                font-size: clamp(0.4375rem, 1vw, 0.5rem);
-            }
-        }
-    </style>
-{% endblock %}
-
 {% block title %}Timetable{% endblock %}
 
+{% block head %}
+<meta name="description" content="Timetable for academic sections showing daily schedules and course details.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+    #content {
+        padding: 0;
+        margin: 0;
+    }
+    .timetable-container {
+        width: 100%;
+        margin: 0 auto;
+        padding: 1.5rem;
+        flex-grow: 1;
+    }
+    .page-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .page-header h1 {
+        margin: 0;
+        font-size: 1.75rem;
+    }
+    .action-button {
+        background-color: var(--accent);
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    .action-button:hover {
+        background-color: var(--accent-dark);
+        transform: translateY(-2px);
+    }
+    .table-wrapper {
+        overflow-x: auto;
+        width: 100%;
+        margin-bottom: 1.5rem;
+    }
+    .timetable {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid var(--input-border-light);
+    }
+    [data-theme="dark"] .timetable {
+        border-color: var(--input-border-dark);
+    }
+    .timetable th, .timetable td {
+        text-align: center;
+        padding: 0.5rem;
+        border: 1px solid var(--input-border-light);
+        min-width: 80px;
+    }
+    [data-theme="dark"] .timetable th, [data-theme="dark"] .timetable td {
+        border-color: var(--input-border-dark);
+    }
+    .timetable th {
+        background-color: var(--menu-footer-bg-light);
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+    [data-theme="dark"] .timetable th {
+        background-color: var(--menu-footer-bg-dark);
+    }
+    .timetable td {
+        font-size: 0.9rem;
+    }
+    .timetable td:first-child {
+        font-weight: 600;
+    }
+    @media (max-width: 768px) {
+        .timetable-container { padding: 1rem; }
+        .page-header { flex-direction: column; align-items: stretch; }
+        .action-button { width: 100%; text-align: center; }
+        .timetable th, .timetable td { padding: 0.4rem; font-size: 0.8rem; }
+    }
+    @media print {
+        body { padding: 1rem; background-color: #fff; color: #000; }
+        nav, footer, .page-header .action-button { display: none; }
+        .timetable-container { padding: 0; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-    <div class="timetable-container">
+<div class="timetable-container">
+    <div class="page-header">
         <h1>{{ title }}</h1>
-        <div id="timetable">
-            <table>
-                <tr>
-                    <th>Day</th>
-                    {% for p in periods %}
-                        <th>{{ p["time_range"] }}</th>
-                    {% endfor %}
-                </tr>
-                {% for day in days %}
+        <div style="display: flex; gap: 1rem;">
+            <button class="action-button" onclick="downloadExcel()">Download as Excel</button>
+            <button class="action-button" onclick="window.print()">Print</button>
+        </div>
+    </div>
+    <div id="timetable-export-area">
+        <div class="table-wrapper">
+            <table class="timetable">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        {% for p in periods %}
+                            <th>{{ p["time_range"] }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day in days %}
                     <tr>
                         <td>{{ day }}</td>
                         {% for p in periods %}
-                            <td>{{ grid[day][p["id"]] }}</td>
+                            <td>{{ grid[day][p["id"]] | safe }}</td>
                         {% endfor %}
                     </tr>
-                {% endfor %}
+                    {% endfor %}
+                </tbody>
             </table>
-            <table class="course-table">
-                <tr>
-                    <th>Course Code</th>
-                    <th>Course</th>
-                    <th>No. of Periods</th>
-                    <th>Faculties</th>
-                    <th>Credits</th>
-                </tr>
-                {% for code, data in course_data.items() %}
+        </div>
+        <div class="table-wrapper">
+            <table class="timetable course-table">
+                <thead>
+                    <tr>
+                        <th>Course Code</th>
+                        <th>Course</th>
+                        <th>No. of Periods</th>
+                        <th>Faculties</th>
+                        <th>Credits</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for code, data in course_data.items() %}
                     <tr>
                         <td>{{ code }}</td>
                         <td>{{ data["name"] }}</td>
@@ -131,66 +159,23 @@ limitations under the License. -->
                         <td>{{ data["faculties"] }}</td>
                         <td>{{ data["credits"] }}</td>
                     </tr>
-                {% endfor %}
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
-        <button class="download-btn" onclick="downloadTable()">Download Timetable</button>
     </div>
-    <script>
-        function downloadTable() {
-            const table = document.getElementById("timetable").innerHTML;
-            const title = document.querySelector('h1').textContent
-                                  .replace(/[()]/g, "")
-                                  .replace(/[ -]/g, "_").toLocaleLowerCase();
-            const htmlContent = `
-                <!DOCTYPE html>
-                <html lang="en-US">
-                <head>
-                    <title>Timetable</title>
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <style>
-                        table, th, td {
-                            border: 1px solid #666;
-                            border-collapse: collapse;
-                            text-align: center;
-                            padding: 4px;
-                            font-family: Arial, sans-serif;
-                            font-size: 8pt;
-                        }
-                        th {
-                            background-color: #d2b48c;
-                            font-weight: bold;
-                        }
-                        td {
-                            background-color: #f5e6cc;
-                        }
-                        .course-table {
-                            width: 100%;
-                            margin-top: 16px;
-                        }
-                        h2 {
-                            text-align: center;
-                            font-size: 12pt;
-                            margin: 8px 0;
-                        }
-                        body {
-                            max-width: 100%;
-                            overflow-x: auto;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <h2>${document.querySelector("h1").textContent}</h2>
-                    ${table}
-                </body>
-                </html>`;
-            const blob = new Blob([htmlContent], { type: "text/html" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `${title}.html`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-    </script>
+</div>
+<script>
+    function downloadExcel() {
+        const wb = XLSX.utils.book_new();
+        const timetable = document.querySelector(".timetable:first-of-type");
+        const ws1 = XLSX.utils.table_to_sheet(timetable);
+        XLSX.utils.book_append_sheet(wb, ws1, "Timetable Grid");
+        const courseTable = document.querySelector(".course-table");
+        const ws2 = XLSX.utils.table_to_sheet(courseTable);
+        XLSX.utils.book_append_sheet(wb, ws2, "Course List");
+
+        XLSX.writeFile(wb, "{{ title }}_Timetable.xlsx");
+    }
+</script>
 {% endblock %}

@@ -60,6 +60,11 @@ def use_db(db_connector: Connection,
     cursor.execute("""USE `%s`""", (database,))
 
 
+def get_user(cursor: Cursor) -> list[str]:
+    cursor.execute("""SELECT USER() AS `user`""")
+    return cursor.fetchone()["user"].split("@")
+
+
 def close() -> None:
     if cursor:
         cursor.close()
