@@ -137,7 +137,7 @@ limitations under the License. -->
                 </svg>
             </div>
         {% endif %}
-        <button type="submit" class="active-button">Login</button>
+        <button type="submit" class="active-button">{{ login or "Login" }}</button>
         {% if error_message %}
             <div class="error message">{{ error_message }}</div>
         {% endif %}
