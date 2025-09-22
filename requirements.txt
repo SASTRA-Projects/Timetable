@@ -10,7 +10,7 @@ gunicorn==23.0.0; platform_system != "Windows"
 itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.2
-mypy==1.18.1
+mypy==1.18.2
 mypy_extensions==1.1.0
 packaging==25.0
 pathspec==0.12.1
