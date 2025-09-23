@@ -2,7 +2,7 @@ argon2-cffi==25.1.0
 argon2-cffi-bindings==25.1.0
 blinker==1.9.0
 cffi==2.0.0
-click==8.2.1
+click==8.3.0
 colorama==0.4.6
 cryptography==46.0.1
 Flask==3.1.2
