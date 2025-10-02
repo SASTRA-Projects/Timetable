@@ -2,9 +2,9 @@ argon2-cffi==25.1.0
 argon2-cffi-bindings==25.1.0
 blinker==1.9.0
 cffi==2.0.0
-click==8.2.1
+click==8.3.0
 colorama==0.4.6
-cryptography==45.0.7
+cryptography==46.0.1
 Flask==3.1.2
 gunicorn==23.0.0; platform_system != "Windows"
 itsdangerous==2.2.0
@@ -17,7 +17,7 @@ pathspec==0.12.1
 pycparser==2.23
 PyMySQL==1.1.2
 setuptools==80.9.0
-types-PyMySQL==1.1.0.20250914
+types-PyMySQL==1.1.0.20250916
 typing_extensions==4.15.0
 waitress==3.0.2; platform_system == "Windows"
 Werkzeug==3.1.3
