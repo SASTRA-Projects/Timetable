@@ -25,7 +25,6 @@ the functions are defined here.
 
 def add_faculty_info(db_connector: Connection,
                      cursor: Cursor, /, *,
-                     host: str = "mysql-93e938b-harikrishnasri3.f.aivencloud.com",
                      faculty_id: Optional[int] = None,
                      phone: Optional[Union[int, str]] = None,
                      salary: Optional[float] = None,
