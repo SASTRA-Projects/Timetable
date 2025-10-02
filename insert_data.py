@@ -39,22 +39,19 @@ def add_faculty_info(db_connector: Connection,
                        VALUES (%s, %s, %s, %s)""",
                        (faculty_id, phone, salary, ph.hash(password)))
 
-        faculty = str(faculty_id)
-        cursor.execute("""DROP USER IF EXISTS %s@'%%'""", (faculty,))
-        cursor.execute("""CREATE USER IF NOT EXISTS %s@'%%' IDENTIFIED BY %s""",
-                       (faculty, password))
-        cursor.execute("""GRANT ALL PRIVILEGES ON `SASTRA`.* TO %s@'%%'""",
-                       (faculty,))
         db_connector.commit()
     except Exception as exception:
         _exception = exception.args
         db_connector.rollback()
         if verbose:
             if _exception[0] == 1062:
-                raise IntegrityError("Faculty information already exists in `faculty_info` table.\n\
-                    If you want to update the information, use `update_faculty_info()` function.")
+                raise IntegrityError("Faculty information already exists in """
+                                     "`faculty_info` table.\n "
+                                     "If you want to update the information, "
+                                     "use `update_faculty_info()` function.")
             elif _exception[0] == 1452:
-                raise IntegrityError("Faculty ID does not exist in `faculties` table.")
+                raise IntegrityError("Faculty ID does not exist in "
+                                     "`faculties` table.")
             else:
                 raise
         raise ValueError("Faculty ID does not exist in `faculties` table "
@@ -92,11 +89,11 @@ def add_section_student(db_connector: Connection,
 
 
 def add_faculty_section_course(db_connector: Connection,
-                        cursor: Cursor, /, *,
-                        id: Optional[int] = None,
-                        faculty_id: Optional[int] = None,
-                        section_id: Optional[int] = None,
-                        course_code: Optional[str] = None) -> None:
+                               cursor: Cursor, /, *,
+                               id: Optional[int] = None,
+                               faculty_id: Optional[int] = None,
+                               section_id: Optional[int] = None,
+                               course_code: Optional[str] = None) -> None:
     cursor.execute("""INSERT INTO `faculty_section_course`
                    (`id`, `faculty_id`, `section_id`, `course_code`)
                    VALUES (%s, %s, %s, %s)""",
@@ -141,7 +138,8 @@ def add_timetable(db_connector: Connection,
                   faculty_section_course_id: Optional[int] = None,
                   class_id: Optional[int] = None) -> None:
     cursor.execute("""INSERT INTO `timetables`
-                   (`day`, `period_id`, `faculty_section_course_id`, `class_id`)
+                   (`day`, `period_id`,
+                   `faculty_section_course_id`, `class_id`)
                    VALUES (%s, %s, %s, %s)""",
                    (day, period_id, faculty_section_course_id, class_id))
     db_connector.commit()
