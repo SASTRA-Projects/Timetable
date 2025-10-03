@@ -757,14 +757,6 @@ def get_student(cursor: Cursor, /, *,
                 programme_id=None,
                 roll_no: Optional[int] = None,
                 reg_no: Optional[Union[int, str]] = None) -> Optional[Dict[str, Union[int, str]]]:
-    if reg_no:
-        reg_no = str(reg_no)
-        campus_id = int(reg_no[0])
-        programme_id = int(reg_no[3:6])
-        degree = get_programme(cursor, programme_id=programme_id)["degree"]
-        duration = get_degree_duration(cursor, degree=degree)
-        join_year = 2000 + int(reg_no[1:3]) - duration % 100
-        roll_no = int(reg_no[6:9])
     if id:
         cursor.execute("""SELECT `name`,
                        CONCAT(
@@ -795,9 +787,24 @@ def get_student(cursor: Cursor, /, *,
                        AND `PD`.`programme_id`=%s
                        AND `roll_no`=%s""",
                        (campus_id, join_year, programme_id, roll_no))
-    else:
-        return None
-    return cursor.fetchone()
+
+    if res := cursor.fetchone() and reg_no:
+        reg_no = str(reg_no)
+        res = res if str(res.pop("reg_no")) == reg_no else None
+
+    return res
+
+
+def decompose_reg_no(cursor: Cursor, /, *,
+                     reg_no: Optional[Union[int, str]] = None):
+    _reg_no = str(reg_no)
+    campus_id = int(_reg_no[0])
+    programme_id = int(_reg_no[3:6])
+    degree = get_programme(cursor, programme_id=programme_id)["degree"]
+    duration = get_degree_duration(cursor, degree=degree)
+    join_year = 2000 + int(_reg_no[1:3]) - duration % 100
+    roll_no = int(_reg_no[6:9])
+    return (campus_id, programme_id, join_year, roll_no)
 
 
 def get_reg_no(cursor: Cursor, /, *,

@@ -38,7 +38,8 @@ def add_campus(db_connector: Connection,
     - **cursor** : Cursor
       Cursor object for executing SQL commands.
     - **id** : Optional[int]
-      The campus ID (optional; if not provided, the database will auto-generate it).
+      The campus ID (optional; if not provided,
+      the database will auto-generate it).
     - **campus** : Optional[str]
       The name of the campus.
 
@@ -77,7 +78,8 @@ def add_school(db_connector: Connection,
     - **cursor** : Cursor
       Cursor object for executing SQL commands.
     - **id** : Optional[int]
-      The school ID (optional; if not provided, the database will auto-generate it).
+      The school ID (optional; if not provided,
+      the database will auto-generate it).
     - **school** : Optional[str]
       The name of the school.
     - **campus_id** : Optional[int]
@@ -88,7 +90,8 @@ def add_school(db_connector: Connection,
     .. code-block:: python
 
         >>> campus_id = get_campus_id(cursor, campus="SASTRA")
-        >>> add_school(connector, cursor, id=3, school="SoC", campus_id=campus_id)
+        >>> add_school(connector, cursor, id=3,
+        ...            school="SoC", campus_id=campus_id)
 
     See Also
     ========
@@ -114,7 +117,8 @@ def add_building(db_connector: Connection,
     - **cursor** : Cursor
       Cursor object for executing SQL commands.
     - **id** : Optional[int]
-      The building ID (optional; if not provided, the database may auto-generate it).
+      The building ID (optional; if not provided,
+      the database may auto-generate it).
     - **school_id** : Optional[str]
       The ID of the school to which the building belongs.
     - **rooms** : Optional[int]
@@ -125,9 +129,10 @@ def add_building(db_connector: Connection,
     .. code-block:: python
 
         >>> school_id = get_school_id(cursor, campus_id=1, school="SoC")
-        >>> add_school(connector, cursor, school_id=school_id, rooms=63) # building's id is None; auto-generated from 1
-
-        >>> print(get_buildings(connector, cursor, school_id=3)) # Assuming, this is the only building record
+        >>> # building's id is None; auto-generated from 1
+        >>> add_school(connector, cursor, school_id=school_id, rooms=63)
+        >>> # Assuming, this is the only building record
+        >>> print(get_buildings(connector, cursor, school_id=3))
         [{id: 1, school_id: 3, rooms: 63}]
 
     See Also
@@ -187,7 +192,7 @@ def add_degree(db_connector: Connection,
     ========
     .. code-block:: python
 
-        >>> add_degree(connector, cursor, degree="B.Tech.") # Note: MBA and NOT as M.B.A
+        >>> add_degree(connector, cursor, degree="B.Tech.")
     """
     cursor.execute("""INSERT INTO `degrees` (`name`, `duration`)
                    VALUES (%s, %s)""", (degree, duration))
@@ -216,7 +221,9 @@ def add_stream(db_connector: Connection,
     ========
     .. code-block:: python
 
-        >>> add_stream(connector, cursor, stream="Artificial Intelligence and Data Science", department="Computer Science")
+        >>> add_stream(connector, cursor,
+        ...            stream="Artificial Intelligence and Data Science",
+        ...            department="Computer Science")
     """
     cursor.execute("""INSERT INTO `streams` (`name`, `department`)
                    VALUES (%s, %s)""", (stream, department))
@@ -238,7 +245,8 @@ def add_programme(db_connector: Connection,
     - **cursor** : Cursor
       Cursor object for executing SQL commands.
     - **id** : Optional[int]
-      The programme ID (optional; if not provided, the database will auto-generate it).
+      The programme ID (optional; if not provided,
+      the database will auto-generate it).
     - **degree** : Optional[str]
       The name of the degree.
     - **stream** : Optional[str]
@@ -248,7 +256,8 @@ def add_programme(db_connector: Connection,
     ========
     .. code-block:: python
 
-        >>> add_programme(connector, cursor, id=7, degree="B.Tech.", stream="Artificial Intelligence and Data Science")
+        >>> add_programme(connector, cursor, id=7, degree="B.Tech.",
+        ...               stream="Artificial Intelligence and Data Science")
     """
     cursor.execute("""INSERT INTO `programmes` (`id`, `degree`, `stream`)
                    VALUES (%s, %s, %s)""", (id, degree, stream))
@@ -292,7 +301,9 @@ def add_course(db_connector: Connection,
     ========
     .. code-block:: python
 
-        >>> add_course(connector, cursor, code="EIE101R01", course="Basic Electronics Engineering", credits=3, L=2, P=2, T=0)
+        >>> add_course(connector, cursor, code="EIE101R01",
+        ...            course="Basic Electronics Engineering",
+        ...            credits=3, L=2, P=2, T=0)
     """
     cursor.execute("""INSERT INTO `courses`
                    (`code`, `name`, `department`, `credits`, `L`, `P`, `T`)
@@ -317,17 +328,22 @@ def add_lab_department(db_connector: Connection,
     - **course_code** : Optional[str]
       The couse code of the course (a.k.a subject).
     - **department** : Optional[str]
-      The name of the department. Department should be '' (or "") if the course has practical hours, but not lab.
+      The name of the department. Department should be '' (or "")
+      if the course has practical hours, but not lab.
 
     Examples
     ========
     .. code-block:: python
 
-        >>> add_lab_department(connector, cursor, course_code="MEC102", department="")
-        >>> add_lab_department(connector, cursor, course_code="MEC103", department="CSE")
-        >>> add_lab_department(connector, cursor, course_code="MEC103", department="Drawing")
+        >>> add_lab_department(connector, cursor,
+        ...                    course_code="MEC102", department="")
+        >>> add_lab_department(connector, cursor,
+        ...                    course_code="MEC103", department="CSE")
+        >>> add_lab_department(connector, cursor,
+        ...                    course_code="MEC103", department="Drawing")
     """
-    cursor.execute("""INSERT INTO `lab_departments` (`course_code`, `department`)
+    cursor.execute("""INSERT INTO `lab_departments`
+                   (`course_code`, `department`)
                    VALUES (%s, %s)""", (course_code, department))
     db_connector.commit()
 
@@ -355,14 +371,18 @@ def add_campus_programme(db_connector: Connection,
     .. code-block:: python
 
         >>> campus_id = get_campus_id(cursor, "SRC")
-        >>> programme_id = get_programme_id(cursor, degree="B.Sc.", stream="Nuclear Physics") # returns only the ID
-        >>> add_campus_programme(connector, cursor, campus_id=campus_id, programme_id=programme_id)
+        >>> # returns only the ID
+        >>> programme_id = get_programme_id(cursor, degree="B.Sc.",
+        ...                                 stream="Nuclear Physics")
+        >>> add_campus_programme(connector, cursor, campus_id=campus_id,
+        ...                      programme_id=programme_id)
 
     See Also
     ========
     - :func:`get_programme_id` – To get the programme details.
     """
-    cursor.execute("""INSERT INTO `campus_programmes` (`campus_id`, `programme_id`)
+    cursor.execute("""INSERT INTO `campus_programmes`
+                   (`campus_id`, `programme_id`)
                    VALUES (%s, %s)""", (campus_id, programme_id))
     db_connector.commit()
 
@@ -390,13 +410,16 @@ def add_school_department(db_connector: Connection,
     .. code-block:: python
 
         >>> school_id = get_school_id(cursor, campus_id=1, school="SoC")
-        >>> add_school_department(connector, cursor, school_id=school_id, department="Computer Science")
+        >>> add_school_department(connector, cursor, school_id=school_id,
+        ...                       department="Computer Science")
 
     See Also
     ========
-    - :func:`get_school_id` – To get the school ID of the given campus and name of the school.
+    - :func:`get_school_id` – To get the school ID of the given campus
+                              and name of the school.
     """
-    cursor.execute("""INSERT INTO `school_departments` (`school_id`, `department`)
+    cursor.execute("""INSERT INTO `school_departments`
+                   (`school_id`, `department`)
                    VALUES (%s, %s)""", (school_id, department))
     db_connector.commit()
 
@@ -426,13 +449,17 @@ def add_programme_course(db_connector: Connection,
     ========
     .. code-block:: python
 
-        >>> programme_id = get_programme_id(cursor, degree="B.Tech.", stream="CS")
-        >>> add_programme_course(connector, cursor, campus_id=campus_id, programme_id=programme_id, course_code="EIE101R01")
+        >>> programme_id = get_programme_id(cursor, degree="B.Tech.",
+        ...                                 stream="CS")
+        >>> add_programme_course(connector, cursor, campus_id=campus_id,
+        ...                      programme_id=programme_id,
+        ...                      course_code="EIE101R01")
 
     """
     cursor.execute("""INSERT INTO `programme_courses`
                    (`programme_id`, `course_code`, `is_elective`)
-                   VALUES (%s, %s, %s)""", (programme_id, course_code, elective))
+                   VALUES (%s, %s, %s)""",
+                   (programme_id, course_code, elective))
     db_connector.commit()
 
 
@@ -469,7 +496,8 @@ def add_class(db_connector: Connection,
     .. code-block:: python
 
         >>> building = get_buildings(cursor, school_id=5)[0]
-        >>> add_class(connector, cursor, id=1, building_id=building["id"], room_no=107, capacity=60)
+        >>> add_class(connector, cursor, id=1, building_id=building["id"],
+        ...           room_no=107, capacity=60)
 
     See Also
     ========
@@ -509,7 +537,8 @@ def add_section(db_connector: Connection,
     - **degree** : Optional[str]
       The degree pursued by student in the section.
     - **stream** : Optional[str]
-      The stream chosen by student in the section. (If many stream students, then None)
+      The stream chosen by student in the section.
+      (If many stream students, then None)
     - **year** : Optional[int]
       The year of study (of the students under the degree-stream).
 
@@ -518,15 +547,15 @@ def add_section(db_connector: Connection,
     .. code-block:: python
 
         >>> campus_id = get_campus_id(cursor, campus="SRC")
-        >>> add_class(connector, cursor, id=1, campus_id=campus_id, degree="B.Tech.", year=1) # stream is None, here
+        >>> add_class(connector, cursor, id=1, campus_id=campus_id,
+        ...           degree="B.Tech.", year=1) # stream is None, here
 
     See Also
     ========
     - `get_campus_id()` – To get the ID of the given campus.
     """
-    cursor.execute("""INSERT INTO `sections` (`id`, `campus_id`,
-                                             `degree`, `stream`,
-                                             `section`, `year`)
+    cursor.execute("""INSERT INTO `sections`
+                   (`id`, `campus_id`, `degree`, `stream`, `section`, `year`)
                    VALUES (%s, %s, %s, %s, %s, %s)""",
                    (id, campus_id, degree, stream, section, year))
     db_connector.commit()
@@ -549,7 +578,8 @@ def add_faculty(db_connector: Connection,
     - **cursor** : Cursor
       Cursor object for executing SQL commands.
     - **id** : Optional[int]
-      The faculty ID (optional; if not provided, the database will auto-generate it).
+      The faculty ID (optional; if not provided,
+      the database will auto-generate it).
     - **name** : Optional[str]
       The name of the faculty member.
     - **campus_id** : Optional[int]
@@ -599,7 +629,8 @@ def add_student(db_connector: Connection,
     - **cursor** : Cursor
       Cursor object for executing SQL commands.
     - **id** : Optional[int]
-      The student ID (optional; if not provided, the database will auto-generate it).
+      The student ID (optional; if not provided,
+      the database will auto-generate it).
     - **name** : Optional[str]
       The name of the student.
     - **campus_id** : Optional[int]
@@ -609,7 +640,8 @@ def add_student(db_connector: Connection,
     - **programme_id** : Optional[int]
       The ID of the programme the student is enrolled in.
     - **roll_no** : Optional[int]
-      The roll number assigned to the student (optional; if not provided, the database will auto-generate it).
+      The roll number assigned to the student (optional; if not provided,
+      the database will auto-generate it).
     - **phone** : Optional[Union[int, str]]
       The contact number of the student.
 
@@ -622,21 +654,20 @@ def add_student(db_connector: Connection,
                 degree="B.Tech.",
                 stream="Artificial intelligence and data science"
             )
-
+        >>> # phone can be either str, or int
         >>> add_student(connector, cursor, id=233, name="Sarvesh. S",
                         campus_id=1, join_year=2023, programme_id=programme_id,
-                        roll_no=None, phone=9876543210) # phone can be either str, or int
+                        roll_no=None, phone=9876543210)
 
     See Also
     ========
-    - :func:`get_programme_id` – To get the programme ID for a given degree and stream.
+    - :func:`get_programme_id` – To get the programme ID for
+                                 a given degree and stream.
     """
-    cursor.execute("""INSERT INTO `students` (`id`, `name`,
-                                              `campus_id`,
-                                              `join_year`,
-                                              `programme_id`,
-                                              `roll_no`,
-                                              `phone`)
+    cursor.execute("""INSERT INTO `students`
+                   (`id`, `name`, `campus_id`, `join_year`,
+                   `programme_id`, `roll_no`, `phone`)
                    VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-                   (id, name, campus_id, join_year, programme_id, roll_no, phone))
+                   (id, name, campus_id, join_year,
+                    programme_id, roll_no, str(phone)))
     db_connector.commit()
