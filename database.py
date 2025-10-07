@@ -160,7 +160,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
     cursor.execute("""CREATE TABLE IF NOT EXISTS `programmes` (
                    `id` MEDIUMINT UNSIGNED AUTO_INCREMENT,
                    `degree` VARCHAR(20) NOT NULL,
-                   `stream` VARCHAR(60) NOT NULL,
+                   `stream` VARCHAR(60) NULL,
                    PRIMARY KEY(`id`),
                    FOREIGN KEY(`degree`) REFERENCES `degrees`(`name`)
                    ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -316,7 +316,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
                    `join_year` SMALLINT UNSIGNED NOT NULL,
                    `programme_id` MEDIUMINT UNSIGNED NOT NULL,
                    `roll_no` SMALLINT UNSIGNED NOT NULL,
-                   `phone` CHAR(10) NOT NULL,
+                   `phone` CHAR(10),
                    PRIMARY KEY(`id`),
                    FOREIGN KEY(`campus_id`, `programme_id`)
                    REFERENCES `campus_programmes`(`campus_id`, `programme_id`)

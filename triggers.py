@@ -193,7 +193,9 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                     ON `streams`.`name`=`programmes`.`stream`
                     AND NEW.`programme_id`=`id`;
 
-                    CALL `department_exists`(NEW.`campus_id`, `dept`);
+                    IF (`dept`)
+                        THEN CALL `department_exists`(NEW.`campus_id`, `dept`);
+                    END IF;
                    END;
     """)
     cursor.execute("""CREATE TRIGGER IF NOT EXISTS `campus_has_programme_department_update`
@@ -207,7 +209,9 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                     ON `streams`.`name`=`programmes`.`stream`
                     AND NEW.`programme_id`=`id`;
 
-                    CALL `department_exists`(NEW.`campus_id`, `dept`);
+                    IF (`dept`)
+                        THEN CALL `department_exists`(NEW.`campus_id`, `dept`);
+                    END IF;
                    END;
     """)
     cursor.execute("""CREATE TRIGGER IF NOT EXISTS `course_is_lab_insert`
@@ -331,7 +335,9 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                    FOR EACH ROW
                    BEGIN
                     CALL `validate_join_year`(NEW.`join_year`);
-                    CALL `department_exists`(NEW.`campus_id`, NEW.`department`);
+                    IF (`dept`)
+                        THEN CALL `department_exists`(NEW.`campus_id`, `dept`);
+                    END IF;
                    END;
     """)
     cursor.execute("""CREATE TRIGGER IF NOT EXISTS `faculties_join_yr_dept_chk_update`
@@ -339,7 +345,9 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                    FOR EACH ROW
                    BEGIN
                     CALL `validate_join_year`(NEW.`join_year`);
-                    CALL `department_exists`(NEW.`campus_id`, NEW.`department`);
+                    IF (`dept`)
+                        THEN CALL `department_exists`(NEW.`campus_id`, `dept`);
+                    END IF;
                    END;
     """)
     cursor.execute("""CREATE TRIGGER IF NOT EXISTS `students_join_yr_chk_roll_incr_insert`
