@@ -664,10 +664,11 @@ def add_student(db_connector: Connection,
     - :func:`get_programme_id` – To get the programme ID for
                                  a given degree and stream.
     """
+    phone = str(phone) if phone else phone
     cursor.execute("""INSERT INTO `students`
                    (`id`, `name`, `campus_id`, `join_year`,
                    `programme_id`, `roll_no`, `phone`)
                    VALUES (%s, %s, %s, %s, %s, %s, %s)""",
                    (id, name, campus_id, join_year,
-                    programme_id, roll_no, str(phone)))
+                    programme_id, roll_no, phone))
     db_connector.commit()

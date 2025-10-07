@@ -256,7 +256,8 @@ def get_classes(cursor: Cursor, /, *,
                 building_id: Optional[int] = None,
                 lab: Optional[bool] = None,
                 department: Optional[str] = None,
-                section_id: Optional[int] = None) -> Tuple[Dict[str, Union[bool, int]], ...]:
+                section_id: Optional[int] = None,
+                room_no: Optional[int] = None) -> Tuple[Dict[str, Union[bool, int]], ...]:
     if section_id:
         cursor.execute("""SELECT `classes`.`id` AS `id`, `room_no`, `capacity`
                        FROM `section_class`
@@ -317,7 +318,12 @@ def get_classes(cursor: Cursor, /, *,
                         WHERE `is_lab`=%s""", (lab,))
     else:
         cursor.execute("""SELECT * FROM `classes`""")
-    return cursor.fetchall()
+
+    res = cursor.fetchall()
+    if room_no:
+        res = [r for r in res if r.pop("room_no") == room_no]
+
+    return res
 
 
 def get_class(cursor: Cursor, /, *,

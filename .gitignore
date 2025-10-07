@@ -12,3 +12,4 @@ sastra/
 timetable/
 venv/
 .vscode/
+*.xlsx
