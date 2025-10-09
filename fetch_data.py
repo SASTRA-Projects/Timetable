@@ -516,7 +516,7 @@ def get_section_classes(cursor: Cursor, /, *,
             cursor.execute("""SELECT `section_id`, `class_id`
                            FROM `section_class`""")
             return cursor.fetchall()
-    return cursor.fetchone()
+    return cursor.fetchall()
 
 
 def is_elective(cursor: Cursor, /, *,

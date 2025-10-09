@@ -197,10 +197,10 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                        ON `CB`.`building_id`=`classes`.`building_id`
                        AND `is_lab`
                        AND `campus_id`=%s
-                       AND `department`=%s""", ( campus_id, department))
+                       AND `department`=%s""", (campus_id, department))
         classes = cursor.fetchall()
         elective_std_sec = {(std["degree"], std["stream"], std["course_code"]): std["no_of_students"] // sec["no_of_sections"]
-                              for std in no_of_elective_students
+                            for std in no_of_elective_students
                             for sec in no_of_sections
                             if std["degree"] == sec["degree"]
                             and std["stream"] == sec["stream"]
@@ -498,7 +498,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                     _half = -(-_no_of_students // 2)
                     if course[2]:
                         _course = fetch_data.get_lab_departments(cursor, course_code=course[0])
-                        assert course, "Programming Error, No labs found!"
+                        assert _course, "Programming Error, No labs found!"
 
                         _course = _course[0]
                         hrs = _course["P"]
@@ -517,6 +517,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                             else:
                                 for period in lab_periods:
                                     class_day_period.append((max_lab_capacity(ld, *period, no_of_students=-(-num // 2)), period))
+
                             assert class_day_period, "No lab is available..."
                             assert ld != "" or len(class_day_period) >= no_of_sections, "Not enough classes"
                             labs.append([class_day_period, ld])
