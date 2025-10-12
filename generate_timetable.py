@@ -71,21 +71,19 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 
     def get_cls_idx(day_period):
         def dpsort(dp):
-            p = 5 - dp[1] if dp[1] > 4 else dp[1] - 4
-            return days[dp[0]] + p
+            p = dp[1] - 5 if dp[1] > 4 else 4 - dp[1]
+            return (p, -days[dp[0]])
 
         days = {}
         for d, p in day_period:
             days[d] = days.get(d, 0) + 1
 
         _day_period = day_period.copy()
-        day_period = day_period.copy()
         while _day_period:
-            _day_period = sorted(_day_period, key=dpsort, reverse=True)
+            _day_period = sorted(_day_period, key=dpsort)
             day, p = _day_period.pop(0)
             idx = day_period.index((day, p))
             yield idx
-            day_period.pop(idx)
             days[day] -= 1
             if days[day] == 0:
                 del days[day]
@@ -820,7 +818,6 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                                                                      class_id=class_id)
                                 if len(_exception) < 2:
                                     if len(day_period) > 0:
-                                        cls_idx = get_cls_idx(day_period)
                                         print(835, _exception, day_period)
                                         continue
                                     print(_exception, 11, "Over")
@@ -1016,7 +1013,6 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                                                      day=day, period_id=period_id+1, faculty_section_course_id=fsc["id"], class_id=class_id)
                     if len(_exception) < 2:
                         if len(day_period) > 0:
-                            cls_idx = get_cls_idx(day_period)
                             print(1003, _exception, day_period, len(day_period), len(class_day_period), day, period_id, ctwice, twice, _cls_idx)
                             ctwice = False
                             continue
@@ -1091,10 +1087,9 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                                                  class_id=(class_id or roaming_id))
                     if len(_exception) < 2:
                         if len(periods) > 0:
-                            cls_idx = get_cls_idx(periods)
                             print(1079, _exception, periods, _cls_idx)
                             continue
-                        print(_exception, len(periods), day, period_id, class_id, roaming_id, "Over")
+                        print(_exception, len(periods), day, period_id, class_id or roaming_id, "Over")
                         return None
                     elif "faculty" in _exception[1]:
                         pass

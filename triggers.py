@@ -673,7 +673,6 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                             ON `classes`.`id`=`class_id`
                             AND NOT `is_lab`
                             AND `day`=NEW.`day`
-                            AND `period_id`=NEW.`period_id`
                             AND `faculty_section_course_id`=NEW.`faculty_section_course_id`
                             LIMIT 1
                     )
@@ -881,7 +880,6 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                             ON `classes`.`id`=`class_id`
                             AND NOT `is_lab`
                             AND `day`=NEW.`day`
-                            AND `period_id`=NEW.`period_id`
                             AND `faculty_section_course_id`=NEW.`faculty_section_course_id`
                             LIMIT 1
                     )
