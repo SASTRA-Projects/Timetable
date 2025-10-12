@@ -112,7 +112,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
     """)
     cursor.execute("""CREATE FUNCTION IF NOT EXISTS `get_is_lab`(`class_id` MEDIUMINT UNSIGNED)
                    RETURNS BOOLEAN
-                   NOT DETERMINISTIC
+                   DETERMINISTIC
                    READS SQL DATA
                     RETURN (SELECT `is_lab`
                             FROM `classes`
@@ -121,7 +121,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
     cursor.execute("""CREATE FUNCTION IF NOT EXISTS `section_has_course`
                    (`section_id` MEDIUMINT UNSIGNED, `course_code` VARCHAR(10))
                    RETURNS BOOLEAN
-                   NOT DETERMINISTIC
+                   DETERMINISTIC
                    READS SQL DATA
                     RETURN EXISTS (
                             SELECT 1
@@ -142,7 +142,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
     cursor.execute("""CREATE FUNCTION IF NOT EXISTS `get_section_programme_id`
                    (`section_id` MEDIUMINT UNSIGNED)
                    RETURNS MEDIUMINT UNSIGNED
-                   NOT DETERMINISTIC
+                   DETERMINISTIC
                    READS SQL DATA
                     RETURN (SELECT `programmes`.`id`
                             FROM `programmes`
@@ -159,7 +159,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
     cursor.execute("""CREATE FUNCTION IF NOT EXISTS `get_is_elective`
                    (`code` VARCHAR(10), `section_id` MEDIUMINT UNSIGNED)
                    RETURNS BOOLEAN
-                   NOT DETERMINISTIC
+                   DETERMINISTIC
                    READS SQL DATA
                     RETURN (EXISTS (
                                 SELECT 1
@@ -174,11 +174,11 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                                     JOIN `sections`
                                     ON `sections`.`id`=`section_id`
                                     AND `sections`.`degree`=`programmes`.`degree`
+                                    AND `sections`.`campus_id`=`CP`.`campus_id`
                                     AND (`sections`.`stream` IS NULL
-                                        AND `sections`.`campus_id`=`CP`.`campus_id`
-                                        OR `sections`.`stream`=`programmes`.`stream`)
+                                        OR `sections`.`stream`=`programmes`.`stream`
                                     )
-                                LIMIT 1
+                                )
                             )
                     );
     """)
@@ -193,7 +193,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                     ON `streams`.`name`=`programmes`.`stream`
                     AND NEW.`programme_id`=`id`;
 
-                    IF (`dept`)
+                    IF (`dept` IS NOT NULL)
                         THEN CALL `department_exists`(NEW.`campus_id`, `dept`);
                     END IF;
                    END;
@@ -209,7 +209,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                     ON `streams`.`name`=`programmes`.`stream`
                     AND NEW.`programme_id`=`id`;
 
-                    IF (`dept`)
+                    IF (`dept` IS NOT NULL)
                         THEN CALL `department_exists`(NEW.`campus_id`, `dept`);
                     END IF;
                    END;
@@ -335,8 +335,8 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                    FOR EACH ROW
                    BEGIN
                     CALL `validate_join_year`(NEW.`join_year`);
-                    IF (`dept`)
-                        THEN CALL `department_exists`(NEW.`campus_id`, `dept`);
+                    IF (NEW.`department` IS NOT NULL)
+                        THEN CALL `department_exists`(NEW.`campus_id`, NEW.`department`);
                     END IF;
                    END;
     """)
@@ -345,8 +345,8 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                    FOR EACH ROW
                    BEGIN
                     CALL `validate_join_year`(NEW.`join_year`);
-                    IF (`dept`)
-                        THEN CALL `department_exists`(NEW.`campus_id`, `dept`);
+                    IF (NEW.`department` IS NOT NULL)
+                        THEN CALL `department_exists`(NEW.`campus_id`, NEW.`department`);
                     END IF;
                    END;
     """)

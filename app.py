@@ -27,6 +27,7 @@ app.jinja_env.autoescape = True
 app.secret_key = secrets.token_hex(16)
 
 DAYS: tuple[str, ...] = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+timetables: list[dict[str, Union[bool, int, str]]] = []
 
 
 @app.before_request
@@ -275,6 +276,7 @@ def show_faculty_details() -> str:
 @app.route("/faculty/timetable")
 def show_faculty_timetable() -> str:
     if sql.cursor:
+        global timetables
         if not session.get("faculty") or not session.get("faculty_details"):
             return render_template("./failed.html",
                                    reason="Illegal access or value is missing")
@@ -287,8 +289,11 @@ def show_faculty_timetable() -> str:
             period["time_range"] = f"{period['start_time']}-{period['end_time']}"
 
         grid = {day: {period["id"]: "" for period in periods} for day in DAYS}
-        timetables = fetch_data.get_timetables(sql.cursor, faculty_id=id)
-        for row in timetables:
+        if not timetables:
+            timetables = fetch_data.get_timetables(sql.cursor)
+
+        _timetables = [t for t in timetables if t["faculty_id"] == id]
+        for row in _timetables:
             day = row["day"]
             period_id = row["period_id"]
             content = f"{row['course_code']}-{row['faculty_id']}({row['room_no']})"
@@ -300,7 +305,7 @@ def show_faculty_timetable() -> str:
                 grid[day][period_id] += content
 
         course_data = {}
-        for fc in timetables:
+        for fc in _timetables:
             course_code = fc["course_code"]
             course = fetch_data.get_course(sql.cursor, code=course_code)
             if course_code not in course_data:
@@ -325,6 +330,7 @@ def show_faculty_timetable() -> str:
 @app.route("/timetable", methods=["POST"])
 def show_timetables() -> str:
     if sql.cursor:
+        global timetables
         section_id = int(request.form["section_id"])
         periods = fetch_data.get_periods(sql.cursor)
         section = fetch_data.get_section(sql.cursor, section_id=section_id)
@@ -333,8 +339,11 @@ def show_timetables() -> str:
         for period in periods:
             period["time_range"] = f"{period['start_time']}-{period['end_time']}"
         grid = {day: {period["id"]: "" for period in periods} for day in DAYS}
-        timetables = fetch_data.get_timetables(sql.cursor, section_id=section_id)
-        for row in timetables:
+        if not timetables:
+            timetables = fetch_data.get_timetables(sql.cursor)
+
+        _timetables = [t for t in timetables if t["section_id"] == section_id]
+        for row in _timetables:
             day = row["day"]
             period_id = row["period_id"]
             content = f"{row['course_code']}-{row['faculty_id']}({row['room_no']})"
@@ -346,7 +355,7 @@ def show_timetables() -> str:
                 grid[day][period_id] += content
 
         course_data = {}
-        for fc in timetables:
+        for fc in _timetables:
             faculty = fetch_data.get_faculty_name(sql.cursor,
                                                   id=fc["faculty_id"])
             course_code = fc["course_code"]

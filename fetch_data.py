@@ -999,22 +999,29 @@ def get_timetables(cursor: Cursor, /, *,
                    day: Optional[str] = None,
                    period_id: Optional[int] = None) -> Tuple[Dict[str, Union[int, str]]]:
     if class_id:
-        cursor.execute("""SELECT `day`, `period_id`,
+        cursor.execute("""SELECT `day`, `period_id`, `faculty_id`,
+                       `section_id`, `course_code`,
                        `faculty_section_course_id`,
                        `building_id`, `room_no`, `capacity`,
                        `is_lab`, `department`
                        FROM `timetables`
                        JOIN `classes`
                        ON `class_id`=`classes`.`id`
-                       AND `class_id`=%s""", (class_id,))
+                       AND `class_id`=%s
+                       JOIN `faculty_section_course` `FSC`
+                       ON `FSC`.`id`=`faculty_section_course_id`""",
+                       (class_id,))
     else:
-        cursor.execute("""SELECT `day`, `period_id`,
+        cursor.execute("""SELECT `day`, `period_id`, `faculty_id`,
+                       `section_id`, `course_code`,
                        `faculty_section_course_id`, `class_id`,
                        `building_id`, `room_no`, `capacity`,
                        `is_lab`, `department`
                        FROM `timetables`
                        JOIN `classes`
-                       ON `class_id`=`classes`.`id`""")
+                       ON `class_id`=`classes`.`id`
+                       JOIN `faculty_section_course` `FSC`
+                       ON `FSC`.`id`=`faculty_section_course_id`""")
 
     timetables = cursor.fetchall()
     if day:
@@ -1027,20 +1034,13 @@ def get_timetables(cursor: Cursor, /, *,
         timetables = [t for t in timetables
                       if t["building_id"] in buildings]
 
-    if faculty_id or section_id or class_id:
-        faculty_section_course_ids = {fsc["id"]: {
-                "faculty_id": fsc.get("faculty_id", faculty_id),
-                "section_id": fsc.get("section_id", section_id),
-                "course_code": fsc.get("course_code", course_code)
-            }
-            for fsc in get_faculty_section_courses(cursor,
-                                                   faculty_id=faculty_id,
-                                                   section_id=section_id,
-                                                   course_code=course_code)}
-        timetables = [(timetable | faculty_section_course_ids[id])
-                      for timetable in timetables
-                      if (id := timetable["faculty_section_course_id"])
-                      in faculty_section_course_ids]
+    if faculty_id:
+        timetables = [t for t in timetables if t["faculty_id"] == faculty_id]
+    if section_id:
+        timetables = [t for t in timetables if t["section_id"] == section_id]
+    if course_code:
+        timetables = [t for t in timetables if t["course_code"] == course_code]
+
     return timetables
 
 
