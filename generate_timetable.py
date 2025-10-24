@@ -124,10 +124,6 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                            (campus_id, degree, stream, course_code))
         return {section["section_id"] for section in cursor.fetchall()}
 
-    def sort_course(course_code):
-        course = fetch_data.get_course(cursor, code=course_code)
-        return (course["P"], course["L"]+course["P"]+course["T"])
-
     def lab_capacities(department, day, period_id):
         cursor.execute("""SELECT COUNT(*) / `P` AS `labs_per_week`,
                        `section_id`, `degree`, `stream`, `course_code`
@@ -269,59 +265,42 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
             return None
 
     def try_compress(section_id):
-        def compress(day, period_id, faculty_id, section_id, course_code, class_id, *, forward=0):
-            course = fetch_data.get_course(cursor, code=course_code)
-            from_to = (day, period_id, day, period_id + forward)
-            if fetch_data.is_elective(cursor, course_code=course_code, section_id=section_id):
-                section = fetch_data.get_section(cursor, section_id=section_id)
-                degree, stream = section["degree"], section["stream"]
-                possible = True
-                for section in fetch_data.get_sections(cursor, campus_id=campus_id, degree=degree):
-                    faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course_code)
-                    section_course = (section["id"], course_code)
-                    possible = all(possible and is_transfer_possible(*from_to, faculty["faculty_id"], *section_course)[0]
-                                      for faculty in faculties)
-                    if not possible:
-                        print(f"Unable to compress {day}{period_id}",
-                              f"{section["year"]}{section["degree"]}-{section["stream"]}{section["section"]}")
-                        return False
-            else:
-                faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course_code)
-                possible = all(is_transfer_possible(*from_to, faculty["faculty_id"], section_id, course_code, class_id)[0]
-                                 for faculty in faculties)
-                if not possible:
-                    print(f"Unable to compress {day}{period_id}",
-                          f"{section["year"]}{section["degree"]}-{section["stream"]}{section["section"]}")
-                    return False
+        def compress(p, periods, free_periods):
+            day = p[0]
+            pid = p[1]
+            fsc = p[4]
+            cls_id = p[5]
+            delete_data.delete_timetable(db_connector, cursor, day=day, period_id=pid, faculty_section_course_id=fsc_id, class_id=p[5])
+            for dp in free_periods:
+                d, p = dp
+                try:
+                    insert_data.add_timetable(db_connector, cursor, day=d, period_id=p, faculty_section_course_id=fsc, class_id=cls_id)
+                except Exception:
+                    pass
 
-            timetable["period_id"] -= forward
-            delete_data.delete_timetable(db_connector, cursor, **timetable)
-            timetable["period_id"] += forward
-            insert_data.add_timetable(db_connector, cursor, **timetable)
-            return True
-
-        cursor.execute("""SELECT `day`, `period_id`, `faculty_id`, `class_id`
+        cursor.execute("""SELECT `day`, `period_id`,
+                       `faculty_section_course_id`, `class_id`, `is_lab`,
+                       `get_is_elective`(`course_code`, %s) AS `is_elective`,
                        FROM `timetables`
-                       JOIN `faculty_section_course`
-                       ON `id`=`faculty_section_course_id`
+                       JOIN `classes`
+                       ON `classes`.`id`=`class_id`
+                       JOIN `faculty_section_course` `FSC`
+                       ON `FSC`.`id`=`faculty_section_course_id`
                        AND `section_id`=%s
-                       ORDER BY `day`, `period_id`""", (section_id,))
-        timetable = dict.fromkeys(days, [])
-        for period in cursor.fetchall():
-            timetable[period["day"]].append((period["period_id"], period["faculty_id"], section_id, period["class_id"]))
+                       ORDER BY `day`, `period_id`""", (section_id, section_id))
+        result = cursor.fetchall()
+        periods = list({(res["day"], res["period_id"], res["is_lab"], res["is_elective"], res["faculty_section_course_id"], res["class_id"]) for res in result})
+        free_periods = PERIODS - {p[0:2] for p in periods}
+        print(free_periods)
+        for idx, p in enumerate(periods):
+            if not p[3]:
+                if p[1] < 7 and (p[1] not in (4, 5) or periods[idx+1][:2] in free_periods) \
+                    and periods[idx+2][:2] not in free_periods:
+                    compress(p, periods, free_periods)
 
-        for day in days:
-            for period in timetable[day]:
-                if period[0] == 5:
-                    for i in range(3, 0, -1):
-                        if not compress(day, i, *period[1:4], forward=1): return
-                    if not compress(day, 8, *period[1:4], forward=-1): return
-                    break
-            else:
-                for i in range(4, 0, -1):
-                    if not compress(day, i, *period[1:4], forward=1): return
-                for i in range(7, 9):
-                    if not compress(day, i, *period[1:4], forward=-1): return
+                elif p[1] > 2 and (p[1] not in (5, 6) or periods[idx-1][:2] in free_periods) \
+                    and periods[idx-2][:2] not in free_periods:
+                    compress(p, periods, free_periods)
 
     def is_section_busy(section_id, day, period_id):
         cursor.execute("""SELECT 1
@@ -829,7 +808,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                                         if cdp[1][0] == day:
                                             class_day_period.pop(idx)
                                             day_period.pop(idx)
-                                            cls_idx = get_cls_idx(day_period)
+                                            cls_idx = get_cls_idx(day_period)                                        
                                 elif "lunch" in _exception[1]:
                                     class_day_period.pop(_cls_idx)
                                     day_period.pop(_cls_idx)
@@ -1037,8 +1016,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
 
     # 3. Allocate non-elective, non-lab hrs
     for section in sections:
-        period_ids = (1, 2, 3, 4, 6, 7, 8)
-        periods = [(day, period_id) for period_id in period_ids for day in days]
+        periods = [(day, period_id) for day, period_id in get_free_periods(section_id) if period_id != 5]
         cls_idx = get_cls_idx(periods)
         minor_electives = get_minor_elective_hrs(section["id"])
         for period in minor_electives:
