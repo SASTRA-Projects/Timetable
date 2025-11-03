@@ -495,104 +495,86 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                     _no_of_students = num = -(-no_of_students // no_of_sections)
                     _half = -(-_no_of_students // 2)
                     if course[2]:
-                        _course = fetch_data.get_lab_departments(cursor, course_code=course[0])
-                        assert _course, "Programming Error, No labs found!"
+                        _courses = fetch_data.get_lab_departments(cursor, course_code=course[0])
+                        if not _courses:
+                            _courses = [{"P": course[2], "lab_departments": [""]}]
 
-                        _course = _course[0]
-                        hrs = _course["P"]
-                        lab_departments = _course["lab_departments"]
-                        no_of_labs = len(lab_departments)
-                        assert no_of_labs == 1 or 2 * no_of_labs == hrs, "Number of lab-departments did not match with practical hours"
+                        for _course in _courses:
+                            hrs = _course["P"]
+                            lab_departments = _course["lab_departments"]
+                            no_of_labs = len(lab_departments)
+                            assert no_of_labs == 1 or 2 * no_of_labs == hrs, "Number of lab-departments did not match with practical hours"
 
-                        labs = []
-                        for ld in lab_departments:
-                            class_day_period = []
-                            if ld == "":
-                                for period in lab_periods:
-                                    class_capacity = tuple([cls, num] for cls in get_free_classes(num, *period))
-                                    if len(class_capacity) >= no_of_sections:
-                                        class_day_period.append((class_capacity, period))
-                            else:
-                                for period in lab_periods:
-                                    class_day_period.append((max_lab_capacity(ld, *period, no_of_students=-(-num // 2)), period))
-
-                            assert class_day_period, "No lab is available..."
-                            assert ld != "" or len(class_day_period) >= no_of_sections, "Not enough classes"
-                            labs.append([class_day_period, ld])
-
-                        if no_of_labs == 1:
-                            labs *= (hrs // 2)
-
-                        while hrs:
-                            try:
-                                _labs = []
-                                _second_labs = []
-                                _lab_idx = 0
-                                _next_idx = -1
-                                no_of_times = 1
-                                second_day = second_period_id = None
-
-                                if labs[-1][1] == "":
-                                    class_day_period = sorted(labs[-1][0], key=lambda cdp: len(cdp[0]), reverse=True)
-                                    while class_day_period[0][1] not in lab_periods:
-                                        class_day_period.pop(0)
-
-                                    for idx, cdp in enumerate(class_day_period):
-                                        if cdp[1] in _elective_hrs:
-                                            _lab_idx = idx
-                                            break
-                                    _labs.extend(tuple(range(no_of_sections)))
+                            labs = []
+                            for ld in lab_departments:
+                                class_day_period = []
+                                if ld == "":
+                                    for period in lab_periods:
+                                        class_capacity = tuple([cls, num] for cls in get_free_classes(num, *period))
+                                        if len(class_capacity) >= no_of_sections:
+                                            class_day_period.append((class_capacity, period))
                                 else:
-                                    class_day_period = sorted(labs[-1][0],
-                                                              key=lambda cdp: tuple(cdp[0][i][1] for i in range(len(cdp[0]))),
-                                                              reverse=True)
-                                    total_capacity = 0
-                                    while class_day_period[0][1] not in lab_periods:
-                                        class_day_period.pop(0)
+                                    for period in lab_periods:
+                                        class_day_period.append((max_lab_capacity(ld, *period, no_of_students=-(-num // 2)), period))
 
-                                    for idx, cdp in enumerate(class_day_period):
-                                        if cdp[1] not in _elective_hrs:
-                                            continue
-                                        _labs.clear()
-                                        try:
-                                            for i in range(no_of_sections):
-                                                capacity = class_day_period[idx][0][i][1]
-                                                total_capacity += capacity // _half
-                                                _labs.extend((i,) * (capacity // _half))
-                                                if total_capacity >= 2 * no_of_sections:
-                                                    break
-                                            else:
-                                                continue
-                                        except IndexError:
-                                            continue
+                                assert class_day_period, "No lab is available..."
+                                assert ld != "" or len(class_day_period) >= no_of_sections, "Not enough classes"
+                                labs.append([class_day_period, ld])
 
-                                        day, period_id = class_day_period[_lab_idx][1]
-                                        if -(-no_of_students // 2) <= total_capacity < no_of_students:  # need of second lab
-                                            no_of_times = 2
-                                            check_day = (lambda cdp: cdp[0] == day) \
-                                                if any(cdp[1][0] != day for cdp in class_day_period) \
-                                                else lambda cdp: cdp[1] == period_id
-                                            for idx2, cdp2 in enumerate(class_day_period):  # try on elective hrs
-                                                if cdp2[1] not in _elective_hrs or check_day(cdp2[1]):
-                                                    continue
-                                                _second_labs.clear()
-                                                total_capacity = 0
-                                                try:
-                                                    for i in range(no_of_sections):
-                                                        total_capacity += cdp2[0][i][1] // _half
-                                                        _second_labs.extend((i,) * (capacity // _half))
-                                                        if total_capacity >= 2 * no_of_sections:
-                                                            break
-                                                    else:
-                                                        continue
-                                                except IndexError:
-                                                    continue
-                                                _next_idx = idx2
-                                                second_day, second_period_id = class_day_period[_next_idx][1]
+                            if no_of_labs == 1:
+                                labs *= (hrs // 2)
+
+                            while hrs:
+                                try:
+                                    _labs = []
+                                    _second_labs = []
+                                    _lab_idx = 0
+                                    _next_idx = -1
+                                    no_of_times = 1
+                                    second_day = second_period_id = None
+
+                                    if labs[-1][1] == "":
+                                        class_day_period = sorted(labs[-1][0], key=lambda cdp: len(cdp[0]), reverse=True)
+                                        while class_day_period[0][1] not in lab_periods:
+                                            class_day_period.pop(0)
+
+                                        for idx, cdp in enumerate(class_day_period):
+                                            if cdp[1] in _elective_hrs:
+                                                _lab_idx = idx
                                                 break
-                                            else:  # try for any hrs
-                                                for idx2, cdp2 in enumerate(class_day_period):
-                                                    if check_day(cdp2[1]):
+                                        _labs.extend(tuple(range(no_of_sections)))
+                                    else:
+                                        class_day_period = sorted(labs[-1][0],
+                                                                key=lambda cdp: tuple(cdp[0][i][1] for i in range(len(cdp[0]))),
+                                                                reverse=True)
+                                        total_capacity = 0
+                                        while class_day_period[0][1] not in lab_periods:
+                                            class_day_period.pop(0)
+
+                                        for idx, cdp in enumerate(class_day_period):
+                                            if cdp[1] not in _elective_hrs:
+                                                continue
+                                            _labs.clear()
+                                            try:
+                                                for i in range(no_of_sections):
+                                                    capacity = class_day_period[idx][0][i][1]
+                                                    total_capacity += capacity // _half
+                                                    _labs.extend((i,) * (capacity // _half))
+                                                    if total_capacity >= 2 * no_of_sections:
+                                                        break
+                                                else:
+                                                    continue
+                                            except IndexError:
+                                                continue
+
+                                            day, period_id = class_day_period[_lab_idx][1]
+                                            if -(-no_of_students // 2) <= total_capacity < no_of_students:  # need of second lab
+                                                no_of_times = 2
+                                                check_day = (lambda cdp: cdp[0] == day) \
+                                                    if any(cdp[1][0] != day for cdp in class_day_period) \
+                                                    else lambda cdp: cdp[1] == period_id
+                                                for idx2, cdp2 in enumerate(class_day_period):  # try on elective hrs
+                                                    if cdp2[1] not in _elective_hrs or check_day(cdp2[1]):
                                                         continue
                                                     _second_labs.clear()
                                                     total_capacity = 0
@@ -607,140 +589,159 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                                                     except IndexError:
                                                         continue
                                                     _next_idx = idx2
-                                                    second_day, second_period_id = class_day_period[_next_idx]
+                                                    second_day, second_period_id = class_day_period[_next_idx][1]
+                                                    break
+                                                else:  # try for any hrs
+                                                    for idx2, cdp2 in enumerate(class_day_period):
+                                                        if check_day(cdp2[1]):
+                                                            continue
+                                                        _second_labs.clear()
+                                                        total_capacity = 0
+                                                        try:
+                                                            for i in range(no_of_sections):
+                                                                total_capacity += cdp2[0][i][1] // _half
+                                                                _second_labs.extend((i,) * (capacity // _half))
+                                                                if total_capacity >= 2 * no_of_sections:
+                                                                    break
+                                                            else:
+                                                                continue
+                                                        except IndexError:
+                                                            continue
+                                                        _next_idx = idx2
+                                                        second_day, second_period_id = class_day_period[_next_idx]
+                                                        break
+                                                    else:
+                                                        continue
+
+                                            elif total_capacity < no_of_students:
+                                                continue
+
+                                            _lab_idx = idx
+                                        else:  # not possible on elective hrs
+                                            total_capacity = 0
+                                            _labs.clear()
+                                            try:
+                                                for i in range(no_of_sections):
+                                                    capacity = class_day_period[_lab_idx][0][i][1]
+                                                    total_capacity += capacity // _half
+                                                    _labs.extend((i,) * (capacity // _half))
+                                                    if total_capacity >= 2 * no_of_sections:
+                                                        break
+                                                else:
+                                                    continue
+                                            except IndexError:
+                                                continue
+
+                                            day, period_id = class_day_period[_lab_idx][1]
+                                            if -(-no_of_students // 2) <= total_capacity < no_of_students:  # need of second lab
+                                                check_day = (lambda cdp: cdp[0] == day) \
+                                                            if any(cdp[1][0] != day for cdp in class_day_period) \
+                                                            else lambda cdp: cdp[1] == period_id
+                                                for idx2, cdp2 in class_day_period:
+                                                    if check_day(cdp2[1]):
+                                                        continue
+                                                    total_capacity = 0
+                                                    try:
+                                                        for i in range(no_of_sections):
+                                                            total_capacity += cdp2[0][i][1] // _half
+                                                            if total_capacity >= 2 * no_of_sections:
+                                                                break
+                                                    except IndexError:
+                                                        continue
+                                                    _next_idx = idx2
+                                                    second_day, second_period_id = class_day_period[_next_idx][1]
                                                     break
                                                 else:
                                                     continue
 
-                                        elif total_capacity < no_of_students:
-                                            continue
-
-                                        _lab_idx = idx
-                                    else:  # not possible on elective hrs
-                                        total_capacity = 0
-                                        _labs.clear()
-                                        try:
-                                            for i in range(no_of_sections):
-                                                capacity = class_day_period[_lab_idx][0][i][1]
-                                                total_capacity += capacity // _half
-                                                _labs.extend((i,) * (capacity // _half))
-                                                if total_capacity >= 2 * no_of_sections:
-                                                    break
-                                            else:
-                                                continue
-                                        except IndexError:
-                                            continue
-
-                                        day, period_id = class_day_period[_lab_idx][1]
-                                        if -(-no_of_students // 2) <= total_capacity < no_of_students:  # need of second lab
-                                            check_day = (lambda cdp: cdp[0] == day) \
-                                                        if any(cdp[1][0] != day for cdp in class_day_period) \
-                                                        else lambda cdp: cdp[1] == period_id
-                                            for idx2, cdp2 in class_day_period:
-                                                if check_day(cdp2[1]):
-                                                    continue
-                                                total_capacity = 0
-                                                try:
-                                                    for i in range(no_of_sections):
-                                                        total_capacity += cdp2[0][i][1] // _half
-                                                        if total_capacity >= 2 * no_of_sections:
-                                                            break
-                                                except IndexError:
-                                                    continue
-                                                _next_idx = idx2
-                                                second_day, second_period_id = class_day_period[_next_idx][1]
-                                                break
-                                            else:
-                                                continue
-
-                                for section_id in _section_ids:
-                                    faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course[0])
-                                    if no_of_times == 2:
-                                        _no_of_students = _half
-                                        mid = -(-len(faculties) // 2)
-                                        _faculties = faculties[:mid]
-                                    else:
-                                        _faculties = faculties
-                                    for idx, fsc in enumerate(_faculties):
-                                        class_id = class_day_period[_lab_idx][0][_labs[idx]][0]
-                                        insert_data.add_timetable(db_connector, cursor,
-                                                                  day=day,
-                                                                  period_id=period_id,
-                                                                  faculty_section_course_id=fsc["id"],
-                                                                  class_id=class_id)
-                                        insert_data.add_timetable(db_connector, cursor,
-                                                                  day=day,
-                                                                  period_id=period_id+1,
-                                                                  faculty_section_course_id=fsc["id"],
-                                                                  class_id=class_id)
-                                    class_day_period.pop(_lab_idx)
-                                    if _second_labs:
-                                        mid = -(-len(faculties) // 2)
-                                        _faculties = faculties[mid:]
+                                    for section_id in _section_ids:
+                                        faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course[0])
+                                        if no_of_times == 2:
+                                            _no_of_students = _half
+                                            mid = -(-len(faculties) // 2)
+                                            _faculties = faculties[:mid]
+                                        else:
+                                            _faculties = faculties
                                         for idx, fsc in enumerate(_faculties):
-                                            class_id = class_day_period[_next_idx][0][_second_labs[idx]][0]
+                                            class_id = class_day_period[_lab_idx][0][_labs[idx]][0]
                                             insert_data.add_timetable(db_connector, cursor,
-                                                                      day=second_day,
-                                                                      period_id=second_period_id,
-                                                                      faculty_section_course_id=fsc["id"],
-                                                                      class_id=class_id)
+                                                                    day=day,
+                                                                    period_id=period_id,
+                                                                    faculty_section_course_id=fsc["id"],
+                                                                    class_id=class_id)
                                             insert_data.add_timetable(db_connector, cursor,
-                                                                      day=second_day,
-                                                                      period_id=second_period_id+1,
-                                                                      faculty_section_course_id=fsc["id"],
-                                                                      class_id=class_id)
-                                            class_day_period.pop(_next_idx)
-                                        _crs_hrs.add((second_day, second_period_id))
-                                        _crs_hrs.add((second_day, second_period_id+1))
+                                                                    day=day,
+                                                                    period_id=period_id+1,
+                                                                    faculty_section_course_id=fsc["id"],
+                                                                    class_id=class_id)
+                                        class_day_period.pop(_lab_idx)
+                                        if _second_labs:
+                                            mid = -(-len(faculties) // 2)
+                                            _faculties = faculties[mid:]
+                                            for idx, fsc in enumerate(_faculties):
+                                                class_id = class_day_period[_next_idx][0][_second_labs[idx]][0]
+                                                insert_data.add_timetable(db_connector, cursor,
+                                                                        day=second_day,
+                                                                        period_id=second_period_id,
+                                                                        faculty_section_course_id=fsc["id"],
+                                                                        class_id=class_id)
+                                                insert_data.add_timetable(db_connector, cursor,
+                                                                        day=second_day,
+                                                                        period_id=second_period_id+1,
+                                                                        faculty_section_course_id=fsc["id"],
+                                                                        class_id=class_id)
+                                                class_day_period.pop(_next_idx)
+                                            _crs_hrs.add((second_day, second_period_id))
+                                            _crs_hrs.add((second_day, second_period_id+1))
 
-                                _crs_hrs.add((day, period_id))
-                                _crs_hrs.add((day, period_id+1))
-                                print(day, period_id, course, "lab")
-                                hrs -= 2
-                                labs.pop()
+                                    _crs_hrs.add((day, period_id))
+                                    _crs_hrs.add((day, period_id+1))
+                                    print(day, period_id, course, "lab")
+                                    hrs -= 2
+                                    labs.pop()
 
-                            except Exception as exception:
-                                _exception = exception.args
-                                print(_exception, course, faculties, 1, day, period_id)
-                                for section_id in _section_ids:
-                                    faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course[0])
-                                    for fsc in faculties:
-                                        delete_data.delete_timetable(db_connector, cursor,
-                                                                    day=day, period_id=period_id, faculty_section_course_id=fsc["id"],
-                                                                    class_id=class_day_period[_lab_idx][0][_labs[idx]][0])
-                                        delete_data.delete_timetable(db_connector, cursor,
-                                                                    day=day, period_id=period_id+1, faculty_section_course_id=fsc["id"],
-                                                                    class_id=class_day_period[_lab_idx][0][_labs[idx]][0])
-                                    if _second_labs:
-                                        for fsc in faculties[-(-len(faculties) // 2):]:
-                                                delete_data.delete_timetable(db_connector, cursor,
-                                                                            day=second_day,
-                                                                            period_id=second_period_id,
-                                                                            faculty_section_course_id=fsc["id"],
-                                                                            class_id=class_day_period[_next_idx][0][__second_labs[idx]][0])
-                                                delete_data.delete_timetable(db_connector, cursor,
-                                                                            day=second_day,
-                                                                            period_id=second_period_id+1,
-                                                                            faculty_section_course_id=fsc["id"],
-                                                                            class_id=class_day_period[_next_idx][0][__second_labs[idx]][0])
+                                except Exception as exception:
+                                    _exception = exception.args
+                                    print(_exception, course, faculties, 1, day, period_id)
+                                    for section_id in _section_ids:
+                                        faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course[0])
+                                        for fsc in faculties:
+                                            delete_data.delete_timetable(db_connector, cursor,
+                                                                        day=day, period_id=period_id, faculty_section_course_id=fsc["id"],
+                                                                        class_id=class_day_period[_lab_idx][0][_labs[idx]][0])
+                                            delete_data.delete_timetable(db_connector, cursor,
+                                                                        day=day, period_id=period_id+1, faculty_section_course_id=fsc["id"],
+                                                                        class_id=class_day_period[_lab_idx][0][_labs[idx]][0])
+                                        if _second_labs:
+                                            for fsc in faculties[-(-len(faculties) // 2):]:
+                                                    delete_data.delete_timetable(db_connector, cursor,
+                                                                                day=second_day,
+                                                                                period_id=second_period_id,
+                                                                                faculty_section_course_id=fsc["id"],
+                                                                                class_id=class_day_period[_next_idx][0][__second_labs[idx]][0])
+                                                    delete_data.delete_timetable(db_connector, cursor,
+                                                                                day=second_day,
+                                                                                period_id=second_period_id+1,
+                                                                                faculty_section_course_id=fsc["id"],
+                                                                                class_id=class_day_period[_next_idx][0][__second_labs[idx]][0])
 
-                                if len(_exception) < 2:
-                                    print(_exception, 10, "Over")
-                                    return None
-                                elif _exception[0] == 1644:
-                                    for cdp in class_day_period:
-                                        if cdp[1] == (day, period_id):
-                                            labs[-1][0].remove(cdp)
-                                            lab_periods.remove(cdp[1])
-                                            break
-                                    if _second_labs:
+                                    if len(_exception) < 2:
+                                        print(_exception, 10, "Over")
+                                        return None
+                                    elif _exception[0] == 1644:
                                         for cdp in class_day_period:
-                                            if cdp[1] == (second_day, second_period_id):
+                                            if cdp[1] == (day, period_id):
                                                 labs[-1][0].remove(cdp)
                                                 lab_periods.remove(cdp[1])
                                                 break
-                                print(day, period_id, second_day, second_period_id)
-                                continue
+                                        if _second_labs:
+                                            for cdp in class_day_period:
+                                                if cdp[1] == (second_day, second_period_id):
+                                                    labs[-1][0].remove(cdp)
+                                                    lab_periods.remove(cdp[1])
+                                                    break
+                                    print(day, period_id, second_day, second_period_id)
+                                    continue
 
                     if course[1] + course[3]:
                         periods -= _crs_hrs

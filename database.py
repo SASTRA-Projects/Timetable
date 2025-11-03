@@ -305,8 +305,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
     """
     Functional Dependencies
     =======================
-    - `id` \u2192 `name`, `campus_id`, `join_year`, `programme_id`,
-                  `roll_no`, `phone`
+    - `id` \u2192 `name`, `campus_id`, `join_year`, `programme_id`, `roll_no`
     - `campus_id`, `join_year`, `programme_id`, `roll_no` \u2192 `id`, `name`
     """
     cursor.execute("""CREATE TABLE IF NOT EXISTS `students` (
@@ -316,12 +315,10 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
                    `join_year` SMALLINT UNSIGNED NOT NULL,
                    `programme_id` MEDIUMINT UNSIGNED NOT NULL,
                    `roll_no` SMALLINT UNSIGNED NOT NULL,
-                   `phone` CHAR(10),
                    PRIMARY KEY(`id`),
                    FOREIGN KEY(`campus_id`, `programme_id`)
                    REFERENCES `campus_programmes`(`campus_id`, `programme_id`)
                    ON UPDATE CASCADE ON DELETE RESTRICT,
-                   UNIQUE(`campus_id`, `join_year`, `programme_id`, `roll_no`),
-                   CHECK(`phone` REGEXP '^[6-9][0-9]{9}$')
+                   UNIQUE(`campus_id`, `join_year`, `programme_id`, `roll_no`)
     )""")
     db_connector.commit()

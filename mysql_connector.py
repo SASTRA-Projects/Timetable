@@ -48,9 +48,11 @@ def connect(user: str,
     return (db_connector, cursor)
 
 
-def create_db(cursor: Cursor, /, *,
+def create_db(db_connector: Connection,
+              cursor: Cursor, /, *,
               database: Optional[str] = None) -> None:
-    cursor.execute("""CREATE DATABASE IF NOT EXISTS `%s`""", (database,))
+    cursor.execute("""CREATE DATABASE IF NOT EXISTS %s""", (database,))
+    db_connector.commit()
 
 
 def use_db(db_connector: Connection,

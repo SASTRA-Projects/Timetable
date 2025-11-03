@@ -44,8 +44,7 @@ def create_views(db_connector: Connection, cursor: Cursor) -> None:
     5. **``section_student_details``**: Lists details of section & students.
         - **Columns**: `section_id`, `student_id`, `campus_id`,
                        `degree`, `stream`, `section`, `year`,
-                       `name`, `join_year`, `programme_id`,
-                       `roll_no`, `phone_no`
+                       `name`, `join_year`, `programme_id`, `roll_no`
 
     Parameters
     ==========
@@ -119,8 +118,7 @@ def create_views(db_connector: Connection, cursor: Cursor) -> None:
                    SELECT `section_id`, `student_id`,
                    `sections`.`campus_id` AS `campus_id`,
                    `degree`, `stream`, `section`, `year`,
-                   `name`, `join_year`, `programme_id`,
-                   `roll_no`, `phone`
+                   `name`, `join_year`, `programme_id`, `roll_no`
                    FROM `section_students`
                    INNER JOIN `sections`
                    ON `sections`.`id`=`section_id`
