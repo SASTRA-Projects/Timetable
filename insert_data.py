@@ -26,7 +26,6 @@ the functions are defined here.
 def add_faculty_info(db_connector: Connection,
                      cursor: Cursor, /, *,
                      faculty_id: Optional[int] = None,
-                     phone: Optional[Union[int, str]] = None,
                      salary: Optional[float] = None,
                      password: Optional[str] = None,
                      verbose: bool = True) -> None:
@@ -36,8 +35,8 @@ def add_faculty_info(db_connector: Connection,
 
         ph = PasswordHasher()
         cursor.execute("""INSERT INTO `faculty_info`
-                       VALUES (%s, %s, %s, %s)""",
-                       (faculty_id, phone, salary, ph.hash(password)))
+                       VALUES (%s, %s, %s)""",
+                       (faculty_id, salary, ph.hash(password)))
 
         db_connector.commit()
     except Exception as exception:

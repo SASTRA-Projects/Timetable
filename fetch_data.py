@@ -44,7 +44,7 @@ def get_courses(cursor: Cursor, /, *,
                            JOIN `programme_courses`
                            ON `code`=`course_code`
                            AND `programme_id`=%s
-                           AND `is_elective`=%s""", (programme_id, elective,))
+                           AND `is_elective`=%s""", (programme_id, elective))
         elif elective is None:
             cursor.execute("""SELECT *
                            FROM `courses`
@@ -521,7 +521,17 @@ def get_section_classes(cursor: Cursor, /, *,
 
 def is_elective(cursor: Cursor, /, *,
                 course_code: Optional[str] = None,
+                programme_id: Optional[int] = None,
                 section_id: Optional[int] = None) -> bool:
+    if programme_id:
+        cursor.execute("""SELECT `is_elective`
+                       FROM `programme_courses`
+                       WHERE `programme_id`=%s
+                       AND `course_code`=%s""",
+                       (programme_id, course_code))
+        is_elective = cursor.fetchone()
+        return is_elective["is_elective"] if is_elective else False
+
     cursor.execute("""SELECT `get_is_elective`(%s, %s) AS `is_elective`""",
                    (course_code, section_id))
     is_elective = cursor.fetchone()
@@ -892,7 +902,9 @@ def get_section_students(cursor: Cursor, /, *,
 def get_faculty_section_courses(cursor: Cursor, /, *,
                                 faculty_id: Optional[int] = None,
                                 section_id: Optional[int] = None,
-                                course_code: Optional[str] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
+                                course_code: Optional[str] = None,
+                                section_details: Optional[bool] = None,
+                                course_details: Optional[bool] = None) -> Tuple[Dict[str, Union[int, str]], ...]:
     if faculty_id and section_id and course_code:
         cursor.execute("""SELECT `id`, `section_id`, `course_code`
                        FROM `faculty_section_course`
@@ -932,7 +944,21 @@ def get_faculty_section_courses(cursor: Cursor, /, *,
                        WHERE `course_code`=%s""", (course_code,))
     else:
         cursor.execute("""SELECT * FROM `faculty_section_course`""")
-    return cursor.fetchall()
+
+    res = cursor.fetchall()
+    if section_details:
+        if section_id:
+            res = [r | get_section(cursor, section_id=section_id) for r in res]
+        else:
+            res = [r | get_section(cursor, section_id=r["section_id"]) for r in res]
+
+    if course_details:
+        if course_code:
+            res = [r | get_course(cursor, code=course_code) for r in res]
+        else:
+            res = [r | get_course(cursor, code=r["course_code"]) for r in res]
+
+    return res
 
 
 def get_faculty_section_course(cursor: Cursor, /, *,

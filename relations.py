@@ -33,7 +33,7 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
 
     Tables Created
     ==============
-    - **``faculty_info``**: Stores faculty phone, salary, and password.
+    - **``faculty_info``**: Stores salary, and password.
     - **``section_minor_electives``**: Maps minor electives for each section.
     - **``section_class``**: Links sections to classrooms (non-labs).
     - **``section_students``**: Maps students to their sections.
@@ -66,17 +66,15 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
     """
     Functional Dependencies
     =======================
-    - `facutly_id` \u2192 `phone`, `salary`, `password`
+    - `facutly_id` \u2192 `salary`, `password`
     """
     cursor.execute("""CREATE TABLE IF NOT EXISTS `faculty_info` (
                    `faculty_id` MEDIUMINT UNSIGNED,
-                   `phone` CHAR(10) NOT NULL,
                    `salary` DECIMAL(12, 2) NOT NULL,
                    `password` TINYTEXT NOT NULL,
                    PRIMARY KEY(`faculty_id`),
                    FOREIGN KEY(`faculty_id`) REFERENCES `faculties`(`id`)
-                   ON UPDATE CASCADE ON DELETE CASCADE,
-                   CHECK(`phone` REGEXP '^[6789][0-9]{9}$')
+                   ON UPDATE CASCADE ON DELETE CASCADE
     )""")
     """
     Functional Dependencies

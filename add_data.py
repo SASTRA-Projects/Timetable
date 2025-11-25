@@ -617,8 +617,7 @@ def add_student(db_connector: Connection,
                 campus_id: Optional[int] = None,
                 join_year: int = datetime.date.today().year,
                 programme_id: Optional[int] = None,
-                roll_no: Optional[int] = None,
-                phone: Optional[Union[int, str]] = None) -> None:
+                roll_no: Optional[int] = None) -> None:
     r"""
     Add a new student record to the `students` table.
 
@@ -642,9 +641,6 @@ def add_student(db_connector: Connection,
     - **roll_no** : Optional[int]
       The roll number assigned to the student (optional; if not provided,
       the database will auto-generate it).
-    - **phone** : Optional[Union[int, str]]
-      The contact number of the student.
-
     Examples
     ========
     .. code-block:: python
@@ -654,21 +650,19 @@ def add_student(db_connector: Connection,
                 degree="B.Tech.",
                 stream="Artificial intelligence and data science"
             )
-        >>> # phone can be either str, or int
         >>> add_student(connector, cursor, id=233, name="Sarvesh. S",
                         campus_id=1, join_year=2023, programme_id=programme_id,
-                        roll_no=None, phone=9876543210)
+                        roll_no=None)
 
     See Also
     ========
     - :func:`get_programme_id` – To get the programme ID for
                                  a given degree and stream.
     """
-    phone = str(phone) if phone else phone
     cursor.execute("""INSERT INTO `students`
                    (`id`, `name`, `campus_id`, `join_year`,
-                   `programme_id`, `roll_no`, `phone`)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                   `programme_id`, `roll_no`)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
                    (id, name, campus_id, join_year,
-                    programme_id, roll_no, phone))
+                    programme_id, roll_no))
     db_connector.commit()
