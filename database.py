@@ -295,7 +295,7 @@ def create_database(db_connector: Connection, cursor: Cursor) -> None:
                    `name` VARCHAR(40) NOT NULL,
                    `campus_id` TINYINT UNSIGNED NOT NULL,
                    `department` VARCHAR(40) NOT NULL,
-                   `join_year` SMALLINT UNSIGNED NOT NULL,
+                   `join_year` SMALLINT UNSIGNED,
                    PRIMARY KEY(`id`),
                    FOREIGN KEY(`campus_id`) REFERENCES `campuses`(`id`)
                    ON UPDATE CASCADE ON DELETE RESTRICT,

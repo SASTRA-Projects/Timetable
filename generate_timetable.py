@@ -873,8 +873,8 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
             while hrs:
                 try:
                     no_of_times = 1
-                    if hrs < crs["P"]:
-                        crs["P"] = hrs
+                    if hrs < course["P"]:
+                        course["P"] = hrs
                         class_day_period = sorted(labs[-1][0], key=lambda cdp: tuple(cdp[0][i][1] for i in range(len(cdp[0]))), reverse=True)
                         day_period = [period for cls, period in class_day_period]
                         cls_idx = get_cls_idx(day_period)
@@ -999,6 +999,13 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                                                      day=day, period_id=period_id+1, faculty_section_course_id=fsc["id"], class_id=class_id)
                     if len(_exception) < 2:
                         if len(day_period) > 0:
+                            try:
+                                next(cls_idx)
+                            except StopIteration:
+                                cls_idx = get_cls_idx(day_period)
+                            except Exception:
+                                pass
+
                             print(1003, _exception, day_period, len(day_period), len(class_day_period), day, period_id, ctwice, twice, _cls_idx)
                             ctwice = False
                             continue
@@ -1037,7 +1044,7 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
             ), key=lambda x: x["L"] + x["P"] + x["T"],
             reverse=True
         )
-        courses: Set[str] = set()
+        courses: set[str] = set()
         if class_id := fetch_data.get_section_classes(cursor, section_id=section_id):
             class_id = class_id[0]["class_id"]
 

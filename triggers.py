@@ -19,7 +19,7 @@ from typehints import Connection, Cursor
 def create_triggers(db_connector: Connection, cursor: Cursor):
     cursor.execute("""CREATE PROCEDURE IF NOT EXISTS `validate_join_year`
                    (IN `year` SMALLINT UNSIGNED)
-                   IF `year` > YEAR(CURDATE())
+                   IF `year` IS NOT NULL and `year` > YEAR(CURDATE())
                        THEN SIGNAL SQLSTATE '45000'
                        SET MESSAGE_TEXT='Invalid year: Join Year cannot be greater than the current year';
                    END IF;

@@ -163,16 +163,16 @@ def get_streams(cursor: Cursor, /, *,
 def get_programmes(cursor: Cursor, /, *,
                    campus_id: Optional[int] = None,
                    degree: Optional[str] = None,
-                   stream: Optional[str] = None) -> Tuple[Dict[str, Union[int, str]]]:
+                   stream: Optional[str] = "") -> Tuple[Dict[str, Union[int, str]]]:
     if campus_id:
-        if degree and stream:
+        if degree and stream != "":
             cursor.execute("""SELECT `id`, `degree`, `stream`
                            FROM `programmes`
                            JOIN `campus_programmes` AS `CP`
                            ON `programmes`.`id`=`CP`.`programme_id`
                            WHERE `CP`.`campus_id`=%s
                            AND `degree`=%s
-                           AND (`stream`=%s OR `stream` IS NULL)""",
+                           AND `stream` <=> %s""",
                            (campus_id, degree, stream))
         elif degree:
             cursor.execute("""SELECT `id`, `degree`, `stream`
@@ -182,13 +182,13 @@ def get_programmes(cursor: Cursor, /, *,
                            WHERE `CP`.`campus_id`=%s
                            AND `degree`=%s""",
                            (campus_id, degree))
-        elif stream:
+        elif stream != "":
             cursor.execute("""SELECT `id`, `degree`, `stream`
                            FROM `programmes`
                            JOIN `campus_programmes` `CP`
                            ON `programmes`.`id`=`CP`.`programme_id`
                            WHERE `CP`.`campus_id`=%s
-                           AND (`stream`=%s OR `stream` IS NULL)""",
+                           AND `stream` <=> %s""",
                            (campus_id, stream))
         else:
             cursor.execute("""SELECT `id`, `degree`, `stream`
@@ -196,17 +196,17 @@ def get_programmes(cursor: Cursor, /, *,
                            JOIN `campus_programmes` `CP`
                            ON `programmes`.`id`=`CP`.`programme_id`
                            WHERE `CP`.`campus_id`=%s""", (campus_id,))
-    if degree and stream:
+    if degree and stream != "":
         cursor.execute("""SELECT `id` FROM `programmes`
                        WHERE `degree` LIKE %s
-                       AND (`stream` LIKE %s OR `stream` IS NULL)""",
+                       AND `stream` <=> %s""",
                        (degree, stream))
     elif degree:
         cursor.execute("""SELECT `id`, `stream` FROM `programmes`
                        WHERE `degree` LIKE %s""", (degree,))
-    elif stream:
+    elif stream != "":
         cursor.execute("""SELECT `id`, `degree` FROM `programmes`
-                       WHERE `stream` LIKE %s OR `stream` IS NULL""",
+                       WHERE `stream` <=> %s""",
                        (stream,))
     else:
         cursor.execute("""SELECT * FROM `programmes`""")
@@ -223,8 +223,8 @@ def get_programme(cursor: Cursor, /, *,
 
 def get_programme_id(cursor: Cursor, /, *,
                      degree: Optional[str] = None,
-                     stream: Optional[str] = None) -> Optional[int]:
-    if not (degree and stream):
+                     stream: Optional[str] = "") -> Optional[int]:
+    if not (degree and stream != ""):
         return None
     programme = get_programmes(cursor, degree=degree, stream=stream)
     if not programme:
