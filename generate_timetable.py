@@ -994,10 +994,10 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                                 cls_idx = get_cls_idx(day_period)
                             except Exception:
                                 pass
-
                             print(1003, _exception, day_period, len(day_period), len(class_day_period), day, period_id, ctwice, twice, _cls_idx)
                             ctwice = False
                             continue
+
                         print(_exception, day_period, "Over")
                         return None
                     elif "faculty" in _exception[1] or "more than 2 labs at same time" in _exception[1]:

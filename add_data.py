@@ -541,6 +541,8 @@ def add_section(db_connector: Connection,
       (If many stream students, then None)
     - **year** : Optional[int]
       The year of study (of the students under the degree-stream).
+    - **section** : Optional[str]
+      The section name - usually one letter (can also be 2, like "A1", "B", ...).
 
     Examples
     ========
@@ -548,7 +550,7 @@ def add_section(db_connector: Connection,
 
         >>> campus_id = get_campus_id(cursor, campus="SRC")
         >>> add_class(connector, cursor, id=1, campus_id=campus_id,
-        ...           degree="B.Tech.", year=1) # stream is None, here
+        ...           degree="B.Tech.", year=1, section="A")  # stream is None, here
 
     See Also
     ========
@@ -567,7 +569,7 @@ def add_faculty(db_connector: Connection,
                 name: Optional[str] = None,
                 campus_id: Optional[int] = None,
                 department: Optional[str] = None,
-                join_year: int = datetime.date.today().year) -> None:
+                join_year: Optional[int] = None) -> None:
     r"""
     Add a new faculty record to the `faculties` table.
 
@@ -586,8 +588,8 @@ def add_faculty(db_connector: Connection,
       The campus ID where the faculty is assigned.
     - **department** : Optional[str]
       The department where the faculty belongs.
-    - **join_year** : int
-      The year the faculty joined (defaults to the current year).
+    - **join_year** : Optional[int]
+      The year the faculty joined (optional).
 
     Examples
     ========

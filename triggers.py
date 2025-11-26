@@ -281,10 +281,9 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                         JOIN `programmes`
                         ON `CP`.`programme_id`=`programmes`.`id`
                         AND `CP`.`campus_id`=NEW.`campus_id`
-                        AND ((NEW.`stream` IS NULL AND `programmes`.`degree`=NEW.`degree`)
-                            OR
-                            (NEW.`stream` IS NOT NULL AND `programmes`.`degree`=NEW.`degree`
-                            AND `programmes`.`stream`=NEW.`stream`))
+                        AND `programmes`.`degree`=NEW.`degree`
+                        AND (NEW.`stream` IS NULL
+                             OR `programmes`.`stream`=NEW.`stream`)
                         LIMIT 1
                     )
                         THEN SIGNAL SQLSTATE '45000'
@@ -311,10 +310,9 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                         JOIN `programmes`
                         ON `CP`.`programme_id`=`programmes`.`id`
                         AND `CP`.`campus_id`=NEW.`campus_id`
-                        AND ((NEW.`stream` IS NULL AND `programmes`.`degree`=NEW.`degree`)
-                            OR
-                            (NEW.`stream` IS NOT NULL AND `programmes`.`degree`=NEW.`degree`
-                            AND `programmes`.`stream`=NEW.`stream`))
+                        AND `programmes`.`degree`=NEW.`degree`
+                        AND (NEW.`stream` IS NULL
+                             OR `programmes`.`stream`=NEW.`stream`)
                         LIMIT 1
                     )
                         THEN SIGNAL SQLSTATE '45000'
@@ -770,7 +768,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                     END IF;
 
                     IF `new_is_lab` AND (
-                        SELECT COUNT(*)
+                        SELECT COUNT(DISTINCT(`course_code`))
                         FROM `timetables`
                         JOIN `faculty_section_course` `FSC`
                         ON `FSC`.`id`=`faculty_section_course_id`
@@ -977,7 +975,7 @@ def create_triggers(db_connector: Connection, cursor: Cursor):
                     END IF;
 
                     IF `new_is_lab` AND (
-                        SELECT COUNT(*)
+                        SELECT COUNT(DISTINCT(`course_code`))
                         FROM `timetables`
                         JOIN `faculty_section_course` `FSC`
                         ON `FSC`.`id`=`faculty_section_course_id`
