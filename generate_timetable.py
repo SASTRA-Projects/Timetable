@@ -102,26 +102,15 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
         return len([1 for s in cursor.fetchall() if stream is s["stream"] or stream == s["stream"]])
 
     def get_section_course(degree, stream, course_code):
-        if stream:
-            cursor.execute("""SELECT DISTINCT(`section_id`) AS `section_id`
-                           FROM `faculty_section_course`
-                           JOIN `sections`
-                           ON `section_id`=`sections`.`id`
-                           AND `campus_id`=%s
-                           AND `degree`=%s
-                           AND `stream`=%s
-                           AND `course_code`=%s""",
-                           (campus_id, degree, stream, course_code))
-        else:
-            cursor.execute("""SELECT DISTINCT(`section_id`) AS `section_id`
-                           FROM `faculty_section_course`
-                           JOIN `sections`
-                           ON `section_id`=`sections`.`id`
-                           AND `campus_id`=%s
-                           AND `degree`=%s
-                           AND `stream` IS NULL
-                           AND `course_code`=%s""",
-                           (campus_id, degree, stream, course_code))
+        cursor.execute("""SELECT DISTINCT(`section_id`) AS `section_id`
+                       FROM `faculty_section_course`
+                       JOIN `sections`
+                       ON `section_id`=`sections`.`id`
+                       AND `campus_id`=%s
+                       AND `degree`=%s
+                       AND (`stream` <=> %s OR `stream` IS NULL)
+                       AND `course_code`=%s""",
+                       (campus_id, degree, stream, course_code))
         return {section["section_id"] for section in cursor.fetchall()}
 
     def lab_capacities(department, day, period_id):
@@ -1085,6 +1074,12 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                                                  class_id=(class_id or roaming_id))
                     if len(_exception) < 2:
                         if len(periods) > 0:
+                            try:
+                                next(cls_idx)
+                            except StopIteration:
+                                cls_idx = get_cls_idx(day_period)
+                            except Exception:
+                                pass
                             print(1079, _exception, periods, _cls_idx)
                             continue
                         print(exception, len(periods), day, period_id, class_id or roaming_id, "Over")
