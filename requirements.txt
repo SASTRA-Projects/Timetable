@@ -6,6 +6,7 @@ click==8.3.1
 colorama==0.4.6
 cryptography==46.0.3
 Flask==3.1.2
+Flask-Compress==1.23
 gunicorn==23.0.0; platform_system != "Windows"
 itsdangerous==2.2.0
 Jinja2==3.1.6
