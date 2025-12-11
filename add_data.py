@@ -263,91 +263,6 @@ def add_programme(db_connector: Connection,
                    VALUES (%s, %s, %s)""", (id, degree, stream))
     db_connector.commit()
 
-
-def add_course(db_connector: Connection,
-               cursor: Cursor, /, *,
-               code: Optional[str] = None,
-               course: Optional[str] = None,
-               department: Optional[str] = None,
-               credits: Optional[int] = None,
-               L: Optional[int] = None,
-               P: Optional[int] = None,
-               T: Optional[int] = None) -> None:
-    r"""
-    Add a new course record to the `courses` table.
-
-    Parameters
-    ==========
-    - **db_connector** : Connection
-      The database connection object used to interact with the database.
-    - **cursor** : Cursor
-      Cursor object for executing SQL commands.
-    - **code** : Optional[str]
-      The couse code of the course (a.k.a subject).
-    - **course** : Optional[str]
-      The name of the course.
-    - **department** : Optional[str]
-      The name of the department.
-    - **credits** : Optional[int]
-      The credits that the course has.
-    - **L** : Optional[int]
-      The number of lecture hours.
-    - **P** : Optional[int]
-      The number of practical hours.
-    - **T** : Optional[int]
-      The number of tutorial hours.
-
-    Examples
-    ========
-    .. code-block:: python
-
-        >>> add_course(connector, cursor, code="EIE101R01",
-        ...            course="Basic Electronics Engineering",
-        ...            credits=3, L=2, P=2, T=0)
-    """
-    cursor.execute("""INSERT INTO `courses`
-                   (`code`, `name`, `department`, `credits`, `L`, `P`, `T`)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-                   (code, course, department, credits, L, P, T))
-    db_connector.commit()
-
-
-def add_lab_department(db_connector: Connection,
-                       cursor: Cursor, /, *,
-                       course_code: Optional[str] = None,
-                       department: Optional[str] = None) -> None:
-    r"""
-    Add a new course record to the `courses` table.
-
-    Parameters
-    ==========
-    - **db_connector** : Connection
-      The database connection object used to interact with the database.
-    - **cursor** : Cursor
-      Cursor object for executing SQL commands.
-    - **course_code** : Optional[str]
-      The couse code of the course (a.k.a subject).
-    - **department** : Optional[str]
-      The name of the department. Department should be '' (or "")
-      if the course has practical hours, but not lab.
-
-    Examples
-    ========
-    .. code-block:: python
-
-        >>> add_lab_department(connector, cursor,
-        ...                    course_code="MEC102", department="")
-        >>> add_lab_department(connector, cursor,
-        ...                    course_code="MEC103", department="CSE")
-        >>> add_lab_department(connector, cursor,
-        ...                    course_code="MEC103", department="Drawing")
-    """
-    cursor.execute("""INSERT INTO `lab_departments`
-                   (`course_code`, `department`)
-                   VALUES (%s, %s)""", (course_code, department))
-    db_connector.commit()
-
-
 def add_campus_programme(db_connector: Connection,
                          cursor: Cursor, /, *,
                          campus_id: Optional[int] = None,
@@ -424,50 +339,12 @@ def add_school_department(db_connector: Connection,
     db_connector.commit()
 
 
-def add_programme_course(db_connector: Connection,
-                         cursor: Cursor, /, *,
-                         programme_id: Optional[int] = None,
-                         course_code: Optional[str] = None,
-                         elective: bool = False) -> None:
-    r"""
-    Add a new programme-course record to the `programme_courses` table.
-
-    Parameters
-    ==========
-    - **db_connector** : Connection
-      The database connection object used to interact with the database.
-    - **cursor** : Cursor
-      Cursor object for executing SQL commands.
-    - **programme_id** : Optional[int]
-      The programme ID (Programme that has the course).
-    - **course_code** : Optional[str]
-      The course code.
-    - **elective** : bool
-      True if the course is elective, False otherwise. (False by default)
-
-    Examples
-    ========
-    .. code-block:: python
-
-        >>> programme_id = get_programme_id(cursor, degree="B.Tech.",
-        ...                                 stream="CS")
-        >>> add_programme_course(connector, cursor, campus_id=campus_id,
-        ...                      programme_id=programme_id,
-        ...                      course_code="EIE101R01")
-
-    """
-    cursor.execute("""INSERT INTO `programme_courses`
-                   (`programme_id`, `course_code`, `is_elective`)
-                   VALUES (%s, %s, %s)""",
-                   (programme_id, course_code, elective))
-    db_connector.commit()
-
-
 def add_class(db_connector: Connection,
               cursor: Cursor, /, *,
               id: Optional[int] = None,
               building_id: Optional[int] = None,
               room_no: Optional[int] = None,
+              floor: Optional[int] = None,
               capacity: Optional[int] = None,
               is_lab: bool = False,
               department: Optional[str] = None) -> None:
@@ -486,6 +363,8 @@ def add_class(db_connector: Connection,
       The building ID where the classroom is in.
     - **room_no** : Optional[int]
       The room number within the building.
+    - **floot** : Optional[int]
+      The floor number number within the building.
     - **capacity** : Optional[int]
       The capacity of the class.
     - **is_lab** : bool
@@ -497,7 +376,7 @@ def add_class(db_connector: Connection,
 
         >>> building = get_buildings(cursor, school_id=5)[0]
         >>> add_class(connector, cursor, id=1, building_id=building["id"],
-        ...           room_no=107, capacity=60)
+        ...           room_no=107, floor_no=1, capacity=60)
 
     See Also
     ========
@@ -505,11 +384,9 @@ def add_class(db_connector: Connection,
     """
     if is_lab and not department:
         raise ValueError("Lab Classes must have a department")
-    cursor.execute("""INSERT INTO `classes` (`id`, `building_id`,
-                                             `room_no`, `capacity`,
-                                             `is_lab`, `department`)
-                   VALUES (%s, %s, %s, %s, %s, %s)""",
-                   (id, building_id, room_no, capacity, is_lab, department))
+    cursor.execute("""INSERT INTO `classes`
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                   (id, building_id, room_no, floor, capacity, is_lab, department))
     db_connector.commit()
 
 
@@ -565,10 +442,9 @@ def add_section(db_connector: Connection,
 
 def add_faculty(db_connector: Connection,
                 cursor: Cursor, /, *,
-                id: Optional[int] = None,
+                id: Optional[str] = None,
                 name: Optional[str] = None,
                 campus_id: Optional[int] = None,
-                department: Optional[str] = None,
                 join_year: Optional[int] = None) -> None:
     r"""
     Add a new faculty record to the `faculties` table.
@@ -586,8 +462,6 @@ def add_faculty(db_connector: Connection,
       The name of the faculty member.
     - **campus_id** : Optional[int]
       The campus ID where the faculty is assigned.
-    - **department** : Optional[str]
-      The department where the faculty belongs.
     - **join_year** : Optional[int]
       The year the faculty joined (optional).
 
@@ -596,9 +470,9 @@ def add_faculty(db_connector: Connection,
     .. code-block:: python
 
         >>> campus_id = get_campus_id(cursor, campus="SRC")
-        >>> add_faculty(connector, cursor, id=1432, name="T. Muthukumar",
-                        campus_id=campus_id, department="Computer Science",
-                        join_year=2018
+        >>> add_faculty(connector, cursor, id="C1495",
+                        name="T. Muthukumar",
+                        campus_id=campus_id
             )
 
     See Also
@@ -606,9 +480,9 @@ def add_faculty(db_connector: Connection,
     - :func:`get_campus_id` – To get the campus ID based on the campus name.
     """
     cursor.execute("""INSERT INTO `faculties`
-                   (`id`, `name`, `campus_id`, `department`, `join_year`)
-                   VALUES (%s, %s, %s, %s, %s)""",
-                   (id, name, campus_id, department, join_year))
+                   (`id`, `name`, `campus_id`, `join_year`)
+                   VALUES (%s, %s, %s, %s)""",
+                   (id, name, campus_id, join_year))
     db_connector.commit()
 
 

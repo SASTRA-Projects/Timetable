@@ -34,7 +34,6 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
     Tables Created
     ==============
     - **``faculty_info``**: Stores salary, and password.
-    - **``section_minor_electives``**: Maps minor electives for each section.
     - **``section_class``**: Links sections to classrooms (non-labs).
     - **``section_students``**: Maps students to their sections.
     - **``faculty_section_course``**: Assigns faculties to teach courses in sections.
@@ -66,44 +65,25 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
     """
     Functional Dependencies
     =======================
-    - `facutly_id` \u2192 `salary`, `password`
+    - `facutly_id` \u2192 `password`
     """
     cursor.execute("""CREATE TABLE IF NOT EXISTS `faculty_info` (
-                   `faculty_id` MEDIUMINT UNSIGNED,
-                   `salary` DECIMAL(12, 2) NOT NULL,
+                   `faculty_id` VARCHAR(14),
                    `password` TINYTEXT NOT NULL,
                    PRIMARY KEY(`faculty_id`),
                    FOREIGN KEY(`faculty_id`) REFERENCES `faculties`(`id`)
                    ON UPDATE CASCADE ON DELETE CASCADE
     )""")
-    """
-    Functional Dependencies
-    =======================
-    None Exist
-    """
-    cursor.execute("""CREATE TABLE IF NOT EXISTS `section_minor_electives` (
-                   `section_id` MEDIUMINT UNSIGNED NOT NULL,
-                   `course_code` VARCHAR(10) NOT NULL,
-                   FOREIGN KEY(`section_id`) REFERENCES `sections`(`id`)
-                   ON UPDATE CASCADE ON DELETE RESTRICT,
-                   FOREIGN KEY(`course_code`) REFERENCES `courses`(`code`)
-                   ON UPDATE CASCADE ON DELETE RESTRICT,
-                   PRIMARY KEY(`section_id`, `course_code`)
-    )""")
-    """
-    Functional Dependencies
-    =======================
-    - `student_id` \u2192 `section_id`
-    """
     cursor.execute("""CREATE TABLE IF NOT EXISTS `section_class` (
                    `section_id` MEDIUMINT UNSIGNED NOT NULL,
                    `class_id` MEDIUMINT UNSIGNED NOT NULL,
+                   `strength` MEDIUMINT UNSIGNED NOT NULL,
                    PRIMARY KEY(`section_id`),
                    FOREIGN KEY(`section_id`) REFERENCES `sections`(`id`)
                    ON UPDATE CASCADE ON DELETE RESTRICT,
                    FOREIGN KEY(`class_id`) REFERENCES `classes`(`id`)
                    ON UPDATE CASCADE ON DELETE RESTRICT,
-                   UNIQUE(`class_id`)
+                   CHECK(`strength` > 0)
     )""")
     """
     Functional Dependencies
@@ -119,6 +99,13 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
                    FOREIGN KEY(`student_id`) REFERENCES `students`(`id`)
                    ON UPDATE CASCADE ON DELETE RESTRICT
     )""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS `student_electives` (
+                   `student_id` INT UNSIGNED NOT NULL,
+                   `course_code` VARCHAR(10) NOT NULL,
+                   PRIMARY KEY(`student_id`, `course_code`),
+                   FOREIGN KEY(`student_id`) REFERENCES `students`(`id`)
+                   ON UPDATE CASCADE ON DELETE RESTRICT
+    )""")
     """
     Functional Dependencies
     =======================
@@ -127,30 +114,21 @@ def create_relations(db_connector: Connection, cursor: Cursor) -> None:
     """
     cursor.execute("""CREATE TABLE IF NOT EXISTS `faculty_section_course` (
                    `id` INT UNSIGNED AUTO_INCREMENT,
-                   `faculty_id` MEDIUMINT UNSIGNED NOT NULL,
+                   `faculty_id` VARCHAR(14) NOT NULL,
                    `section_id` MEDIUMINT UNSIGNED NOT NULL,
                    `course_code` VARCHAR(10) NOT NULL,
+                   `course` VARCHAR(75) NOT NULL,
+                   `hrs` TINYINT UNSIGNED NOT NULL,
+                   `class_id` MEDIUMINT UNSIGNED,
+                   `is_lab` BOOLEAN DEFAULT FALSE,
+                   `is_elective` BOOLEAN DEFAULT FALSE,
+                   `full_batch` BOOLEAN DEFAULT TRUE,
                    PRIMARY KEY(`id`),
                    FOREIGN KEY(`faculty_id`) REFERENCES `faculties`(`id`)
                    ON UPDATE CASCADE ON DELETE RESTRICT,
                    FOREIGN KEY(`section_id`) REFERENCES `sections`(`id`)
                    ON UPDATE CASCADE ON DELETE RESTRICT,
-                   FOREIGN KEY(`course_code`) REFERENCES `courses`(`code`)
-                   ON UPDATE CASCADE ON DELETE RESTRICT,
-                   UNIQUE(`faculty_id`, `section_id`, `course_code`)
-    )""")
-    """
-    Functional Dependencies
-    =======================
-    None Exist
-    """
-    cursor.execute("""CREATE TABLE IF NOT EXISTS `student_electives` (
-                   `student_id` INT UNSIGNED NOT NULL, -- check student is in this section,
-                   `course_code` VARCHAR(10) NOT NULL,
-                   PRIMARY KEY(`student_id`, `course_code`),
-                   FOREIGN KEY(`student_id`) REFERENCES `students`(`id`)
-                   ON UPDATE CASCADE ON DELETE RESTRICT,
-                   FOREIGN KEY(`course_code`) REFERENCES `courses`(`code`)
+                   FOREIGN KEY(`class_id`) REFERENCES `classes`(`id`)
                    ON UPDATE CASCADE ON DELETE RESTRICT
     )""")
     db_connector.commit()

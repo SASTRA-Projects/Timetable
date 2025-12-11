@@ -108,11 +108,10 @@ limitations under the License. -->
     {% else %}
         <div class="faculty-card">
             <p><strong>Name:</strong> {{ faculty["name"] }}</p>
-            <p><strong>Phone Number:</strong> {{ faculty["phone"] }}</p>
             <p><strong>Campus:</strong> {{ campus }}</p>
-            <p><strong>Department:</strong> {{ faculty["department"] }}</p>
-            <p><strong>Date of Join:</strong> {{ faculty["join_year"] }}</p>
-            <p><strong>Salary:</strong> ₹{{ faculty["salary"] }}</p>
+            {% if faculty.join_year %}
+                <p><strong>Date of Join:</strong> {{ faculty["join_year"] }}</p>
+            {% endif %}
         </div>
         <form action="/faculty/timetable">
             <button type="submit" class="button">Timetable</button>

@@ -101,21 +101,15 @@ limitations under the License. -->
             <tr>
                 <th>Course Name</th>
                 <th>Course Code</th>
-                <th>L</th>
-                <th>T</th>
-                <th>P</th>
-                <th>Credit</th>
+                <th>Hours</th>
                 <th>Core/Elective</th>
             </tr>
-            {% for course in courses %}
+            {% for course in courses.values() %}
                 <tr>
-                    <td>{{ courses[course].name }}</td>
-                    <td>{{ course }}</td>
-                    <td>{{ courses[course].L }}</td>
-                    <td>{{ courses[course].P }}</td>
-                    <td>{{ courses[course].T }}</td>
-                    <td>{{ courses[course].credits }}</td>
-                    <td>{{ courses[course].is_elective }}</td>
+                    <td>{{ course.course }}</td>
+                    <td>{{ course.course_code }}</td>
+                    <td>{{ course.hrs | int }}</td>
+                    <td>{{ course.is_elective }}</td>
                 </tr>
             {% endfor %}
         </table>

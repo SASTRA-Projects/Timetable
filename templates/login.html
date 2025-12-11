@@ -126,7 +126,7 @@ limitations under the License. -->
         <h1>{{ role.title() }} Login</h1>
         <div class="field-group">
             <label for="user">{{ user }}</label>
-            <input type="{{ userType or 'text' }}" name="user" id="user" autofocus autocomplete="off" required>
+            <input type="text" name="user" id="user" autofocus autocomplete="off" required>
         </div>
         {% if not pwd_less %}
             <div class="field-group password">

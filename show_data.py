@@ -149,14 +149,8 @@ def get_degree_duration(cursor: Cursor, /, *,
     return result["duration"] if result else None
 
 
-def get_streams(cursor: Cursor, /, *,
-                department: Optional[str] = None) -> Tuple[Dict[str, str]]:
-    if department:
-        cursor.execute("""SELECT `stream`
-                       FROM `school_streams`
-                       WHERE `department` LIKE %s""", (department,))
-    else:
-        cursor.execute("""SELECT * FROM `streams`""")
+def get_streams(cursor: Cursor, /) -> Tuple[Dict[str, str]]:
+    cursor.execute("""SELECT * FROM `streams`""")
     return cursor.fetchall()
 
 

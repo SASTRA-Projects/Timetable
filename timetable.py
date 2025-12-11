@@ -79,13 +79,10 @@ def create_timetable(db_connector: Connection, cursor: Cursor) -> None:
                    `day` ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday') NOT NULL,
                    `period_id` TINYINT UNSIGNED NOT NULL,
                    `faculty_section_course_id` INT UNSIGNED NOT NULL,
-                   `class_id` MEDIUMINT UNSIGNED NOT NULL,
-                   PRIMARY KEY(`day`, `period_id`, `faculty_section_course_id`, `class_id`),
+                   PRIMARY KEY(`day`, `period_id`, `faculty_section_course_id`),
                    FOREIGN KEY(`faculty_section_course_id`) REFERENCES `faculty_section_course`(`id`)
                    ON UPDATE CASCADE ON DELETE RESTRICT,
                    FOREIGN KEY(`period_id`) REFERENCES `periods`(`id`)
-                   ON UPDATE CASCADE ON DELETE RESTRICT,
-                   FOREIGN KEY(`class_id`) REFERENCES `classes`(`id`)
                    ON UPDATE CASCADE ON DELETE RESTRICT
     )""")
     db_connector.commit()

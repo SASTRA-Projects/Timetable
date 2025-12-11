@@ -76,7 +76,7 @@ limitations under the License. -->
     }
     .timetable th, .timetable td {
         text-align: center;
-        padding: 0.5rem;
+        padding: 0.75rem 0.5rem;
         border: 1px solid var(--input-border-light);
         min-width: 80px;
     }
@@ -86,27 +86,36 @@ limitations under the License. -->
     .timetable th {
         background-color: var(--menu-footer-bg-light);
         font-weight: 600;
-        font-size: 0.8rem;
+        font-size: 0.9rem;
     }
     [data-theme="dark"] .timetable th {
         background-color: var(--menu-footer-bg-dark);
     }
     .timetable td {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
     .timetable td:first-child {
         font-weight: 600;
     }
+    .course-table td {
+        text-align: left;
+    }
+    .course-table td:first-child,
+    .course-table td:nth-child(3) {
+        text-align: center;
+    }
     @media (max-width: 768px) {
         .timetable-container { padding: 1rem; }
         .page-header { flex-direction: column; align-items: stretch; }
+        .page-header > div { width: 100%; }
         .action-button { width: 100%; text-align: center; }
-        .timetable th, .timetable td { padding: 0.4rem; font-size: 0.8rem; }
+        .timetable th, .timetable td { padding: 0.4rem; font-size: 0.75rem; min-width: 60px; }
     }
     @media print {
         body { padding: 1rem; background-color: #fff; color: #000; }
         nav, footer, .page-header .action-button { display: none; }
         .timetable-container { padding: 0; }
+        .page-header h1 { font-size: 1.5rem; margin-bottom: 1rem; }
     }
 </style>
 {% endblock %}
@@ -115,14 +124,14 @@ limitations under the License. -->
 <div class="timetable-container">
     <div class="page-header">
         <h1>{{ title }}</h1>
-        <div style="display: flex; gap: 1rem;">
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
             <button class="action-button" onclick="downloadExcel()">Download as Excel</button>
             <button class="action-button" onclick="window.print()">Print</button>
         </div>
     </div>
     <div id="timetable-export-area">
         <div class="table-wrapper">
-            <table class="timetable">
+            <table class="timetable" id="schedule-table">
                 <thead>
                     <tr>
                         <th>Day</th>
@@ -143,15 +152,17 @@ limitations under the License. -->
                 </tbody>
             </table>
         </div>
+        
+        {% if course_data %}
+        <h2 style="margin: 2rem 0 1rem 0; font-size: 1.5rem;">Course Details</h2>
         <div class="table-wrapper">
-            <table class="timetable course-table">
+            <table class="timetable course-table" id="course-table">
                 <thead>
                     <tr>
                         <th>Course Code</th>
-                        <th>Course</th>
-                        <th>No. of Periods</th>
-                        <th>Faculties</th>
-                        <th>Credits</th>
+                        <th>Course Name</th>
+                        <th>Hours/Week</th>
+                        <th>Faculty</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -159,27 +170,35 @@ limitations under the License. -->
                     <tr>
                         <td>{{ code }}</td>
                         <td>{{ data["name"] }}</td>
-                        <td>{{ data["L"] + data["P"] + data["T"] }}</td>
+                        <td>{{ data["hrs"] }}</td>
                         <td>{{ data["faculties"] }}</td>
-                        <td>{{ data["credits"] }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% endif %}
     </div>
 </div>
 <script>
     function downloadExcel() {
         const wb = XLSX.utils.book_new();
-        const timetable = document.querySelector(".timetable:first-of-type");
+        
+        // Add schedule table
+        const timetable = document.getElementById('schedule-table');
         const ws1 = XLSX.utils.table_to_sheet(timetable);
-        XLSX.utils.book_append_sheet(wb, ws1, "Timetable Grid");
-        const courseTable = document.querySelector(".course-table");
-        const ws2 = XLSX.utils.table_to_sheet(courseTable);
-        XLSX.utils.book_append_sheet(wb, ws2, "Course List");
+        XLSX.utils.book_append_sheet(wb, ws1, "Timetable");
+        
+        // Add course table if it exists
+        const courseTable = document.getElementById('course-table');
+        if (courseTable) {
+            const ws2 = XLSX.utils.table_to_sheet(courseTable);
+            XLSX.utils.book_append_sheet(wb, ws2, "Courses");
+        }
 
-        XLSX.writeFile(wb, "{{ title }}_Timetable.xlsx");
+        // Generate filename from title
+        const filename = "{{ title }}".replace(/[^a-z0-9]/gi, '_') + "_Timetable.xlsx";
+        XLSX.writeFile(wb, filename);
     }
 </script>
 {% endblock %}

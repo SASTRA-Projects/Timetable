@@ -25,8 +25,7 @@ the functions are defined here.
 
 def add_faculty_info(db_connector: Connection,
                      cursor: Cursor, /, *,
-                     faculty_id: Optional[int] = None,
-                     salary: Optional[float] = None,
+                     faculty_id: Optional[str] = None,
                      password: Optional[str] = None,
                      verbose: bool = True) -> None:
     try:
@@ -35,8 +34,8 @@ def add_faculty_info(db_connector: Connection,
 
         ph = PasswordHasher()
         cursor.execute("""INSERT INTO `faculty_info`
-                       VALUES (%s, %s, %s)""",
-                       (faculty_id, salary, ph.hash(password)))
+                       VALUES (%s, %s)""",
+                       (faculty_id, ph.hash(password)))
 
         db_connector.commit()
     except Exception as exception:
@@ -56,24 +55,23 @@ def add_faculty_info(db_connector: Connection,
         raise ValueError("Faculty ID does not exist in `faculties` table "
                          "or Faculty information already exists")
 
-
-def add_section_minor_elective(db_connector: Connection,
-                               cursor: Cursor, /, *,
-                               section_id: Optional[int] = None,
-                               course_code: Optional[str] = None) -> None:
-    cursor.execute("""INSERT INTO `section_minor_electives`
-                   (`section_id`, `course_code`)
-                   VALUES (%s, %s)""", (section_id, course_code))
+def add_student_elective(db_connector: Connection,
+                         cursor: Cursor, /, *,
+                         student_id: Optional[int] = None,
+                         course_code: Optional[str] = None) -> None:
+    cursor.execute("""INSERT INTO `student_electives`
+                   VALUES (%s, %s)""", (student_id, course_code))
     db_connector.commit()
 
 
 def add_section_class(db_connector: Connection,
                       cursor: Cursor, /, *,
                       section_id: Optional[int] = None,
-                      class_id: Optional[int] = None) -> None:
+                      class_id: Optional[int] = None,
+                      strength: Optional[int] = None) -> None:
     cursor.execute("""INSERT INTO `section_class`
-                   (`section_id`, `class_id`)
-                   VALUES (%s, %s)""", (section_id, class_id))
+                   VALUES (%s, %s, %s)""",
+                   (section_id, class_id, strength))
     db_connector.commit()
 
 
@@ -90,23 +88,19 @@ def add_section_student(db_connector: Connection,
 def add_faculty_section_course(db_connector: Connection,
                                cursor: Cursor, /, *,
                                id: Optional[int] = None,
-                               faculty_id: Optional[int] = None,
+                               faculty_id: Optional[str] = None,
                                section_id: Optional[int] = None,
-                               course_code: Optional[str] = None) -> None:
+                               course_code: Optional[str] = None,
+                               course: Optional[str] = None,
+                               hours: Optional[int] = None,
+                               class_id: Optional[int] = None,
+                               is_lab: Optional[bool] = None,
+                               is_elective: Optional[bool] = None,
+                               full_batch: Optional[bool] = None) -> None:
     cursor.execute("""INSERT INTO `faculty_section_course`
-                   (`id`, `faculty_id`, `section_id`, `course_code`)
-                   VALUES (%s, %s, %s, %s)""",
-                   (id, faculty_id, section_id, course_code))
-    db_connector.commit()
-
-
-def add_student_elective(db_connector: Connection,
-                         cursor: Cursor, /, *,
-                         student_id: Optional[int] = None,
-                         course_code: Optional[str] = None) -> None:
-    cursor.execute("""INSERT INTO `student_electives`
-                   (`student_id`, `course_code`)
-                   VALUES (%s, %s)""", (student_id, course_code))
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                   (id, faculty_id, section_id, course_code, course,
+                    hours, class_id, is_lab, is_elective, full_batch))
     db_connector.commit()
 
 
@@ -130,15 +124,10 @@ def add_period(db_connector: Connection,
     db_connector.commit()
 
 
-def add_timetable(db_connector: Connection,
-                  cursor: Cursor, /, *,
+def add_timetable(cursor: Cursor, /, *,
                   day: Optional[str] = None,
                   period_id: Optional[int] = None,
-                  faculty_section_course_id: Optional[int] = None,
-                  class_id: Optional[int] = None) -> None:
+                  faculty_section_course_id: Optional[int] = None) -> None:
     cursor.execute("""INSERT INTO `timetables`
-                   (`day`, `period_id`,
-                   `faculty_section_course_id`, `class_id`)
-                   VALUES (%s, %s, %s, %s)""",
-                   (day, period_id, faculty_section_course_id, class_id))
-    db_connector.commit()
+                   VALUES (%s, %s, %s)""",
+                   (day, period_id, faculty_section_course_id))

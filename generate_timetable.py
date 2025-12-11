@@ -13,9 +13,9 @@
 # limitations under the License.
 
 
+from collections import defaultdict
 from itertools import combinations
 from typehints import Connection, Cursor, Optional, Tuple
-import delete_data
 import fetch_data
 import insert_data
 import random
@@ -24,41 +24,88 @@ import show_data
 
 def generate_timetable(db_connector: Connection, cursor: Cursor,
                        campus_id: Optional[int] = None,
-                       days: Tuple[str] = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"),
-                       period_ids: Tuple[int] = tuple(range(1, 9))) -> None:
+                       days: tuple[str] = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"),
+                       period_ids: tuple[int] = tuple(range(1, 9))) -> None:
 
     PERIODS = {(day, period_id) for day in days for period_id in period_ids}
 
-    def get_minor_elective_hrs(section_id):
-        minor_electives = {crs["course_code"] for crs in fetch_data.get_section_minor_electives(cursor, section_id=section_id)}
-        if not minor_electives:
-            return set()
+    def get_free_classes(no_of_students: int,
+                         day: str,
+                         period_id: int,
+                         section_id: Optional[int] = None,
+                         excl_cls: set[int] = set()) -> list[dict[str, bool | bool]]:
+        section_floor = None
+        section_class_id = None
 
-        cursor.execute("""SELECT `day`, `period_id`
-                       FROM `timetables`
-                       JOIN `faculty_section_course`
-                       ON `id`=`faculty_section_course_id`
-                       AND `course_code` IN %s
-                       AND `section_id`=%s""", (minor_electives, section_id))
-        return {(period["day"], period["period_id"]) for period in cursor.fetchall()}
+        if section_id:
+            cursor.execute("""SELECT `class_id`, `floor`
+                           FROM `section_class`
+                           JOIN `classes`
+                           ON `classes`.`id`=`section_class`.`class_id`
+                           WHERE `section_id`=%s
+                           LIMIT 1""", (section_id,))
+            section_class_info = cursor.fetchone()
+            if section_class_info:
+                section_class_id = section_class_info["class_id"]
+                section_floor = section_class_info["floor"]
 
-    def get_free_classes(no_of_students, day, period_id):
-        cursor.execute("""SELECT `id`
+        print(section_class_id if section_class_id else -1,
+                        campus_id, day, period_id,
+                        section_id if section_id else -1,
+                        no_of_students, day, period_id,
+                        section_floor if section_floor else -1)
+        cursor.execute("""SELECT DISTINCT(`classes`.`id`) AS `id`,
+                       `classes`.`floor` AS `floor`,
+                       `classes`.`room_no` AS `room_no`,
+                       `classes`.`capacity` AS `capacity`,
+                       `classes`.`department` AS `department`,
+                       CASE 
+                           WHEN `classes`.`id`=%s THEN 1
+                           ELSE 0 
+                       END AS `is_home_class`,
+                       CASE 
+                           WHEN `section_other_classes`.`class_id` IS NOT NULL THEN 1
+                           ELSE 0
+                       END AS `section_has_class_here`
                        FROM `classes`
                        JOIN `campus_buildings` `CB`
-                       ON `CB`.`building_id`=`classes`.`building_id`
+                       ON `CB`.`building_id` = `classes`.`building_id`
                        AND `CB`.`campus_id`=%s
-                       AND `capacity` >= %s
-                       AND NOT `is_lab`
-                       EXCEPT
-                       SELECT `id`
-                       FROM `classes`
-                       JOIN `timetables`
-                       ON `class_id`=`id`
-                       AND `day`=%s
-                       AND `period_id`=%s""",
-                       (campus_id, no_of_students, day, period_id))
-        return {cls["id"] for cls in cursor.fetchall()}
+                       LEFT JOIN (
+                       SELECT DISTINCT `FSC`.`class_id`
+                       FROM `timetables` `TT`
+                       JOIN `faculty_section_course` `FSC`
+                           ON `TT`.`faculty_section_course_id` = `FSC`.`id`
+                       WHERE `TT`.`day`=%s
+                           AND `TT`.`period_id`=%s
+                           AND `FSC`.`section_id`=%s
+                           AND `FSC`.`class_id` IS NOT NULL
+                       ) AS `section_other_classes`
+                       ON `section_other_classes`.`class_id` = `classes`.`id`
+                       WHERE `classes`.`capacity` >= %s
+                       AND `classes`.`is_lab` = 0
+                       AND `classes`.`id` NOT IN (
+                           SELECT DISTINCT `FSC`.`class_id`
+                           FROM `timetables` `TT`
+                           JOIN `faculty_section_course` `FSC`
+                               ON `TT`.`faculty_section_course_id` = `FSC`.`id`
+                           WHERE `TT`.`day`=%s
+                               AND `TT`.`period_id`=%s
+                               AND `FSC`.`class_id` IS NOT NULL
+                       )
+                       ORDER BY
+                       `is_home_class` DESC,
+                       CASE WHEN `classes`.`floor`=%s THEN 0 ELSE 1 END,
+                       `section_has_class_here` DESC,
+                       `classes`.`floor`,
+                       `classes`.`capacity`,
+                       `classes`.`room_no`""",
+                       (section_class_id if section_class_id else -1,
+                        campus_id, day, period_id,
+                        section_id if section_id else -1,
+                        no_of_students, day, period_id,
+                        section_floor if section_floor else -1))
+        return [r["id"] for r in cursor.fetchall() if r["id"] not in excl_cls]
 
     def get_free_periods(section_id):
         cursor.execute("""SELECT `day`, `period_id`
@@ -67,12 +114,21 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
                        ON `FSC`.`id`=`faculty_section_course_id`
                        AND `section_id`=%s""", (section_id,))
         day_periods = {(dp["day"], dp["period_id"]) for dp in cursor.fetchall()}
-        return PERIODS - get_minor_elective_hrs(section_id) - day_periods
+        return PERIODS - day_periods
+
+    def get_faculty_free_periods(faculty_id):
+        cursor.execute("""SELECT `day`, `period_id`
+                       FROM `timetables`
+                       JOIN `faculty_section_course` `FSC`
+                       ON `FSC`.`id`=`faculty_section_course_id`
+                       AND `faculty_id`=%s""", (faculty_id,))
+        day_periods = {(dp["day"], dp["period_id"]) for dp in cursor.fetchall()}
+        return PERIODS - day_periods
 
     def get_cls_idx(day_period):
         def dpsort(dp):
-            p = dp[1] - 4 if dp[1] > 4 else 4 - dp[1]
-            return (p, -days[dp[0]])
+            p = dp[1] - 5 if dp[1] > 4 else 4 - dp[1]
+            return (p, -days[dp[0]], random.random() >= 0.5)
 
         days = {}
         for d, p in day_period:
@@ -88,1008 +144,1118 @@ def generate_timetable(db_connector: Connection, cursor: Cursor,
             if days[day] == 0:
                 del days[day]
 
-    def no_of_elective_students(degree, stream, elective):
-        cursor.execute("""SELECT `stream`
-                       FROM `student_electives` `SE`
-                       JOIN `section_students` `SS`
-                       ON `SS`.`student_id`=`SE`.`student_id`
-                       JOIN `sections`
-                       ON `sections`.`id`=`SS`.`section_id`
-                       AND `campus_id`=%s
-                       AND `degree`=%s
-                       AND `course_code`=%s""",
-                       (campus_id, degree, elective))
-        return len([1 for s in cursor.fetchall() if stream is s["stream"] or stream == s["stream"]])
+    def cls_capacities(day, period_id, class_id=None):
+        if class_id:
+            cursor.execute("""SELECT MAX(`strength`) AS `strength`,
+                           `course_code`, `FSC`.`section_id`,
+                           (2-MIN(`full_batch`)) AS `no_of_batch`
+                           FROM `timetables`
+                           JOIN `faculty_section_course` `FSC`
+                           ON `faculty_section_course_id`=`FSC`.`id`
+                           JOIN `section_class` `SC`
+                           ON `FSC`.`section_id`=`SC`.`section_id`
+                           AND `FSC`.`class_id`=%s
+                           AND `day`=%s
+                           AND `period_id`=%s
+                           AND NOT `is_elective`
+                           GROUP BY `course_code`, `FSC`.`section_id`""",
+                           (class_id, day, period_id))
+            lab_students = tuple({
+                "strength": f["strength"],
+                "no_of_batch": f["no_of_batch"]
+            } for f in cursor.fetchall())
 
-    def get_section_course(degree, stream, course_code):
-        cursor.execute("""SELECT DISTINCT(`section_id`) AS `section_id`
-                       FROM `faculty_section_course`
-                       JOIN `sections`
-                       ON `section_id`=`sections`.`id`
-                       AND `campus_id`=%s
-                       AND `degree`=%s
-                       AND (`stream` <=> %s OR `stream` IS NULL)
-                       AND `course_code`=%s""",
-                       (campus_id, degree, stream, course_code))
-        return {section["section_id"] for section in cursor.fetchall()}
+            cursor.execute("""SELECT COUNT(*) AS `strength`, `FSC`.`course_code`,
+                           (2-MIN(`full_batch`)) AS `no_of_batch`
+                           FROM `timetables`
+                           JOIN `faculty_section_course` `FSC`
+                           ON `faculty_section_course_id`=`FSC`.`id`
+                           AND `is_elective`
+                           JOIN `student_electives` `SS`
+                           ON `SS`.`course_code`=`FSC`.`course_code`
+                           AND `class_id`=%s
+                           AND `day`=%s
+                           AND `period_id`=%s
+                           GROUP BY `FSC`.`course_code`""", (class_id, day, period_id))
+            elective_lab_students = tuple({
+                "strength": f["strength"],
+                "no_of_batch": f["no_of_batch"]
+            } for f in cursor.fetchall() if f["strength"] > 0)
 
-    def lab_capacities(department, day, period_id):
-        cursor.execute("""SELECT COUNT(*) / `P` AS `labs_per_week`,
-                       `section_id`, `degree`, `stream`, `course_code`
-                       FROM `timetables`
-                       JOIN `faculty_section_course` `FSC`
-                       ON `FSC`.`id`=`faculty_section_course_id`
-                       JOIN `courses`
-                       ON `course_code`=`code`
-                       JOIN `classes`
-                       ON `classes`.`id`=`class_id`
-                       AND `is_lab`
-                       JOIN `sections`
-                       ON `sections`.`id`=`section_id`
-                       AND `campus_id`=%s
-                       AND `classes`.`department`=%s
-                       GROUP BY `section_id`, `course_code`""",
-                       (campus_id, department))
-        sec_crs = cursor.fetchall()
-        cursor.execute("""SELECT COUNT(*) AS `no_of_students`,
-                       `FSC`.`section_id`, `course_code`,
-                       `get_is_elective`(`code`, `FSC`.`section_id`) AS `is_elective`
-                       FROM `faculty_section_course` `FSC`
-                       JOIN `courses`
-                       ON `course_code`=`code`
-                       JOIN `sections`
-                       ON `sections`.`id`=`FSC`.`section_id`
-                       JOIN `section_students` `SS`
-                       ON `SS`.`section_id`=`sections`.`id`
-                       AND `campus_id`=%s
-                       AND `courses`.`department`=%s
-                       GROUP BY `FSC`.`section_id`, `code`""",
-                       (campus_id, department))
-        no_of_students = [std for std in cursor.fetchall() if not std["is_elective"]]
-        cursor.execute("""SELECT COUNT(*) AS `no_of_sections`,
-                       `course_code`, `degree`, `stream`
-                       FROM `faculty_section_course` `FSC`
-                       JOIN `sections`
-                       ON `sections`.`id`=`FSC`.`section_id`
-                       JOIN `courses`
-                       ON `code`=`course_code`
-                       AND `campus_id`=%s
-                       AND `department`=%s
-                       AND `get_is_elective`(`code`, `section_id`)
-                       AND `P`
-                       GROUP BY `code`, `degree`, `stream`""",
-                       (campus_id, department))
-        no_of_sections = cursor.fetchall()
-        cursor.execute("""SELECT COUNT(*) AS `no_of_students`,
-                       `course_code`, `degree`, `stream`
-                       FROM `section_students` `SS`
-                       JOIN `sections`
-                       ON `SS`.`section_id`=`sections`.`id`
-                       JOIN `student_electives` `SE`
-                       ON `SS`.`student_id`=`SE`.`student_id`
-                       JOIN `courses`
-                       ON `course_code`=`code`
-                       AND `get_is_elective`(`code`, `SS`.`section_id`)
-                       AND `P`
-                       AND `campus_id`=%s
-                       AND `department`=%s
-                       GROUP BY `code`, `degree`, `stream`""",
-                       (campus_id, department))
-        no_of_elective_students = cursor.fetchall()
-        cursor.execute("""SELECT `class_id`, `capacity`, `section_id`,
-                       `course_code`, `degree`, `stream`,
-                       `get_is_elective`(`course_code`, `section_id`) AS `is_elective`
-                       FROM `timetables`
-                       JOIN `faculty_section_course` `FSC`
-                       ON `FSC`.`id`=`faculty_section_course_id`
-                       JOIN `classes`
-                       ON `classes`.`id`=`class_id`
-                       AND `is_lab`
+
+            cursor.execute("""SELECT `capacity`
+                           FROM `classes`
+                           WHERE `id`=%s""", (class_id,))
+            capacity = cursor.fetchone()["capacity"]
+
+            return capacity - sum(s["strength"]//s["no_of_batch"]
+                                  for s in lab_students + elective_lab_students)
+        return None
+
+    def max_cls_capacity(day, period_id, class_id=None, no_of_students=0):
+        class_capacity = cls_capacities(day, period_id, class_id)
+        if class_id:
+            return class_capacity if class_capacity >= no_of_students else 0
+
+        return sorted(filter(lambda x: x[1] >= no_of_students, class_capacity),
+                      key=lambda x: x[1], reverse=True)
+
+    def schedule_electives(student_choices, electives: dict[str, int | None]) -> dict[int, set[str]]:
+        conflict_graph = defaultdict(set)
+        for choices in student_choices:
+            for c1, c2 in combinations(choices, 2):
+                conflict_graph[c1].add(c2)
+                conflict_graph[c2].add(c1)
+
+        all_courses = list(electives.keys())
+        for c1, c2 in combinations(all_courses, 2):
+            class_id_1 = electives.get(c1)
+            class_id_2 = electives.get(c2)
+            if class_id_1 is not None and class_id_1 == class_id_2:
+                conflict_graph[c1].add(c2)
+                conflict_graph[c2].add(c1)
+
+        sorted_courses = sorted(all_courses, key=lambda x: len(conflict_graph[x]), reverse=True)
+        course_slots: dict[str, int] = {}
+        for course in sorted_courses:
+            neighbor_slots = {
+                course_slots[neighbor]
+                for neighbor in conflict_graph[course]
+                if neighbor in course_slots
+            }
+            slot = 0
+            while slot in neighbor_slots:
+                slot += 1
+            course_slots[course] = slot
+
+        schedule_output = defaultdict(set)
+        for course, slot in course_slots.items():
+            schedule_output[slot].add(course)
+
+        return dict(schedule_output)
+
+
+    def update_fsc(f_id, cls_id):
+        cursor.execute("""UPDATE `faculty_section_course`
+                       SET `class_id`=%s
+                       WHERE `id`=%s""", (cls_id, f_id))
+        db_connector.commit()
+
+    def add_timetable(f_id, day, period_id):
+        insert_data.add_timetable(cursor, day=day, period_id=period_id, faculty_section_course_id=f_id)
+
+    def delete_timetable(f_id, day, period_id):
+        cursor.execute("""DELETE FROM `timetables`
+                       WHERE `faculty_section_course_id`=%s
                        AND `day`=%s
-                       AND `period_id`=%s
-                       JOIN `courses`
-                       ON `course_code`=`code`
-                       JOIN `sections`
-                       ON `section_id`=`sections`.`id`
-                       AND `campus_id`=%s
-                       AND `courses`.`department`=%s""",
-                       (day, period_id, campus_id, department))
-        class_capacity = list(cursor.fetchall())
-        cursor.execute("""SELECT `classes`.`id` AS `class_id`, `capacity`
-                       FROM `classes`
-                       JOIN `campus_buildings` `CB`
-                       ON `CB`.`building_id`=`classes`.`building_id`
-                       AND `is_lab`
-                       AND `campus_id`=%s
-                       AND `department`=%s""", (campus_id, department))
-        classes = cursor.fetchall()
-        elective_std_sec = {(std["degree"], std["stream"], std["course_code"]): std["no_of_students"] // sec["no_of_sections"]
-                            for std in no_of_elective_students
-                            for sec in no_of_sections
-                            if std["degree"] == sec["degree"]
-                            and std["stream"] == sec["stream"]
-                            and std["course_code"] == sec["course_code"]}
-        cls_sec_crs = {(sc["course_code"], sc["section_id"]): sc["labs_per_week"]
-                       for cls in class_capacity
-                       for sc in sec_crs
-                       if sc["course_code"] == cls["course_code"]
-                       and sc["section_id"] == cls["section_id"]}
-        std_sec = {(std["section_id"], std["course_code"]): std["no_of_students"]
-                   for std in no_of_students
-                   for cls in class_capacity
-                   if std["course_code"] == cls["course_code"]
-                   and std["section_id"] == cls["section_id"]}
-        for cls in class_capacity:
-            if cls["is_elective"]:
-                cls["capacity"] -= elective_std_sec[(cls["degree"], cls["stream"], cls["course_code"])] // cls_sec_crs[(cls["course_code"], cls["section_id"])]
-            else:
-                cls["capacity"] -= std_sec[(cls["section_id"], cls["course_code"])] // cls_sec_crs[(cls["course_code"], cls["section_id"])]
+                       AND `period_id`=%s""", (f_id, day, period_id))
+        db_connector.commit()
 
-        for cls in classes:
-            if not any(cls["class_id"] == c["class_id"] for c in class_capacity):
-                class_capacity.append(cls)
+    def elective_labs(fsc, std_electives, periods) -> dict[str, set[tuple[str, int]]]:
+        elective_hrs: dict[str, set[tuple[str, int]]] = {}
+        tot_std: dict[str, int] = {}
 
-        return class_capacity
+        courses = {_f["course_code"] for _f in fsc}
+        for _f in fsc:
+            batch = (2 - _f["full_batch"])
+            num = len({s for s, e in std_electives.items() if e in courses})
+            tot_std[_f["course_code"]] = num // batch
+            for _p in periods.copy():
+                if not max_cls_capacity(*_p, class_id=_f["class_id"], no_of_students=num//batch):
+                    periods -= {_p, (_p[0], _p[1]+1)}
 
-    def max_lab_capacity(department, day, period_id, no_of_students=0):
-        class_capacity = lab_capacities(department, day, period_id)
-        class_capacity = sorted(list({(cls["class_id"], int(cls["capacity"])) for cls in class_capacity}), key=lambda x: x[1], reverse=True)
-        return [[*cls] for cls in class_capacity if cls[1] > no_of_students]
+        periods = list(periods)
+        cls_idx = get_cls_idx(periods)
+        while fsc:
+            try:
+                _cls_idx = next(cls_idx)
+                p = periods[_cls_idx]
+                _timetable = []
+                for _f in fsc:
+                    batch = (2 - _f["full_batch"])
+                    if _f["hrs"] < 0:
+                        print(_f, 370)
 
-    def sorted_and_reverse(courses=None, no_of_electives=None, combs=[]):
-        rev = lambda combs: sorted(combs | {c for comb in combs if (c := comb[::-1]) and c not in combs}, key=lambda x: (-len(x), x))
-        if combs:
-            return rev(set(combs))
-        else:
-            combs = {comb for i in range(1, no_of_electives+1) for comb in combinations(courses, i)}
-            combs = {comb if len(comb) > 1 else (comb[0], comb[0]) for comb in combs}
-            return rev(combs)
+                    if not max_cls_capacity(
+                        p[0], p[1], class_id=_f["class_id"],
+                        no_of_students=tot_std[_f["course_code"]]//batch
+                    ):
+                        periods.remove(p)
+                        cls_idx = get_cls_idx(periods)
+                        print(f"Lab's full {_f["class_id"]}")
+                        raise ValueError(f"Lab's full {_f["class_id"]} {_f["course_code"]}")
+                    _timetable.append((_f, *p))
 
-    def transitive(allowed, c1, c2):
-        c3 = (c1[0], c2[-1])
-        for c in allowed:
-            if c == c3:
-                return tuple({*c1, *c2, *c3})
-        else:
-            return None
+                _elective_hrs: dict[str, set[tuple[str, int]]] = defaultdict(set)
+                for t in _timetable:
+                    _f = t[0]
+                    add_timetable(_f["id"], t[1], t[2])
+                    add_timetable(_f["id"], t[1], t[2] + 1)
+                    _elective_hrs[_f["course_code"]] |= {t[1:], (t[1], t[2]+1)}
+                elective_hrs.update(_elective_hrs)
 
-    def try_compress(section_id):
-        def compress(p, periods, free_periods):
-            day = p[0]
-            pid = p[1]
-            fsc = p[4]
-            cls_id = p[5]
-            delete_data.delete_timetable(db_connector, cursor, day=day, period_id=pid, faculty_section_course_id=fsc_id, class_id=p[5])
-            for dp in free_periods:
-                d, p = dp
-                try:
-                    insert_data.add_timetable(db_connector, cursor, day=d, period_id=p, faculty_section_course_id=fsc, class_id=cls_id)
-                except Exception:
-                    pass
+                to_remove = []
+                for _f in fsc:
+                    _f["hrs"] -= 2
+                    if _f["hrs"] == 0:
+                        to_remove.append(_f)
+                for t in to_remove:
+                    fsc.remove(t)
 
-        cursor.execute("""SELECT `day`, `period_id`,
-                       `faculty_section_course_id`, `class_id`, `is_lab`,
-                       `get_is_elective`(`course_code`, %s) AS `is_elective`,
-                       FROM `timetables`
-                       JOIN `classes`
-                       ON `classes`.`id`=`class_id`
-                       JOIN `faculty_section_course` `FSC`
-                       ON `FSC`.`id`=`faculty_section_course_id`
-                       AND `section_id`=%s
-                       ORDER BY `day`, `period_id`""", (section_id, section_id))
-        result = cursor.fetchall()
-        periods = list({(res["day"], res["period_id"], res["is_lab"], res["is_elective"], res["faculty_section_course_id"], res["class_id"]) for res in result})
-        free_periods = PERIODS - {p[0:2] for p in periods}
-        print(free_periods)
-        for idx, p in enumerate(periods):
-            if not p[3]:
-                if p[1] < 7 and (p[1] not in (4, 5) or periods[idx+1][:2] in free_periods) \
-                    and periods[idx+2][:2] not in free_periods:
-                    compress(p, periods, free_periods)
-
-                elif p[1] > 2 and (p[1] not in (5, 6) or periods[idx-1][:2] in free_periods) \
-                    and periods[idx-2][:2] not in free_periods:
-                    compress(p, periods, free_periods)
-
-    def is_section_busy(section_id, day, period_id):
-        cursor.execute("""SELECT 1
-                       FROM `timetables`
-                       JOIN `faculty_section_course` `FSC`
-                       ON `FSC`.`id`=`faculty_section_course_id`
-                       AND `section_id`=%s
-                       AND `day`=%s
-                       AND `period_id`=%s""", (section_id, day, period_id))
-        return True if cursor.fetchone() else False
-
-    def is_faculty_busy(faculty_id, day, period_id):
-        cursor.execute("""SELECT 1
-                       FROM `timetables`
-                       JOIN `faculty_section_course` `FSC`
-                       ON `FSC`.`id`=`faculty_section_course_id`
-                       AND `faculty_id`=%s
-                       AND `day`=%s
-                       AND `period_id`=%s
-                       LIMIT 1""", (faculty_id, day, period_id))
-        return True if cursor.fetchone() else False
-
-    def faculty_came_thrice(faculty_id, section_id, day):
-        cursor.execute("""SELECT COUNT(*) AS `cnt`
-                       FROM `timetables`
-                       JOIN `faculty_section_course` `FSC`
-                       ON `FSC`.`id`=`faculty_section_course_id`
-                       AND `faculty_id`=%s
-                       AND `section_id`=%s
-                       AND `day`=%s
-                       LIMIT 1""", (faculty_id, section_id, day))
-        return cursor.fetchone()["cnt"] == 3
-
-    def is_transfer_possible(from_day, from_period_id, to_day, to_period_id, faculty_id, section_id, course_code, class_id):
-        if (from_day, from_period_id) == (to_day, to_period_id):
-            return (True, "Same period")
-
-        course = fetch_data.get_course(cursor, code=course_code)
-        cls = fetch_data.get_class(cursor, class_id=class_id)
-        if is_section_busy(section_id, to_day, to_period_id):
-            return (False, "Section has other class")
-
-        if is_faculty_busy(faculty_id, to_day, to_period_id):
-            return (False, "Faculty has other class")
-
-        if fetch_data.is_elective(cursor, course_code=course_code, section_id=section_id):
-            section = fetch_data.get_section(cursor, section_id=section_id)
-            degree, stream = section["degree"], section["stream"]
-            sections = fetch_data.get_sections(cursor, campus_id=campus_id, degree=degree, stream=stream)
-
-        if cls["is_lab"]:
-            lab_capacity = lab_capacities(cls["department"], to_day, to_period_id)
-            if fetch_data.is_elective(cursor, course_code=course_code, section_id=section_id):
-                no_of_sections = len(section_ids)
-                cursor.execute("""SELECT 1
-                               FROM `section_students` `SS`
-                               JOIN `sections`
-                               ON `SS`.`section_id`=`sections`.`id`
-                               JOIN `student_electives` `SE`
-                               ON `SS`.`student_id`=`SE`.`student_id`
-                               AND `campus_id`=%s
-                               AND `degree`=%s
-                               AND `stream`=%s
-                               AND `course_code`=%s""",
-                               (campus_id, degree, stream, course_code))
-                no_of_students = -(-len(cursor.fetchall()) // no_of_sections)
-            else:
-                no_of_students = len(fetch_data.get_section_students(cursor, section_id=section_id))
-            if lab_capacity < no_of_students:
-                return (False, "Lab has lesser capacity")
-        return (True, fetch_data.is_elective(cursor, course_code=course_code, section_id=section_id))
-
-    def can_allocate(day, period_id, section_id, course_code, class_id):
-        faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course_code)
-        if any(is_faculty_busy(faculty["faculty_id"], day, period_id) for faculty in faculties):
-            return (False, "Faculty is busy")
-
-    programmes = show_data.get_programmes(cursor, campus_id=campus_id)
-    sections = fetch_data.get_sections(cursor, campus_id=campus_id)
-    section_ids = {section["id"] for section in sections}
-    student_electives = fetch_data.get_student_electives(cursor)
-
-    # 1. Allocate elective labs: Assume no elective if it is a mixed streams
-    for programme in programmes:
-        courses = sorted(
-            fetch_data.get_courses(cursor, programme_id=programme["id"], elective=True),
-            key=lambda x: x["L"] + x["P"] + x["T"],
-            reverse=True
-        )
-        _sections = [section for section in sections if section["degree"] == programme["degree"]]
-        for year in range(1, show_data.get_degree_duration(cursor, degree=programme["degree"]) + 1):
-            _section_ids = {section["id"] for section in _sections if section["year"] == year}
-            _student_ids = {student["student_id"] for section_id in _section_ids
-                            for student in fetch_data.get_section_students(cursor, section_id=section_id)}
-            _student_electives = {course["code"]: student_ids for course in courses
-                                  if (student_ids := {se["student_id"] for se in student_electives
-                                                      if se["course_code"] == course["code"] and se["student_id"] in _student_ids})}
-            if not _student_electives:
-                continue
-            _courses = set(_student_electives.keys())
-            no_of_electives = 0
-            student_id = tuple(_student_electives[tuple(_courses)[0]])[0]
-            for course, student_ids in _student_electives.items():
-                if student_id in student_ids:
-                    no_of_electives += 1
-
-            if no_of_electives > 1:
-                allowed = set(sorted_and_reverse(courses=_courses, no_of_electives=no_of_electives))
-                not_allowed = set()
-                students = set()
-                for se1 in student_electives:
-                    for student_id in se1[1]:
-                        if student_id in students:
-                            continue
-                        else:
-                            students.add(student_id)
-                        num = 0
-                        electives = set()
-                        for se2 in student_electives:
-                            if student_id in se2[1]:
-                                num += 1
-                                electives.add(se2["course_code"])
-                                if num == no_of_electives:
-                                    break
-                        electives = tuple(sorted(electives))
-                        not_allowed.add(electives)
-                        not_allowed.add(electives[::-1])
-
-                allowed -= not_allowed
-                allowed = sorted_and_reverse(combs=allowed)
-                for c1 in allowed:
-                    for c2 in allowed:
-                        if c1 != c2 and c1[-1] == c2[0]:
-                            allowed.remove(c1)
-                            allowed.remove(c2)
-                            course = transitive(allowed, c1, c2)
-                            if not course:
-                                allowed.append(c1)
-                                allowed.append(c2)
-                            else:
-                                allowed.append(course)
-                                course = course[::-1]
-                                if course not in allowed:
-                                    allowed.append(course)
-                                break
-
-                allowed = [set(course) for course in allowed]
-                for course in allowed:
-                    allowed.remove(course)
-                    if course not in allowed:
-                        allowed.insert(0, course)
-
-                allowed = sorted(tuple(tuple(course) for course in allowed), key=lambda x: len(x), reverse=True)
-                over = set()
-                not_allowed = set()
-                for course in allowed:
-                    if all(c in over for c in course):
-                        not_allowed.add(course)
-                    elif not any(c in over for c in course):
-                        over |= set(course)
-                    else:
-                        for c2 in course:
-                            if c2 not in over:
-                                if (c2,) == course:
-                                    break  # not deleting it
-                                elif (c2,) not in allowed:
-                                    allowed.append((c2,))
-                        else:
-                            not_allowed.add(course)
-
-                assert course != over, "Unable to allot for all the electives"
-                for course in not_allowed:
-                    allowed.remove(course)
-
-            else:
-                allowed = [tuple(_courses)]
-
-            assert len(allowed) <= no_of_electives+1, f"Cannot allocate efficiently within {no_of_electives+1} periods"
-            periods = PERIODS - get_minor_elective_hrs(list(_section_ids)[0])
-            allowed = [tuple(sorted(((course, crs["L"], crs["P"], crs["T"])
-                                      for _courses in allowed
-                                      for course in _courses
-                                      if (crs := fetch_data.get_course(cursor, code=course))),
-                                      key=lambda x: (sum(x[1:4]), x[2]),
-                                      reverse=True))]
-            for _courses in allowed:
-                _elective_hrs = set()
-                for course in _courses:
-                    _crs_hrs = set()
-                    lab_periods = [period for period in periods if period[1] % 2 == 1]
-                    if not (_section_ids := get_section_course(programme["degree"], programme["stream"], course[0])):
-                        continue
-
-                    no_of_sections = len(_section_ids)
-                    no_of_students = len(_student_electives[course[0]])
-                    _no_of_students = num = -(-no_of_students // no_of_sections)
-                    _half = -(-_no_of_students // 2)
-                    if course[2]:
-                        _courses = fetch_data.get_lab_departments(cursor, course_code=course[0])
-                        if not _courses:
-                            _courses = [{"P": course[2], "lab_departments": [""]}]
-
-                        for _course in _courses:
-                            hrs = _course["P"]
-                            lab_departments = _course["lab_departments"]
-                            no_of_labs = len(lab_departments)
-                            assert no_of_labs == 1 or 2 * no_of_labs == hrs, "Number of lab-departments did not match with practical hours"
-
-                            labs = []
-                            for ld in lab_departments:
-                                class_day_period = []
-                                if ld == "":
-                                    for period in lab_periods:
-                                        class_capacity = tuple([cls, num] for cls in get_free_classes(num, *period))
-                                        if len(class_capacity) >= no_of_sections:
-                                            class_day_period.append((class_capacity, period))
-                                else:
-                                    for period in lab_periods:
-                                        class_day_period.append((max_lab_capacity(ld, *period, no_of_students=-(-num // 2)), period))
-
-                                assert class_day_period, "No lab is available..."
-                                assert ld != "" or len(class_day_period) >= no_of_sections, "Not enough classes"
-                                labs.append([class_day_period, ld])
-
-                            if no_of_labs == 1:
-                                labs *= (hrs // 2)
-
-                            while hrs:
-                                try:
-                                    _labs = []
-                                    _second_labs = []
-                                    _lab_idx = 0
-                                    _next_idx = -1
-                                    no_of_times = 1
-                                    second_day = second_period_id = None
-
-                                    if labs[-1][1] == "":
-                                        class_day_period = sorted(labs[-1][0], key=lambda cdp: len(cdp[0]), reverse=True)
-                                        while class_day_period[0][1] not in lab_periods:
-                                            class_day_period.pop(0)
-
-                                        for idx, cdp in enumerate(class_day_period):
-                                            if cdp[1] in _elective_hrs:
-                                                _lab_idx = idx
-                                                break
-                                        _labs.extend(tuple(range(no_of_sections)))
-                                    else:
-                                        class_day_period = sorted(labs[-1][0],
-                                                                key=lambda cdp: tuple(cdp[0][i][1] for i in range(len(cdp[0]))),
-                                                                reverse=True)
-                                        total_capacity = 0
-                                        while class_day_period[0][1] not in lab_periods:
-                                            class_day_period.pop(0)
-
-                                        for idx, cdp in enumerate(class_day_period):
-                                            if cdp[1] not in _elective_hrs:
-                                                continue
-                                            _labs.clear()
-                                            try:
-                                                for i in range(no_of_sections):
-                                                    capacity = class_day_period[idx][0][i][1]
-                                                    total_capacity += capacity // _half
-                                                    _labs.extend((i,) * (capacity // _half))
-                                                    if total_capacity >= 2 * no_of_sections:
-                                                        break
-                                                else:
-                                                    continue
-                                            except IndexError:
-                                                continue
-
-                                            day, period_id = class_day_period[_lab_idx][1]
-                                            if -(-no_of_students // 2) <= total_capacity < no_of_students:  # need of second lab
-                                                no_of_times = 2
-                                                check_day = (lambda cdp: cdp[0] == day) \
-                                                    if any(cdp[1][0] != day for cdp in class_day_period) \
-                                                    else lambda cdp: cdp[1] == period_id
-                                                for idx2, cdp2 in enumerate(class_day_period):  # try on elective hrs
-                                                    if cdp2[1] not in _elective_hrs or check_day(cdp2[1]):
-                                                        continue
-                                                    _second_labs.clear()
-                                                    total_capacity = 0
-                                                    try:
-                                                        for i in range(no_of_sections):
-                                                            total_capacity += cdp2[0][i][1] // _half
-                                                            _second_labs.extend((i,) * (capacity // _half))
-                                                            if total_capacity >= 2 * no_of_sections:
-                                                                break
-                                                        else:
-                                                            continue
-                                                    except IndexError:
-                                                        continue
-                                                    _next_idx = idx2
-                                                    second_day, second_period_id = class_day_period[_next_idx][1]
-                                                    break
-                                                else:  # try for any hrs
-                                                    for idx2, cdp2 in enumerate(class_day_period):
-                                                        if check_day(cdp2[1]):
-                                                            continue
-                                                        _second_labs.clear()
-                                                        total_capacity = 0
-                                                        try:
-                                                            for i in range(no_of_sections):
-                                                                total_capacity += cdp2[0][i][1] // _half
-                                                                _second_labs.extend((i,) * (capacity // _half))
-                                                                if total_capacity >= 2 * no_of_sections:
-                                                                    break
-                                                            else:
-                                                                continue
-                                                        except IndexError:
-                                                            continue
-                                                        _next_idx = idx2
-                                                        second_day, second_period_id = class_day_period[_next_idx]
-                                                        break
-                                                    else:
-                                                        continue
-
-                                            elif total_capacity < no_of_students:
-                                                continue
-
-                                            _lab_idx = idx
-                                        else:  # not possible on elective hrs
-                                            total_capacity = 0
-                                            _labs.clear()
-                                            try:
-                                                for i in range(no_of_sections):
-                                                    capacity = class_day_period[_lab_idx][0][i][1]
-                                                    total_capacity += capacity // _half
-                                                    _labs.extend((i,) * (capacity // _half))
-                                                    if total_capacity >= 2 * no_of_sections:
-                                                        break
-                                                else:
-                                                    continue
-                                            except IndexError:
-                                                continue
-
-                                            day, period_id = class_day_period[_lab_idx][1]
-                                            if -(-no_of_students // 2) <= total_capacity < no_of_students:  # need of second lab
-                                                check_day = (lambda cdp: cdp[0] == day) \
-                                                            if any(cdp[1][0] != day for cdp in class_day_period) \
-                                                            else lambda cdp: cdp[1] == period_id
-                                                for idx2, cdp2 in class_day_period:
-                                                    if check_day(cdp2[1]):
-                                                        continue
-                                                    total_capacity = 0
-                                                    try:
-                                                        for i in range(no_of_sections):
-                                                            total_capacity += cdp2[0][i][1] // _half
-                                                            if total_capacity >= 2 * no_of_sections:
-                                                                break
-                                                    except IndexError:
-                                                        continue
-                                                    _next_idx = idx2
-                                                    second_day, second_period_id = class_day_period[_next_idx][1]
-                                                    break
-                                                else:
-                                                    continue
-
-                                    for section_id in _section_ids:
-                                        faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course[0])
-                                        if no_of_times == 2:
-                                            _no_of_students = _half
-                                            mid = -(-len(faculties) // 2)
-                                            _faculties = faculties[:mid]
-                                        else:
-                                            _faculties = faculties
-                                        for idx, fsc in enumerate(_faculties):
-                                            class_id = class_day_period[_lab_idx][0][_labs[idx]][0]
-                                            insert_data.add_timetable(db_connector, cursor,
-                                                                    day=day,
-                                                                    period_id=period_id,
-                                                                    faculty_section_course_id=fsc["id"],
-                                                                    class_id=class_id)
-                                            insert_data.add_timetable(db_connector, cursor,
-                                                                    day=day,
-                                                                    period_id=period_id+1,
-                                                                    faculty_section_course_id=fsc["id"],
-                                                                    class_id=class_id)
-                                        class_day_period.pop(_lab_idx)
-                                        if _second_labs:
-                                            mid = -(-len(faculties) // 2)
-                                            _faculties = faculties[mid:]
-                                            for idx, fsc in enumerate(_faculties):
-                                                class_id = class_day_period[_next_idx][0][_second_labs[idx]][0]
-                                                insert_data.add_timetable(db_connector, cursor,
-                                                                        day=second_day,
-                                                                        period_id=second_period_id,
-                                                                        faculty_section_course_id=fsc["id"],
-                                                                        class_id=class_id)
-                                                insert_data.add_timetable(db_connector, cursor,
-                                                                        day=second_day,
-                                                                        period_id=second_period_id+1,
-                                                                        faculty_section_course_id=fsc["id"],
-                                                                        class_id=class_id)
-                                                class_day_period.pop(_next_idx)
-                                            _crs_hrs.add((second_day, second_period_id))
-                                            _crs_hrs.add((second_day, second_period_id+1))
-
-                                    _crs_hrs.add((day, period_id))
-                                    _crs_hrs.add((day, period_id+1))
-                                    print(day, period_id, course, "lab")
-                                    hrs -= 2
-                                    labs.pop()
-
-                                except Exception as exception:
-                                    _exception = exception.args
-                                    print(_exception, course, faculties, 1, day, period_id)
-                                    for section_id in _section_ids:
-                                        faculties = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course[0])
-                                        for fsc in faculties:
-                                            delete_data.delete_timetable(db_connector, cursor,
-                                                                        day=day, period_id=period_id, faculty_section_course_id=fsc["id"],
-                                                                        class_id=class_day_period[_lab_idx][0][_labs[idx]][0])
-                                            delete_data.delete_timetable(db_connector, cursor,
-                                                                        day=day, period_id=period_id+1, faculty_section_course_id=fsc["id"],
-                                                                        class_id=class_day_period[_lab_idx][0][_labs[idx]][0])
-                                        if _second_labs:
-                                            for fsc in faculties[-(-len(faculties) // 2):]:
-                                                    delete_data.delete_timetable(db_connector, cursor,
-                                                                                day=second_day,
-                                                                                period_id=second_period_id,
-                                                                                faculty_section_course_id=fsc["id"],
-                                                                                class_id=class_day_period[_next_idx][0][__second_labs[idx]][0])
-                                                    delete_data.delete_timetable(db_connector, cursor,
-                                                                                day=second_day,
-                                                                                period_id=second_period_id+1,
-                                                                                faculty_section_course_id=fsc["id"],
-                                                                                class_id=class_day_period[_next_idx][0][__second_labs[idx]][0])
-
-                                    if len(_exception) < 2:
-                                        print(_exception, 10, "Over")
-                                        return None
-                                    elif _exception[0] == 1644:
-                                        for cdp in class_day_period:
-                                            if cdp[1] == (day, period_id):
-                                                labs[-1][0].remove(cdp)
-                                                lab_periods.remove(cdp[1])
-                                                break
-                                        if _second_labs:
-                                            for cdp in class_day_period:
-                                                if cdp[1] == (second_day, second_period_id):
-                                                    labs[-1][0].remove(cdp)
-                                                    lab_periods.remove(cdp[1])
-                                                    break
-                                    print(day, period_id, second_day, second_period_id)
-                                    continue
-
-                    if course[1] + course[3]:
-                        periods -= _crs_hrs
-                        periods -= {(day, 5) for day in days}
-                        hrs = course[1] + course[3]
-                        day_period = []
-                        class_day_period = []
-                        for period in periods:
-                            classes = tuple([cls] for cls in get_free_classes(num, *period))
-                            if len(classes) >= no_of_sections:
-                                class_day_period.append((classes, period))
-                                day_period.append(period)
-
-                        assert class_day_period, "Not enough free classes at any time"
-                        class_day_period = sorted(class_day_period, key=lambda cdp: len(cdp[0]), reverse=True)
-                        cls_idx = get_cls_idx(day_period)
-                        while hrs:
-                            try:
-                                _cls_idx = 0
-                                for idx, cdp in enumerate(class_day_period):
-                                    if cdp[1] in _elective_hrs:
-                                        _cls_idx = idx
-                                        break
-                                else:
-                                    _cls_idx = next(cls_idx)
-
-                                day, period_id = class_day_period[_cls_idx][1]
-                                classes = class_day_period[_cls_idx][0][:no_of_sections]
-                                for idx, section_id in enumerate(_section_ids):
-                                    fsc = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course[0])[:no_of_sections]
-                                    for _fsc, cls in zip(sorted(fsc, key=lambda x: x["id"]), classes):
-                                        insert_data.add_timetable(db_connector,
-                                                                  cursor,
-                                                                  day=day,
-                                                                  period_id=period_id,
-                                                                  faculty_section_course_id=_fsc["id"],
-                                                                  class_id=cls[0])
-                                class_day_period.pop(_cls_idx)
-                                day_period.pop(_cls_idx)
-                                cls_idx = get_cls_idx(day_period)
-                                _elective_hrs.add((day, period_id))
-                                print(day, period_id, course, "theory")
-                                hrs -= 1
-
-                            except Exception as exception:
-                                _exception = exception.args
-                                print(_exception, course, fsc, 2, day, period_id)
-                                for section_id in _section_ids:
-                                    fsc = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_code=course[0])[:no_of_sections]
-                                    for _fsc, class_id in zip(sorted(fsc, key=lambda x: x["id"]), classes):
-                                        delete_data.delete_timetable(db_connector, cursor,
-                                                                     day=day, period_id=period_id,
-                                                                     faculty_section_course_id=_fsc["id"],
-                                                                     class_id=class_id)
-                                if len(_exception) < 2:
-                                    if len(day_period) > 0:
-                                        print(835, _exception, day_period)
-                                        continue
-                                    print(_exception, 11, "Over")
-                                    return None
-                                elif "faculty" in _exception[1] or "more than 2 labs at same time" in _exception[1]:
-                                    pass
-                                elif "same day" in _exception[1] or "same time" in _exception[1]:
-                                    for idx, cdp in enumerate(class_day_period):
-                                        if cdp[1][0] == day:
-                                            class_day_period.pop(idx)
-                                            day_period.pop(idx)
-                                            cls_idx = get_cls_idx(day_period)                                        
-                                elif "lunch" in _exception[1]:
-                                    class_day_period.pop(_cls_idx)
-                                    day_period.pop(_cls_idx)
-                                    cls_idx = get_cls_idx(day_period)
-                        periods |= _crs_hrs
-
-                periods -= _elective_hrs
+                print(courses, p)
+                periods.remove(p)
                 db_connector.commit()
 
-    # 2. Allocate lab courses
-    for section_id in section_ids:
-        periods = {(day, period_id) for day, period_id in get_free_periods(section_id) if period_id % 2}
-        no_of_students = len(fetch_data.get_section_students(cursor, section_id=section_id))
-        faculty_courses = sorted(filter(
-                lambda x: x["P"] and not fetch_data.is_elective(cursor, course_code=x["course_code"], section_id=section_id),
-                fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_details=True)
-            ), key=lambda x: x["L"] + x["P"] + x["T"],
-            reverse=True
-        )
-        twice: list[int | str] = []
-        ctwice = False
-        for fc in faculty_courses:
-            course = fetch_data.get_lab_departments(cursor, course_code=fc["course_code"])[0]
-            hrs = course["P"]
-            faculties = [{"id": f["id"], "faculty_id": f["faculty_id"]}
-                         for f in faculty_courses
-                         if f["course_code"] == fc["course_code"]]
-            for fsc in faculty_courses:
-                if fsc["course_code"] == fc["course_code"] and fsc["id"] != fc["id"]:
-                    faculty_courses.remove(fsc)
+            except Exception as e:
+                _exception = e.args
+                print(_exception, p)
+                db_connector.rollback()
+                if len(_exception) < 2:
+                    if len(periods) > 0:
+                        try:
+                            next(cls_idx)
+                        except:
+                            print("cls_idx over\n")
+                            cls_idx = get_cls_idx(periods)
+                            if len(_exception) and 'out of range' in _exception[0]:
+                                cls_idx = get_cls_idx(periods)
+                        print(380, _exception, periods, p, _cls_idx)
+                        continue
+                    print(_exception, 11, "Over")
+                    return {}
 
-            lab_departments = course["lab_departments"]
-            no_of_labs = len(lab_departments)
-            assert no_of_labs == 1 or 2 * no_of_labs == hrs, "Number of lab-departments did not match with practical hours"
+                if "Non-lab classes" in _exception[1] or "Duplicate" in _exception[1]:
+                    periods.remove(p)
+                    cls_idx = get_cls_idx(periods)
 
-            labs = []
-            num = no_of_students
-            for ld in lab_departments:
-                class_day_period = []
-                if ld == "":
-                    for period in periods:
-                        if not (cls := get_free_classes(no_of_students, *period) & get_free_classes(no_of_students, period[0], period[1]+1)):
-                            pass
-                        class_day_period.append((([_cls, no_of_students] for _cls in cls), period))
-                else:
-                    num = -(-num // 2)
-                    for period in periods:
-                        class_day_period.append((max_lab_capacity(ld, *period, no_of_students=num), period))
-                assert class_day_period, "No lab is available..."
-                labs.append((class_day_period, ld))
+                elif "same day" in _exception[1] or "same time" in _exception[1]:
+                    day = periods[_cls_idx][0]
+                    for d, p in periods:
+                        if d == day:
+                            periods.remove((d, p))
+                    cls_idx = get_cls_idx(periods)
 
-            if no_of_labs == 1:
-                labs *= (hrs // 2)
+                elif "faculty" in _exception[1] or "more than 2 labs at same time" in _exception[1]:
+                    periods.remove(p)
+                    cls_idx = get_cls_idx(periods)
 
-            day_period = [period for cls, period in class_day_period]
-            cls_idx = get_cls_idx(day_period)
-            while hrs:
-                try:
-                    no_of_times = 1
-                    if hrs < course["P"]:
-                        course["P"] = hrs
-                        class_day_period = sorted(labs[-1][0], key=lambda cdp: tuple(cdp[0][i][1] for i in range(len(cdp[0]))), reverse=True)
-                        day_period = [period for cls, period in class_day_period]
-                        cls_idx = get_cls_idx(day_period)
-
-                    for idx, cdp in enumerate(class_day_period):
-                        if cdp[1] not in periods or not cdp[0]:
-                            class_day_period.pop(idx)
-                            day_period.pop(idx)
-                            cls_idx = get_cls_idx(day_period)
-
-                    _cls_idx = next(cls_idx)
-                    class_id, capacity = class_day_period[_cls_idx][0][0]
-                    day, period_id = class_day_period[_cls_idx][1]
-                    if (day, period_id) in twice:
-                        no_of_times = 2
-                    if capacity < no_of_students:
-                        if ctwice:
-                            for cdp in class_day_period:
-                                if cdp[1] == twice[0]:
-                                    class_id, capacity = cdp[0][0]
-                                    day, period_id = twice[0]
-                                    break
-                        no_of_times = 2
-
-                    if capacity < no_of_students // no_of_times or not class_day_period:
-                        if not ctwice:
-                            print("Too many students & too less capacity in all the labs...", class_day_period, capacity, no_of_students, ctwice)
-                        else:
-                            ctwice = False  # Lab is too busy at this time...
-                            print(930)
-                            continue
-                        print("Over")
-                        return None
-
-                    _faculties = faculties
-                    if no_of_times == 2:
-                        _faculties = faculties[:-(-len(faculties) // 2)]
-                    for fsc in _faculties:
-                        insert_data.add_timetable(db_connector, cursor,
-                                                  day=day,
-                                                  period_id=period_id,
-                                                  faculty_section_course_id=fsc["id"],
-                                                  class_id=class_id)
-                        insert_data.add_timetable(db_connector, cursor,
-                                                  day=day,
-                                                  period_id=period_id+1,
-                                                  faculty_section_course_id=fsc["id"],
-                                                  class_id=class_id)
-                    class_day_period[_cls_idx][0][0][1] -= no_of_students // no_of_times
-                    if class_day_period[_cls_idx][0][0][1] < no_of_students // no_of_times:
-                        class_day_period[_cls_idx][0].pop(0)
-                    if not class_day_period[_cls_idx][0]:
-                        class_day_period.pop(_cls_idx)
-                        day_period.pop(_cls_idx)
-                        cls_idx = get_cls_idx(day_period)
-
-                    if no_of_times-1:
-                        _cls_idx = next(cls_idx)
-                        _faculties = faculties[-(-len(faculties) // 2):]
-                        if not ctwice:
-                            ctwice = True
-                            twice.append((day, period_id))
-                            class_id, capacity = class_day_period[_cls_idx][0][0]
-                            day, period_id = class_day_period[_cls_idx][1]
-                        else:
-                            periods.remove((day, period_id))
-                            for idx, cdp in enumerate(class_day_period):
-                                if not cdp[0]:
-                                    class_day_period.pop(idx)
-                                    day_period.pop(idx)
-                                    cls_idx = get_cls_idx(day_period)
-
-                                if cdp[1] == twice[1]:
-                                    class_id, capacity = cdp[0][0]
-                                    day, period_id = twice[1]
-                                    break
-                            twice.clear()
-                            ctwice = False
-                        if capacity < no_of_students // 2:
-                            print("Too many students & too less capacity in all the labs...", class_day_period, capacity, no_of_students, ctwice)
-                            if ctwice:
-                                ctwice = False
-                                print(970)
-                                continue
-                            print("Over")
-                            return None
-
-                        for fsc in _faculties:
-                            insert_data.add_timetable(db_connector, cursor,
-                                                      day=day,
-                                                      period_id=period_id,
-                                                      faculty_section_course_id=fsc["id"],
-                                                      class_id=class_id)
-                            insert_data.add_timetable(db_connector, cursor,
-                                                      day=day,
-                                                      period_id=period_id+1,
-                                                      faculty_section_course_id=fsc["id"],
-                                                      class_id=class_id)
-                        class_day_period[_cls_idx][0][0][1] -= no_of_students // no_of_times
-                        if class_day_period[_cls_idx][0][0][1] < no_of_students // no_of_times:
-                            class_day_period[_cls_idx][0].pop(0)
-
-                        if not class_day_period[_cls_idx][0]:
-                            class_day_period.pop(_cls_idx)
-                            day_period.pop(_cls_idx)
-                            cls_idx = get_cls_idx(day_period)
-                        if ctwice:
-                            twice.append((day, period_id))
-                            ctwice = True
-                    if not ctwice:
-                        periods.remove((day, period_id))
-                    ctwice = True if twice else False
-                    hrs -= 2
-                    labs.pop()
-                    print(section_id, day, period_id, fc, class_id)
-                except Exception as exception:
-                    _exception = exception.args
-                    for fsc in _faculties:
-                        delete_data.delete_timetable(db_connector, cursor,
-                                                     day=day, period_id=period_id, faculty_section_course_id=fsc["id"], class_id=class_id)
-                        delete_data.delete_timetable(db_connector, cursor,
-                                                     day=day, period_id=period_id+1, faculty_section_course_id=fsc["id"], class_id=class_id)
-                    if len(_exception) < 2:
-                        if len(day_period) > 0:
-                            try:
-                                next(cls_idx)
-                            except StopIteration:
-                                cls_idx = get_cls_idx(day_period)
-                            except Exception:
-                                pass
-                            print(1003, _exception, day_period, len(day_period), len(class_day_period), day, period_id, ctwice, twice, _cls_idx)
-                            ctwice = False
-                            continue
-
-                        print(_exception, day_period, "Over")
-                        return None
-                    elif "faculty" in _exception[1] or "more than 2 labs at same time" in _exception[1]:
-                        ctwice = False
-                    elif "more than 2 labs on the same day" in _exception[1]:
-                        for idx, cdp in enumerate(class_day_period):
-                            if cdp[1][0] == day:
-                                class_day_period.pop(idx)
-                                day_period.pop(idx)
-                                cls_idx = get_cls_idx(day_period)
-                    elif "lunch" in _exception[1]:
-                        class_day_period.pop(_cls_idx)
-                        day_period.pop(_cls_idx)
-                        cls_idx = get_cls_idx(day_period)
-                        periods.remove((day, period_id))
-                    print(f"Error {section_id} {day}{period_id} {fc["faculty_id"]}, {fc["id"]} {fc["course_code"]}: {_exception}{no_of_students}")
-                    continue
-            db_connector.commit()
-
-    # 3. Allocate non-elective, non-lab hrs
-    for section in sections:
-        section_id = section["id"]
-        periods = [(day, period_id) for day, period_id in get_free_periods(section_id) if period_id != 5]
-        cls_idx = get_cls_idx(periods)
-        minor_electives = get_minor_elective_hrs(section_id)
-        for period in minor_electives:
-            periods.remove(period)
-
-        no_of_students = len(fetch_data.get_section_students(cursor, section_id=section_id))
-        faculty_courses = sorted(filter(
-                lambda x: x["L"] + x["P"] and not fetch_data.is_elective(cursor, course_code=x["course_code"], section_id=section_id),
-                fetch_data.get_faculty_section_courses(cursor, section_id=section_id, course_details=True)
-            ), key=lambda x: x["L"] + x["P"] + x["T"],
-            reverse=True
-        )
-        courses: set[str] = set()
-        if class_id := fetch_data.get_section_classes(cursor, section_id=section_id):
-            class_id = class_id[0]["class_id"]
-
-        print(section)
-        for fc in faculty_courses:
-            if fc["course_code"] not in courses:
-                courses.add(fc["course_code"])
-            else:
-                continue
-
-            course = fc
-            if not course:
-                continue
-            hrs = course["L"] + course["T"]
-            for fsc in faculty_courses:
-                if fsc["course_code"] == fc["course_code"] and fsc["id"] != fc["id"]:
-                    faculty_courses.remove(fsc)
-
-            while hrs:
-                try:
-                    _cls_idx = next(cls_idx)
-                    day, period_id = periods[_cls_idx]
-                    if not class_id:
-                        roaming_id = list(get_free_classes(no_of_students, day, period_id))[0]
-                    insert_data.add_timetable(db_connector, cursor,
-                                              day=day,
-                                              period_id=period_id,
-                                              faculty_section_course_id=fc["id"],
-                                              class_id=(class_id or roaming_id))
-                    hrs -= 1
+                elif "lunch" in _exception[1]:
                     periods.pop(_cls_idx)
                     cls_idx = get_cls_idx(periods)
-                except Exception as exception:
-                    _exception = exception.args
-                    delete_data.delete_timetable(db_connector, cursor,
-                                                 day=day, period_id=period_id,
-                                                 faculty_section_course_id=fc["id"],
-                                                 class_id=(class_id or roaming_id))
-                    if len(_exception) < 2:
-                        if len(periods) > 0:
-                            try:
-                                next(cls_idx)
-                            except StopIteration:
-                                cls_idx = get_cls_idx(day_period)
-                            except Exception:
-                                pass
-                            print(1079, _exception, periods, _cls_idx)
-                            continue
-                        print(exception, len(periods), day, period_id, class_id or roaming_id, "Over")
-                        return None
-                    elif "faculty" in _exception[1]:
-                        pass
+
+                if not (_cls_idx >= 0 and len(periods) <= _cls_idx + 1):
+                    cls_idx = get_cls_idx(periods)
+        return elective_hrs
+
+    # 1. Allocate elective labs, then theory
+    sec_map = {int(s["id"]): (s["degree"], s["stream"], s["year"], s["section"])
+               for s in fetch_data.get_sections(cursor, campus_id=campus_id)}
+    degrees = show_data.get_degrees(cursor)
+    for _degree in degrees:
+        degree = _degree["name"]
+        fsc = fetch_data.get_electives(cursor, degree=degree)
+        yr_electives = defaultdict(lambda: defaultdict(set))
+        std_electives = defaultdict(set)
+        yr_students = defaultdict(set)
+        _sec_electives = defaultdict(set)
+        for f in fsc:
+            if f["course_code"] not in std_electives:
+                assert isinstance(f["section_id"], int) and isinstance(f["course_code"], str)
+                section = fetch_data.get_section(cursor, section_id=f["section_id"])
+
+                assert section is not None and isinstance(section["year"], int)
+                year = section["year"]
+
+                assert isinstance(year, int)
+                yr_electives[year][f["course_code"]].add(f["class_id"])
+                _sec_electives[sec_map[f["section_id"]]].add(f["course_code"])
+
+                for s in fetch_data.get_student_electives(cursor, course_code=f["course_code"]):
+                    std_electives[s["student_id"]].add(f["course_code"])
+                    yr_students[year].add(s["student_id"])
+
+        if not yr_electives:
+            continue
+
+        for year, _electives in yr_electives.items():
+            student_choices = set()
+            for s_id in yr_students[year]:
+                student_choices.add(tuple(std_electives[s_id]))
+
+            _electives = schedule_electives(student_choices, _electives).values()
+            electives: list[set[str]] = []
+            for s in _electives:
+                overlap = [c for c in electives if not s.isdisjoint(c)]
+                rest = [c for c in electives if s.isdisjoint(c)]
+                combined = s.union(*overlap)
+                electives = [combined] + rest
+
+            for _courses in electives:
+                    _periods = PERIODS
+                    _fsc = list(filter(lambda x: x["course_code"] in _courses, fsc))
+
+                    tot_std: dict[str, int] = {}
+                    _lab_hrs = [_f for _f in _fsc if _f["is_lab"]]
+                    _lab_fac_period = PERIODS
+                    _fac_period = PERIODS
+                    _sec_period = PERIODS
+                    for _f in _fsc:
+                        if _f["is_lab"]:
+                            _lab_fac_period &= get_faculty_free_periods(_f["faculty_id"])
+                        else:
+                            _fac_period &= get_faculty_free_periods(_f["faculty_id"])
+                        _sec_period &= get_free_periods(section_id=_f["section_id"])
+
+                    _periods &= _sec_period
+                    lab_hrs: dict[str, set[tuple[str, int]]] = {}
+                    if _lab_hrs:
+                        lab_hrs = elective_labs(_lab_hrs, std_electives,
+                                                {_p for _p in _periods & _lab_fac_period if _p[1] % 2})
+                        assert lab_hrs
+
+                    _fsc = [_f for _f in _fsc if not _f["is_lab"]]
+                    _periods = {_p for _p in _periods if _p[1] != 5}
+                    _excl_cls = set()
+                    for _f in _fsc:
+                        if _f["class_id"] is None:
+                            num = len({s for s, e in std_electives.items() if e in _courses})
+                            tot_std[_f["course_code"]] = num
+                        else:
+                            _excl_cls.add(_f["class_id"])
+
+                    _periods -= {(d, 5) for d in days}
+                    periods = list(_periods & _fac_period)
+                    cls_idx = get_cls_idx(periods)
+                    _no_error = True
+                    _stsl = False
+                    while _fsc:
+                        try:
+                            _p = set(periods)
+                            __fsc = filter(lambda x: x["course_code"] not in _courses, fsc)
+                            for _f in __fsc:
+                                _p &= (PERIODS - get_free_periods(_f["faculty_id"]))
+                            if _p:
+                                cls_idx = get_cls_idx(list(_p))
+                            _cls_idx = next(cls_idx)
+                            p = periods[_cls_idx]
+                            k = 0
+                            while _stsl and any(lab_hrs.get(c) == p for c in _courses):
+                                _cls_idx = next(cls_idx)
+                                p = periods[_cls_idx]
+
+                            classes = get_free_classes(60, p[0], p[1], _fsc[0]["section_id"], _excl_cls)
+                            _timetable = []
+                            for _f in _fsc:
+                                if _f["class_id"] is None and _no_error:
+                                    if tot_std[_f["course_code"]] > 60:
+                                        cls_id = get_free_classes(tot_std[_f["course_code"]], *p, _f["section_id"], _excl_cls)[0]
+                                        update_fsc(_f["id"], cls_id)
+                                    else:
+                                        update_fsc(_f["id"], classes[k])
+                                        k = (k + 1) % len(classes)
+                                if not _stsl and _f["course_code"] in lab_hrs \
+                                and p in lab_hrs[_f["course_code"]]:
+                                    _stsl = True
+                                else:
+                                    _timetable.append((_f, *p))
+
+                            for t in _timetable:
+                                add_timetable(t[0]["id"], t[1], t[2])
+
+                            to_remove = []
+                            for _f in _fsc:
+                                if _f["course_code"] not in lab_hrs \
+                                    or lab_hrs and p not in lab_hrs[_f["course_code"]]:
+                                    _f["hrs"] -= 1
+                                if _f["hrs"] == 0:
+                                    to_remove.append(_f)
+
+                            for t in to_remove:
+                                _fsc.remove(t)
+
+                            print(_courses, sec_map[_f["section_id"]], p)
+                            periods.remove(p)
+                            _no_error = False
+                            db_connector.commit()
+
+                        except Exception as e:
+                            _exception = e.args
+                            print(_exception, p)
+                            db_connector.rollback()
+                            if len(_exception) < 2:
+                                if len(periods) > 0:
+                                    try:
+                                        next(cls_idx)
+                                    except:
+                                        print("cls_idx over\n")
+                                        cls_idx = get_cls_idx(periods)
+                                    if len(_exception) and 'out of range' in _exception[0]:
+                                        cls_idx = get_cls_idx(periods)
+                                    print(550, _exception, periods, p, _cls_idx)
+                                    continue
+                                print(_exception, 12, "Over")
+                                return None
+
+                            if "Non-lab classes" in _exception[1] or "Duplicate" in _exception[1]:
+                                if any(_f["class_id"] for _f in _fsc):
+                                    periods.remove(p)
+                                    cls_idx = get_cls_idx(periods)
+                            elif "same day" in _exception[1] or "same time" in _exception[1]:
+                                day = periods[_cls_idx][0]
+                                for d, p in periods:
+                                    if d == day:
+                                        periods.remove((d, p))
+                                cls_idx = get_cls_idx(periods)
+
+                            elif "faculty" in _exception[1] or "more than 2 labs at same time" in _exception[1]:
+                                periods.remove(p)
+                                cls_idx = get_cls_idx(periods)
+
+                            elif "lunch" in _exception[1]:
+                                periods.pop(_cls_idx)
+                                cls_idx = get_cls_idx(periods)
+
+                            if not (_cls_idx >= 0 and len(periods) <= _cls_idx + 1):
+                                cls_idx = get_cls_idx(periods)
+                            for _f in _fsc:
+                                if _f["class_id"] is None:
+                                    update_fsc(_f["id"], None)
+
+    # 2. Allocate non-elective lab courses
+    # for section_id in sec_map:
+    #     __fsc = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, is_elective=False, is_lab=True)
+    #     fsc = defaultdict(list)
+    #     num = fetch_data.get_section(cursor, section_id=section_id)["strength"]
+    #     for _f in __fsc:
+    #         fsc[str(_f["course_code"])].append(_f)
+
+    #     processed_ids = set()
+    #     paired_groups = {}
+    #     solo_courses = set()
+    #     first_allocation_done = set()
+    #     for course_code in fsc:
+    #         if course_code=="CAP209":
+    #             print(end="")
+
+    #         while True:
+    #             rows = [r for r in fsc[course_code] if r["id"] not in processed_ids and r["hrs"] > 0]
+    #             if not rows: 
+    #                 break
+
+    #             rows = [r for r in rows if r["class_id"] != 619]
+    #             if not rows: 
+    #                 break
+
+    #             rows.sort(key=lambda x: (-int(x["hrs"]), x["course"], x["class_id"], x["faculty_id"]))
+    #             is_split = not rows[0]["full_batch"]
+    #             _periods_base = get_free_periods(section_id=section_id) & PERIODS
+    #             if course_code in paired_groups:
+    #                 paired_course = paired_groups[course_code]
+    #                 primary_rows = rows
+    #                 paired_rows = [r for r in fsc[paired_course] if r["id"] not in processed_ids and r["hrs"] > 0 and r["class_id"] != 619]
+    #                 if not paired_rows:
+    #                     del paired_groups[course_code]
+    #                     if paired_course in paired_groups:
+    #                         del paired_groups[paired_course]
+    #                     solo_courses.add(course_code)
+    #                     _fsc = primary_rows
+    #                     strategy = [(_fsc, None)]
+
+    #                 else:
+    #                     paired_rows.sort(key=lambda x: (-int(x["hrs"]), x["course"], x["class_id"], x["faculty_id"]))
+    #                     _fsc = primary_rows + paired_rows
+    #                     strategy = [(_fsc, paired_course)]
+
+    #             elif course_code in solo_courses:
+    #                 _fsc = rows
+    #                 strategy = [(_fsc, None)]
+
+    #             else:
+    #                 if len(rows) > 2 and course_code not in ("CHY101", "CIV103"):
+    #                     _fsc = rows[:(len(rows)+1)//2]
+    #                 else:
+    #                     _fsc = rows
+
+    #                 strategy = []
+    #                 if is_split:
+    #                     primary_ids = {x["faculty_id"] for x in _fsc}
+    #                     prim_periods = _periods_base.copy()
+    #                     for _f in _fsc: 
+    #                         prim_periods &= get_faculty_free_periods(_f["faculty_id"])
+
+    #                     potential_pairs = []
+    #                     for other_code in fsc:
+    #                         if other_code == course_code: 
+    #                             continue
+    #                         if other_code in paired_groups or other_code in solo_courses:
+    #                             continue
+
+    #                         others = [r for r in fsc[other_code] if r["id"] not in processed_ids and r["hrs"] > 0 and r["class_id"] != 619]
+    #                         if not others: 
+    #                             continue
+
+    #                         other_is_split = not others[0]["full_batch"] or (others[0]["hrs"] > 2 and other_code not in first_allocation_done)
+    #                         if not other_is_split:
+    #                             continue
+
+    #                         if not primary_ids.isdisjoint({x["faculty_id"] for x in others}): 
+    #                             continue
+
+    #                         others.sort(key=lambda x: (-int(x["hrs"]), x["course"], x["class_id"], x["faculty_id"]))                            
+    #                         if len(others) > 2:
+    #                             cand = others[:(len(others)+1)//2]
+    #                         else:
+    #                             cand = others[:]
+
+    #                         tmp = prim_periods.copy()
+    #                         for _f in cand: 
+    #                             tmp &= get_faculty_free_periods(_f["faculty_id"])
+
+    #                         overlap_len = len(tmp)
+    #                         if overlap_len > 0:
+    #                             potential_pairs.append((overlap_len, other_code, cand))
+
+    #                     potential_pairs.sort(key=lambda x: x[0], reverse=True)
+    #                     for _, other_code, pair in potential_pairs:
+    #                         strategy.append((_fsc + pair, other_code))
+
+    #                 strategy.append((_fsc, None))
+
+    #             allocated_chunk = False
+    #             for strategy_fsc, paired_with in strategy:
+    #                 _periods = _periods_base.copy()
+    #                 for _f in strategy_fsc: 
+    #                     _periods &= get_faculty_free_periods(_f["faculty_id"])
+
+    #                 periods = list(_p for _p in _periods if _p[1] % 2 != 0 and (_p[0], _p[1]+1) in _periods)
+    #                 if not periods: 
+    #                     continue
+
+    #                 cls_idx = get_cls_idx(periods)
+    #                 strategy_success = False                    
+    #                 while True:
+    #                     try:
+    #                         try:
+    #                             _idx = next(cls_idx)
+    #                         except StopIteration:
+    #                             if len(periods) > 0:
+    #                                 cls_idx = get_cls_idx(periods, section_id)
+    #                                 continue
+    #                             break
+
+    #                         p = periods[_idx]
+    #                         _timetable = []
+    #                         for _f in strategy_fsc:
+    #                             batch = 2 - _f["full_batch"]
+    #                             if not max_cls_capacity(p[0], p[1], class_id=_f["class_id"], no_of_students=num//batch):
+    #                                 raise ValueError(f"Lab's full {_f['class_id']}")
+    #                             _timetable.append((_f, *p))
+
+    #                         for t in _timetable:
+    #                             add_timetable(t[0]["id"], t[1], t[2])
+    #                             add_timetable(t[0]["id"], t[1], t[2]+1)
+
+    #                         db_connector.commit()
+    #                         for t in _timetable:
+    #                             t[0]["hrs"] -= 2
+
+    #                         if course_code not in first_allocation_done:
+    #                             first_allocation_done.add(course_code)                                
+    #                             if paired_with:
+    #                                 paired_groups[course_code] = paired_with
+    #                                 paired_groups[paired_with] = course_code
+    #                                 first_allocation_done.add(paired_with)
+    #                                 print(f"{p} {section_id} Success - PAIRED: {course_code} <-> {paired_with}")
+    #                             else:
+    #                                 solo_courses.add(course_code)
+    #                                 print(f"{p} {section_id} Success - SOLO: {course_code}")
+    #                         else:
+    #                             if course_code in paired_groups:
+    #                                 print(f"{p} {section_id} Success - {course_code} (with {paired_groups[course_code]})")
+    #                             else:
+    #                                 print(f"{p} {section_id} Success - {course_code} (solo)")
+
+    #                         processed_ids.update(x["id"] for x in strategy_fsc if x["hrs"] <= 0)
+    #                         strategy_success = True
+    #                         break
+
+    #                     except Exception as e:
+    #                         db_connector.rollback()
+    #                         ex = e.args
+    #                         print(ex)
+    #                         if len(ex) < 2 or "Lab's full" in str(ex):
+    #                             if p in periods: 
+    #                                 periods.remove(p)
+    #                             cls_idx = get_cls_idx(periods)
+    #                         elif "faculty" in str(ex) or "same" in str(ex) or "Duplicate" in str(ex):
+    #                             if p in periods: 
+    #                                 periods.remove(p)
+    #                             cls_idx = get_cls_idx(periods)
+    #                         elif "lunch" in str(ex):
+    #                             if _idx < len(periods): 
+    #                                 periods.pop(_idx)
+    #                             cls_idx = get_cls_idx(periods)
+    #                         else:
+    #                             if p in periods: 
+    #                                 periods.remove(p)
+    #                             cls_idx = get_cls_idx(periods)
+
+    #                 if strategy_success:
+    #                     allocated_chunk = True
+    #                     break
+
+    #             if not allocated_chunk:
+    #                 print(f"Failed to allocate {section_id} {course_code} Hrs: {rows[0]['hrs']}")
+    #                 return None
+
+    # ==========================================
+    # HELPER FUNCTIONS & SWAPPING LOGIC
+    # ==========================================
+
+    def max_cls_capacity(day, period_id, class_id, no_of_students):
+        """Checks if room has space for new students."""
+        if not class_id: return True # Virtual room
+        cursor.execute("SELECT `capacity` FROM `classes` WHERE `id`=%s", (class_id,))
+        res = cursor.fetchone()
+        if not res: return True 
+        
+        # Calculate Current Occupancy
+        # Get all sections currently in this class at this time
+        cursor.execute("""
+            SELECT DISTINCT `FSC`.`section_id`, `FSC`.`full_batch`
+            FROM `timetables` `T`
+            JOIN `faculty_section_course` `FSC` ON `T`.`faculty_section_course_id`=`FSC`.`id`
+            WHERE `T`.`day`=%s AND `T`.`period_id`=%s AND `FSC`.`class_id`=%s
+        """, (day, period_id, class_id))
+        
+        current_occupancy = 0
+        rows = cursor.fetchall()
+        for r in rows:
+            # Fetch strength from section_class
+            # We use LIMIT 1 assuming strength is consistent for the section
+            cursor.execute("SELECT `strength` FROM `section_class` WHERE `section_id`=%s LIMIT 1", (r['section_id'],))
+            s_res = cursor.fetchone()
+            if s_res:
+                strength = s_res['strength']
+                current_occupancy += strength if r['full_batch'] else (strength // 2)
+            
+        return (current_occupancy + no_of_students) <= res['capacity']
+
+    def delete_timetable_safe(fsc_id, day, period_id):
+        cursor.execute("DELETE FROM `timetables` WHERE `faculty_section_course_id`=%s AND `day`=%s AND `period_id`=%s", (fsc_id, day, period_id))
+
+    def add_timetable_safe(fsc_id, day, period_id):
+        insert_data.add_timetable(cursor, day=day, period_id=period_id, faculty_section_course_id=fsc_id)
+
+    def resolve_conflict_recursive(target_fsc_list, section_id, duration, depth=0, forbidden=None):
+        """
+        Attempts to make space for a list of FSCs (strategy) by moving blockers.
+        target_fsc_list: list of FSC dicts to allocate together.
+        section_id: The section_id of the target courses (passed explicitly).
+        duration: 2 for labs, 1 for theory.
+        """
+        if depth > 1: return False
+        if forbidden is None: forbidden = set()
+
+        candidates = list(PERIODS)
+        random.shuffle(candidates)
+
+        for day, period in candidates:
+            if period == 5: continue
+            
+            slots = [period]
+            if duration == 2:
+                if period not in (1, 3, 6, 7): continue
+                if (day, period+1) not in PERIODS: continue
+                if period == 4: continue
+                slots = [period, period+1]
+
+            if any((day, p) in forbidden for p in slots): continue
+
+            # Check Capacity (HARD Constraint)
+            cap_ok = True
+            # Fetch strength for the target section once
+            try:
+                sec_classes = fetch_data.get_section_classes(cursor, section_id=section_id)
+                if not sec_classes: raise ValueError("No section class info")
+                str_val = sec_classes[0]['strength']
+            except:
+                # Fallback if fetch_data fails or returns empty
+                cursor.execute("SELECT strength FROM section_class WHERE section_id=%s LIMIT 1", (section_id,))
+                res = cursor.fetchone()
+                str_val = res['strength'] if res else 60 # Default fallback
+
+            for fsc in target_fsc_list:
+                needed = str_val if fsc['full_batch'] else (str_val // 2)
+                for p in slots:
+                    if not max_cls_capacity(day, p, fsc['class_id'], needed):
+                        cap_ok = False; break
+                if not cap_ok: break
+            if not cap_ok: continue
+
+            # Identify Blockers
+            blockers = set()
+            
+            # Faculty Blockers
+            for fsc in target_fsc_list:
+                for p in slots:
+                    cursor.execute("""SELECT `faculty_section_course_id` FROM `timetables` 
+                                      JOIN `faculty_section_course` `F` ON `F`.`id`=`faculty_section_course_id`
+                                      WHERE `day`=%s AND `period_id`=%s AND `faculty_id`=%s""", 
+                                      (day, p, fsc['faculty_id']))
+                    blockers.update(r['faculty_section_course_id'] for r in cursor.fetchall())
+            
+            # Section Blockers
+            for p in slots:
+                cursor.execute("""SELECT `faculty_section_course_id` FROM `timetables` 
+                                  JOIN `faculty_section_course` `F` ON `F`.`id`=`faculty_section_course_id`
+                                  WHERE `day`=%s AND `period_id`=%s AND `section_id`=%s""", 
+                                  (day, p, section_id))
+                blockers.update(r['faculty_section_course_id'] for r in cursor.fetchall())
+
+            target_ids = {f['id'] for f in target_fsc_list}
+            blockers = list(blockers - target_ids)
+
+            max_blockers = 3 + depth  # Allow more blockers at deeper recursion levels
+            if blockers and len(blockers) > max_blockers:
+                continue
+
+            sp_name = f"swap_{depth}_{random.randint(1000,9999)}"
+            try:
+                cursor.execute(f"SAVEPOINT {sp_name}")
+                
+                # 1. Delete Blockers
+                moved_blockers = []
+                for b_id in blockers:
+                    # Fetch full FSC info for blocker to get its section_id
+                    b_info = fetch_data.get_faculty_section_course(cursor, faculty_section_course_id=b_id)
+                    if not b_info: raise Exception("Invalid blocker")
+
+                    b_slots = fetch_data.get_timetables(cursor, faculty_section_course_id=b_id)
+                    for bs in b_slots:
+                        delete_timetable_safe(b_id, bs['day'], bs['period_id'])
+
+                    moved_blockers.append((b_info, b_slots))
+                
+                # 2. Insert Target
+                for fsc in target_fsc_list:
+                    for p in slots:
+                        add_timetable_safe(fsc['id'], day, p)
+
+                # 3. Re-allocate Blockers (Recursion)
+                new_forbidden = forbidden.copy()
+                for p in slots: new_forbidden.add((day, p))
+                
+                for b_info, old_slots in moved_blockers:
+                    b_dur = 2 if b_info['is_lab'] else 1
+                    # Pass the blocker's section_id explicitely
+                    if not resolve_conflict_recursive([b_info], b_info['section_id'], b_dur, depth+1, new_forbidden):
+                        raise Exception("Failed to re-allocate blocker")
+
+                cursor.execute(f"RELEASE SAVEPOINT {sp_name}")
+                print(f"      [Swap Success] Moved {len(moved_blockers)} blockers to fit {target_fsc_list[0]['course_code']}")
+                return True
+
+            except Exception:
+                cursor.execute(f"ROLLBACK TO SAVEPOINT {sp_name}")
+                continue
+                
+        return False
+
+    # ==========================================
+    # 2. ALLOCATE NON-ELECTIVE LABS
+    # ==========================================
+    print("\n=== Allocating Non-Elective Labs ===")
+    
+    for section_id in sec_map:
+        __fsc = fetch_data.get_faculty_section_courses(cursor, section_id=section_id, is_elective=False, is_lab=True)
+        fsc_map = defaultdict(list)
+        
+        # We need section strength. Fetching it safely.
+        try:
+            sec_classes = fetch_data.get_section_classes(cursor, section_id=section_id)
+            if sec_classes:
+                 section_strength = sec_classes[0]['strength']
+            else:
+                 # Fallback
+                 cursor.execute("SELECT strength FROM section_class WHERE section_id=%s LIMIT 1", (section_id,))
+                 res = cursor.fetchone()
+                 section_strength = res['strength'] if res else 60
+        except:
+            section_strength = 60
+
+        for _f in __fsc:
+            fsc_map[str(_f["course_code"])].append(_f)
+            
+        processed_ids = set()
+        paired_groups = {}
+        solo_courses = set()
+        first_allocation_done = set()
+        
+        keys = list(fsc_map.keys())
+
+        for course_code in keys:
+            while True:
+                rows = [r for r in fsc_map[course_code] if r["id"] not in processed_ids and r["hrs"] > 0]
+                rows = [r for r in rows if r["class_id"] != 619]
+                if not rows:
+                    break
+
+                rows.sort(key=lambda x: (-int(x["hrs"]), x["course"], x["class_id"], x["faculty_id"]))
+                is_split = not rows[0]["full_batch"]
+                strategy = []
+                if course_code in paired_groups:
+                    partner = paired_groups[course_code]
+                    p_rows = [r for r in fsc_map[partner] if r["id"] not in processed_ids and r["hrs"] > 0]
+                    p_rows = [r for r in p_rows if r["class_id"] != 619]
+                    
+                    if p_rows:
+                         p_rows.sort(key=lambda x: (-int(x["hrs"]), x["course"], x["class_id"], x["faculty_id"]))
+                         strategy = [(rows + p_rows, partner)]
                     else:
-                        periods.pop(_cls_idx)
-                        cls_idx = get_cls_idx(periods)
-                    print(f"Error {section_id},{day}{period_id} {fc["faculty_id"]}, {fc["id"]} {fc["course_code"]}: {_exception}{_cls_idx}\n{periods}")
-                    continue
-            print("Success")
-            db_connector.commit()
+                         strategy = [(rows, None)]
+                elif course_code in solo_courses:
+                    strategy = [(rows, None)]
+                else:
+                    current_batch = rows
+                    if len(rows) > 2 and course_code not in ("CHY101", "CIV103"):
+                        current_batch = rows[:(len(rows)+1)//2]
+                    
+                    if is_split:
+                        primary_ids = {x["faculty_id"] for x in current_batch}
+                        found_partner = False
+                        for cand_code in fsc_map:
+                            if cand_code == course_code or cand_code in paired_groups or cand_code in solo_courses: continue
+                            cand_rows = [r for r in fsc_map[cand_code] if r["id"] not in processed_ids and r["hrs"] > 0]
+                            cand_rows = [r for r in cand_rows if r["class_id"] != 619]
+                            if not cand_rows: continue
+                            
+                            if cand_rows[0]['full_batch']: continue
+                            
+                            cand_fac = {x['faculty_id'] for x in cand_rows}
+                            if not primary_ids.isdisjoint(cand_fac): continue
+                            
+                            cand_rows.sort(key=lambda x: (-int(x["hrs"]), x["course"], x["class_id"], x["faculty_id"]))
+                            cand_slice = cand_rows
+                            if len(cand_rows) > 2: cand_slice = cand_rows[:(len(cand_rows)+1)//2]
+                            
+                            strategy.append((current_batch + cand_slice, cand_code))
+                            found_partner = True
+                            break
+                        
+                        if not found_partner:
+                            strategy.append((current_batch, None))
+                    else:
+                        strategy.append((rows, None))
+
+                success = False
+                for target_fscs, partner_code in strategy:
+                    if resolve_conflict_recursive(target_fscs, section_id, duration=2):
+                        db_connector.commit()
+                        
+                        for x in target_fscs: x['hrs'] -= 2
+                        processed_ids.update(x['id'] for x in target_fscs if x['hrs'] <= 0)
+                        
+                        if course_code not in first_allocation_done:
+                            first_allocation_done.add(course_code)
+                            if partner_code:
+                                paired_groups[course_code] = partner_code
+                                paired_groups[partner_code] = course_code
+                                first_allocation_done.add(partner_code)
+                                print(f"  Allocated PAIRED: {course_code} & {partner_code}")
+                            else:
+                                solo_courses.add(course_code)
+                                print(f"  Allocated SOLO: {course_code}")
+                        
+                        success = True
+                        break
+                
+                if not success:
+                    print(f"  FAILED to allocate Lab {course_code} (Section {section_id})")
+                    break
+
+    # ==========================================
+    # 3. ALLOCATE NON-ELECTIVE THEORY
+    # ==========================================
+    print("\n=== Allocating Non-Elective Theory ===")
+    
+    for section_id in sec_map:
+        theory_courses = list(fetch_data.get_faculty_section_courses(
+            cursor, section_id=section_id, is_elective=False, is_lab=False
+        ))
+        theory_courses.sort(key=lambda x: x['hrs'], reverse=True)
+        
+        for course in theory_courses:
+            while course["hrs"] > 0:
+                allocated = False
+                
+                # 1. Try Direct Allocation (Fast)
+                free_slots = list(get_free_periods(section_id) & get_faculty_free_periods(course['faculty_id']))
+                random.shuffle(free_slots)
+                
+                for p in free_slots:
+                    if p[1] == 5: continue
+                    try:
+                        add_timetable_safe(course["id"], p[0], p[1])
+                        db_connector.commit()
+                        course["hrs"] -= 1
+                        allocated = True
+                        break
+                    except:
+                        db_connector.rollback()
+                        continue
+                
+                # 2. Try Swap (Smart)
+                if not allocated:
+                    # Pass section_id explicitely
+                    if resolve_conflict_recursive([course], section_id, duration=1):
+                        db_connector.commit()
+                        course["hrs"] -= 1
+                    else:
+                        print(f"  FAILED Theory {course['course_code']} (Section {section_id})")
+                        break
+
+    # ==========================================
+    # 4. GLOBAL CONSTRAINT SOLVER (The "Fixer")
+    # ==========================================
+    
+    def get_conflicting_entries(day, period, faculty_id, section_id, class_id):
+        """
+        Finds ALL timetable entries that would prevent an allocation at (day, period).
+        Returns a list of (timetable_id, fsc_id, reason).
+        """
+        conflicts = []
+        
+        # 1. Faculty Busy?
+        cursor.execute("""
+            SELECT `faculty_section_course_id` FROM `timetables`
+            WHERE `day`=%s AND `period_id`=%s 
+            AND `faculty_section_course_id` IN (
+                SELECT `id` FROM `faculty_section_course` WHERE `faculty_id`=%s
+            )
+        """, (day, period, faculty_id))
+        for row in cursor.fetchall():
+            conflicts.append((row['faculty_section_course_id'], 'faculty'))
+
+        # 2. Section Busy?
+        cursor.execute("""
+            SELECT `faculty_section_course_id` FROM `timetables`
+            WHERE `day`=%s AND `period_id`=%s 
+            AND `faculty_section_course_id` IN (
+                SELECT `id` FROM `faculty_section_course` WHERE `section_id`=%s
+            )
+        """, (day, period, section_id))
+        for row in cursor.fetchall():
+            conflicts.append((row['faculty_section_course_id'], 'section'))
+
+        # 3. Room Full? (Only if specific room assigned)
+        if class_id:
+            # Calculate current strength vs capacity
+            cursor.execute("SELECT `capacity` FROM `classes` WHERE `id`=%s", (class_id,))
+            res = cursor.fetchone()
+            if res:
+                capacity = res['capacity']
+                cursor.execute("""
+                    SELECT `T`.`faculty_section_course_id`, `S`.`strength`, `FSC`.`full_batch`
+                    FROM `timetables` `T`
+                    JOIN `faculty_section_course` `FSC` ON `T`.`faculty_section_course_id`=`FSC`.`id`
+                    JOIN `section_class` `S` ON `FSC`.`section_id`=`S`.`section_id`
+                    WHERE `T`.`day`=%s AND `T`.`period_id`=%s AND `FSC`.`class_id`=%s
+                """, (day, period, class_id))
+                
+                occupants = cursor.fetchall()
+                current_occ = sum(occ['strength'] if occ['full_batch'] else occ['strength']//2 for occ in occupants)
+                
+                # We need to know OUR strength to see if we fit
+                my_sec_cls = fetch_data.get_section_classes(cursor, section_id=section_id)
+                my_strength = my_sec_cls[0]['strength'] if my_sec_cls else 60
+                
+                if current_occ + my_strength > capacity:
+                    # Logic: If full, we consider EVERYONE in the room as a potential conflict
+                    # Removing one might be enough, but for simplicity, we list them all.
+                    for occ in occupants:
+                         conflicts.append((occ['faculty_section_course_id'], 'room'))
+
+        return conflicts
+
+    def solve_recursively(pending_courses, depth=0):
+        """
+        Enhanced Global DFS with Min-Conflicts Heuristic.
+        Prioritizes slots that require the LEAST amount of displacement.
+        """
+        if not pending_courses:
+            return True # All allocated!
+        
+        # 1. Sort Pending: Hardest First (Labs, then High Hours)
+        pending_courses.sort(key=lambda x: (x['fsc']['is_lab'], x['hrs_needed']), reverse=True)
+        
+        current = pending_courses[0]
+        fsc = current['fsc']
+        hrs_needed = current['hrs_needed']
+        
+        if hrs_needed <= 0:
+            return solve_recursively(pending_courses[1:], depth)
+            
+        if depth % 20 == 0:
+             print(f"[{depth}] Fitting {fsc['course_code']} (Sec {fsc['section_id']})...")
+
+        duration = 2 if fsc['is_lab'] else 1
+        
+        candidates = []
+        all_periods = list(PERIODS)
+        random.shuffle(all_periods)
+        
+        for day, period in all_periods:
+            if period == 5: continue
+            
+            req_slots = [period]
+            if duration == 2:
+                if period not in (1, 3, 6, 7): continue
+                if (day, period+1) not in PERIODS: continue
+                if period == 4: continue
+                req_slots = [period, period+1]
+            
+            # Check Conflicts
+            slot_conflicts = []
+            for p in req_slots:
+                # Use your existing get_conflicting_entries function
+                confs = get_conflicting_entries(day, p, fsc['faculty_id'], fsc['section_id'], fsc['class_id'])
+                slot_conflicts.extend(confs)
+            
+            # FIX: Count Unique FSC IDs (index 0), not Reasons
+            # The conflict list is [(fsc_id, reason), ...] based on your previous logs
+            unique_ids = {c[0] for c in slot_conflicts}
+            
+            # RELAXED PRUNING:
+            # Dynamic limits based on course type and depth
+            base_limit = 8 if fsc['is_lab'] else 5
+            depth_bonus = depth // 3  # Allow more conflicts at deeper levels
+            limit = base_limit + depth_bonus
+            if len(unique_ids) > limit:
+                continue
+            
+            candidates.append({
+                'day': day, 
+                'req_slots': req_slots, 
+                'conflicts': slot_conflicts, 
+                'unique_ids': unique_ids
+            })
+        
+        # Sort Candidates: Try LOWEST conflict count first (The "Min-Conflicts" Heuristic)
+        candidates.sort(key=lambda x: len(x['unique_ids']))
+        
+        for cand in candidates:
+            day = cand['day']
+            req_slots = cand['req_slots']
+            conflicts = cand['conflicts']
+            
+            sp_name = f"dfs_{depth}_{random.randint(100000,999999)}"
+            try:
+                cursor.execute(f"SAVEPOINT {sp_name}")
+                
+                # A. Remove Conflicts
+                displaced_fscs = []
+                processed_cf_ids = set()
+                print(conflicts)
+                for cf_item in conflicts:
+                    cf_fsc_id = cf_item[0] # Index 0 is ID
+                    
+                    if cf_fsc_id in processed_cf_ids: continue
+                    
+                    cf_info = fetch_data.get_faculty_section_course(cursor, faculty_section_course_id=cf_fsc_id)
+                    cf_slots = fetch_data.get_timetables(cursor, faculty_section_course_id=cf_fsc_id)
+                    
+                    if not cf_slots: continue
+                    
+                    for s in cf_slots:
+                        delete_timetable_safe(cf_fsc_id, s['day'], s['period_id'])
+                    
+                    lost_hrs = len(cf_slots)
+                    displaced_fscs.append({'fsc': cf_info, 'hrs_needed': lost_hrs})
+                    processed_cf_ids.add(cf_fsc_id)
+
+                # B. Insert Current Course
+                for p in req_slots:
+                    add_timetable_safe(fsc['id'], day, p)
+                
+                # C. Prepare Recursive State
+                rem_current = hrs_needed - duration
+                
+                # Mix displaced with remaining. 
+                next_pending = pending_courses[1:] + displaced_fscs
+                if rem_current > 0:
+                    next_pending.append({'fsc': fsc, 'hrs_needed': rem_current})
+                
+                if depth < 30:  # Increased depth limit for complex cases
+                    if solve_recursively(next_pending, depth + 1):
+                        cursor.execute(f"RELEASE SAVEPOINT {sp_name}")
+                        return True
+                
+                raise Exception("Backtrack")
+
+            except Exception as e:
+                print(e.args)
+                cursor.execute(f"ROLLBACK TO SAVEPOINT {sp_name}")
+                continue
+        
+        return False
+
+    # ==========================================
+    # 4. EXECUTE GLOBAL FIXER
+    # ==========================================
+    print("\n=== Running Global Constraint Solver for Failed Allocations ===")
+    
+    # 1. Collect all courses that still have hrs > 0
+    # failed_courses = []
+    
+    # # Check Labs
+    # cursor.execute("SELECT * FROM `faculty_section_course` WHERE `hrs` > 0")
+    # remaining_rows = cursor.fetchall()
+    
+    # for r in remaining_rows:
+    #     # We need to manually calculate ACTUAL remaining based on DB because 
+    #     # local variables in previous loops might not have synced perfectly if logical errors existed.
+    #     # But 'hrs' column in DB is not updated by us? 
+    #     # WAIT: Your previous code updates dictionary objects, not DB 'hrs' column.
+    #     # We must rely on the counts in 'timetables' vs 'faculty_section_course'.
+        
+    #     cursor.execute("SELECT COUNT(*) as cnt FROM timetables WHERE faculty_section_course_id=%s", (r['id'],))
+    #     allocated_hrs = cursor.fetchone()['cnt']
+        
+    #     # Total hrs required is in 'fsc.csv'? No, it's in 'faculty_section_course' table 'hrs' column?
+    #     # Assuming 'hrs' in DB is the TARGET hours.
+    #     target_hrs = r['hrs'] # This column usually means Total Hours per week
+        
+    #     needed = target_hrs - allocated_hrs
+    #     if needed > 0:
+    #         failed_courses.append({'fsc': r, 'hrs_needed': needed})
+
+    # if not failed_courses:
+    #     print("Success! No failed courses found.")
+    # else:
+    #     print(f"Found {len(failed_courses)} courses with pending hours. Attempting to solve...")
+        
+    #     # Multi-stage recovery process
+    #     recovery_stages = [
+    #         ("Stage 1: Simple backtracking", lambda: solve_recursively(failed_courses.copy())),
+    #         ("Stage 2: Relaxed constraints", lambda: solve_with_relaxed_constraints(failed_courses.copy())),
+    #         ("Stage 3: Aggressive reshuffling", lambda: solve_with_aggressive_reshuffling(failed_courses.copy()))
+    #     ]
+        
+    #     for stage_name, stage_func in recovery_stages:
+    #         print(f"\n=== {stage_name} ===")
+    #         try:
+    #             if stage_func():
+    #                 print(f"{stage_name} Success! All courses allocated.")
+    #                 db_connector.commit()
+    #                 break
+    #             else:
+    #                 print(f"{stage_name} failed. Trying next approach...")
+    #                 db_connector.rollback()
+    #         except Exception as e:
+    #             print(f"{stage_name} failed with error: {e}")
+    #             db_connector.rollback()
+    #     else:
+    #         print("All recovery stages failed. The schedule may be unsatisfiable with current constraints.")
+    #         # Optional: Keep partial solution or revert?
+    #         # db_connector.rollback()
