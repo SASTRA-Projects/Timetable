@@ -16,7 +16,7 @@ packaging==26.0
 pathspec==1.0.4
 pycparser==3.0
 PyMySQL==1.1.2
-setuptools==80.10.2
+setuptools==82.0.0
 types-PyMySQL==1.1.0.20251220
 typing_extensions==4.15.0
 waitress==3.0.2; platform_system == "Windows"
