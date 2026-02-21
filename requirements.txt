@@ -6,7 +6,7 @@ click==8.3.1
 colorama==0.4.6
 cryptography==46.0.5
 Flask==3.1.2
-gunicorn==24.1.1; platform_system != "Windows"
+gunicorn==25.1.0; platform_system != "Windows"
 itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.3
@@ -16,7 +16,7 @@ packaging==26.0
 pathspec==1.0.4
 pycparser==3.0
 PyMySQL==1.1.2
-setuptools==80.10.2
+setuptools==82.0.0
 types-PyMySQL==1.1.0.20251220
 typing_extensions==4.15.0
 waitress==3.0.2; platform_system == "Windows"
