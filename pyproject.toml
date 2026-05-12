@@ -12,7 +12,7 @@ dependencies = [
     "argon2-cffi==25.1.0",
     "cryptography==47.0.0",
     "mypy==1.20.2",
-    "gunicorn==25.3.0; platform_system != 'Windows'",
+    "gunicorn==26.0.0; platform_system != 'Windows'",
     "waitress==3.0.2; platform_system == 'Windows'"
 ]
 
