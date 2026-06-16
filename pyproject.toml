@@ -10,7 +10,7 @@ dependencies = [
     "Jinja2==3.1.6", 
     "PyMySQL==1.2.0",
     "argon2-cffi==25.1.0",
-    "cryptography==48.0.0",
+    "cryptography==49.0.0",
     "mypy==2.1.0",
     "gunicorn==26.0.0; platform_system != 'Windows'",
     "waitress==3.0.2; platform_system == 'Windows'"
