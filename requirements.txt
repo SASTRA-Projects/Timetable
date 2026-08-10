@@ -12,7 +12,7 @@ Jinja2==3.1.6
 MarkupSafe==3.0.3
 mypy==2.3.0
 mypy_extensions==1.1.0
-packaging==26.2
+packaging==26.3
 pathspec==1.1.1
 pycparser==3.0
 PyMySQL==1.2.0
