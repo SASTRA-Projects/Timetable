@@ -20,4 +20,4 @@ setuptools==84.0.0
 types-PyMySQL==1.2.0.20260923
 typing_extensions==4.16.0
 waitress==3.0.2; platform_system == "Windows"
-Werkzeug==3.1.8
+Werkzeug==3.1.9
